@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # SparQ Social Media Management Platform
 
 This project is a Hootsuite-like platform built with Next.js, TypeScript, Tailwind CSS, and App Router. It supports:
@@ -27,3 +28,7 @@ This project is a Hootsuite-like platform built with Next.js, TypeScript, Tailwi
 
 ---
 For more details, see `.github/copilot-instructions.md`.
+=======
+# sparq-plug
+A social media management platform (Hootsuite-like) built with Next.js, TypeScript, Tailwind CSS, and App Router. Features: multi-client management, analytics, admin dashboard, client dashboard, post scheduling, and integrations for Facebook, Twitter(X), Instagram, TikTok, LinkedIn.
+>>>>>>> 4e12dbed0403098b6473fc8ee4ee111adee0765f
