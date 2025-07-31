@@ -2,6 +2,16 @@ import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import { useState } from 'react';
 import { getOptimalPostTime } from '@/features/scheduling';
+import ContentCalendar from '@/components/ContentCalendar';
+import TeamCollaboration from '@/components/TeamCollaboration';
+import Notifications from '@/components/Notifications';
+import SocialInbox from '@/components/SocialInbox';
+import CustomReports from '@/components/CustomReports';
+import TrendingTopics from '@/components/TrendingTopics';
+import ABTesting from '@/components/ABTesting';
+import MediaLibrary from '@/components/MediaLibrary';
+import AudienceInsights from '@/components/AudienceInsights';
+import PlatformHealth from '@/components/PlatformHealth';
 
 // Placeholder: Replace with real-time analytics fetching logic
 const mockAnalytics: { timestamp: Date; engagement: number; contentType: 'image' | 'video' | 'text' }[] = [
@@ -27,12 +37,12 @@ export default function ClientDashboard() {
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Header title="Client Dashboard" />
-        <main className="flex-1 p-8 overflow-y-auto">
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold mb-2">Connected Accounts</h2>
-            {/* Social account connect UI goes here */}
-          </section>
-          <section className="mb-8">
+        <main className="flex-1 p-8 overflow-y-auto space-y-6">
+          <Notifications />
+          <ContentCalendar />
+          <TeamCollaboration />
+          <SocialInbox />
+          <section>
             <h2 className="text-2xl font-bold mb-2">Schedule a Post</h2>
             <form className="bg-white rounded shadow p-6 max-w-xl">
               <label className="block mb-2 font-medium">Content Type</label>
@@ -57,10 +67,12 @@ export default function ClientDashboard() {
               {/* Add post content and submit button here */}
             </form>
           </section>
-          <section>
-            <h2 className="text-2xl font-bold mb-2">Analytics</h2>
-            {/* Analytics widgets go here */}
-          </section>
+          <TrendingTopics />
+          <ABTesting />
+          <MediaLibrary />
+          <AudienceInsights />
+          <CustomReports />
+          <PlatformHealth />
         </main>
       </div>
     </div>
