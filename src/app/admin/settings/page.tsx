@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import InvoiceModule from '@/components/InvoiceModule';
 
 export default function Settings() {
   const [activeSection, setActiveSection] = useState('general');
@@ -296,23 +297,13 @@ export default function Settings() {
             </div>
           )}
 
-          {/* Placeholder for other sections */}
-          {activeSection !== 'general' && activeSection !== 'security' && activeSection !== 'team' && (
+          {/* Billing Section: Invoicing and Payments */}
+          {activeSection === 'billing' && (
             <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                {sections.find(s => s.id === activeSection)?.name} Settings
+              <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <span>💳</span> Invoicing & Payments
               </h3>
-              <div className="text-center py-12">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-4xl">{sections.find(s => s.id === activeSection)?.icon}</span>
-                </div>
-                <p className="text-gray-600 text-lg">
-                  {sections.find(s => s.id === activeSection)?.name} configuration options will be available here.
-                </p>
-                <div className="mt-6 p-6 bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl">
-                  <p className="text-gray-500">Settings panel placeholder</p>
-                </div>
-              </div>
+              <InvoiceModule />
             </div>
           )}
         </div>

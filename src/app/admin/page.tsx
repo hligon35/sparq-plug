@@ -6,6 +6,12 @@ import Header from '@/components/Header';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [stats, setStats] = useState({
     activeClients: 24,
     socialAccounts: 156,
@@ -49,6 +55,41 @@ export default function AdminDashboard() {
   const handleQuickAction = (action: string) => {
     alert(`${action} clicked! This would navigate to the respective page.`);
   };
+
+  // Security handlers
+  const handlePasswordUpdate = () => {
+    if (!newPassword || !confirmPassword) {
+      alert('Please fill in both password fields');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+    if (newPassword.length < 8) {
+      alert('Password must be at least 8 characters long');
+      return;
+    }
+    alert('Admin password updated successfully!');
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowSecurityModal(false);
+  };
+
+  const handleToggle2FA = () => {
+    if (!twoFactorEnabled) {
+      alert('Admin 2FA setup initiated! In production, this would show QR code setup.');
+      setTwoFactorEnabled(true);
+    } else {
+      alert('Admin 2FA disabled successfully!');
+      setTwoFactorEnabled(false);
+    }
+  };
+
+  const handleSecurityAudit = () => {
+    alert('Running security audit... In production, this would scan for vulnerabilities.');
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header Bar */}
@@ -63,12 +104,20 @@ export default function AdminDashboard() {
               <p className="text-white/80 text-sm mt-1">Multi-Platform Social Media Management & Analytics</p>
             </div>
           </div>
-          <button
-            onClick={() => window.location.href = '/login'}
-            className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-          >
-            Logout
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowSecurityModal(true)}
+              className="bg-yellow-500/20 hover:bg-yellow-500/30 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+            >
+              Security
+            </button>
+            <button
+              onClick={() => window.location.href = '/login'}
+              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </div>
 
@@ -261,6 +310,105 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Security Modal */}
+      {showSecurityModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[1000]">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-md border border-gray-200 shadow-lg relative">
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              onClick={() => setShowSecurityModal(false)}
+              aria-label="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Admin Security Settings</h2>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Change Admin Password</label>
+                <div className="relative">
+                  <input 
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10" 
+                    placeholder="New password" 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showNewPassword ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <div className="relative mt-2">
+                  <input 
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10" 
+                    placeholder="Confirm new password" 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showConfirmPassword ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <button 
+                  onClick={handlePasswordUpdate}
+                  className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow"
+                >
+                  Update Password
+                </button>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Admin Two-Factor Authentication (2FA)</label>
+                <button 
+                  onClick={handleToggle2FA}
+                  className={`${twoFactorEnabled ? 'bg-green-500 hover:bg-green-600' : 'bg-yellow-500 hover:bg-yellow-600'} text-white px-4 py-2 rounded-lg font-medium shadow`}
+                >
+                  {twoFactorEnabled ? 'Disable Admin 2FA' : 'Enable Admin 2FA'}
+                </button>
+                <p className="text-xs text-gray-500 mt-1">
+                  {twoFactorEnabled ? 'Admin 2FA is currently enabled.' : 'Secure admin access with an extra layer of protection.'}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">System Security Audit</label>
+                <button 
+                  onClick={handleSecurityAudit}
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium shadow"
+                >
+                  Run Security Audit
+                </button>
+                <p className="text-xs text-gray-500 mt-1">Check for vulnerabilities and security issues.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
