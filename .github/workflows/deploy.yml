@@ -1,0 +1,17 @@
+name: Deploy sparqplug (self-hosted)
+
+on:
+  push:
+    branches: [ live ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Sync live app dir with origin/live
+        run: |
+          git -C /srv/core/sparqplug/sparq-plug fetch --all --prune
+          git -C /srv/core/sparqplug/sparq-plug reset --hard origin/live
+      - name: Restart gateway + app
+        run: |
+          docker compose -f /srv/core/sparqplug/docker-compose.yml up -d --force-recreate gateway app

@@ -1,0 +1,171 @@
+'use client';
+
+import { useState } from 'react';
+import AdminTopNav from '@/components/AdminTopNav';
+import AdminHeader from '@/components/AdminHeader';
+
+export default function PostScheduling() {
+  const [scheduledPosts, setScheduledPosts] = useState([
+    { id: 1, content: 'New product launch announcement!', platform: 'Facebook', client: 'TechCorp', scheduledTime: '2025-08-06 10:00 AM', status: 'Scheduled' },
+    { id: 2, content: 'Behind the scenes content...', platform: 'Instagram', client: 'FashionBrand', scheduledTime: '2025-08-06 2:00 PM', status: 'Scheduled' },
+    { id: 3, content: 'Weekly promotion post', platform: 'Twitter/X', client: 'LocalRestaurant', scheduledTime: '2025-08-06 6:00 PM', status: 'Scheduled' },
+    { id: 4, content: 'Health tips and advice', platform: 'LinkedIn', client: 'HealthClinic', scheduledTime: '2025-08-07 9:00 AM', status: 'Draft' }
+  ]);
+
+  const handleCreatePost = () => {
+    alert('Create new post form would open here');
+  };
+
+  const handleEditPost = (postId: number) => {
+    alert(`Edit post ${postId} would open here`);
+  };
+
+  // Top nav handles routing; sidebar removed
+
+  return (
+    <div className="min-h-screen bg-[#f5f7fb]">
+      <AdminHeader title="Post Scheduling" subtitle="Schedule and manage social posts across platforms" />
+
+      {/* Centered content with top nav pills */}
+      <div className="px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto">
+          <AdminTopNav />
+          {/* Main Content */}
+          <div className="">
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg">
+              <div className="text-center">
+                <div className="text-4xl font-bold mb-2">{scheduledPosts.filter(p => p.status === 'Scheduled').length}</div>
+                <div className="text-white/90 text-sm font-medium">Scheduled Posts</div>
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg">
+              <div className="text-center">
+                <div className="text-4xl font-bold mb-2">{scheduledPosts.filter(p => p.status === 'Draft').length}</div>
+                <div className="text-white/90 text-sm font-medium">Draft Posts</div>
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg">
+              <div className="text-center">
+                <div className="text-4xl font-bold mb-2">47</div>
+                <div className="text-white/90 text-sm font-medium">Published Today</div>
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+              <div className="text-center">
+                <div className="text-4xl font-bold mb-2">156</div>
+                <div className="text-white/90 text-sm font-medium">This Week</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Calendar Placeholder */}
+          <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm mb-8">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-6 h-6 bg-purple-500 rounded-full"></div>
+              <h3 className="text-2xl font-bold text-gray-800">Content Calendar</h3>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-12 border-2 border-dashed border-gray-300">
+              <div className="text-center text-gray-500">
+                <svg className="w-16 h-16 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                <p className="text-lg font-medium">Interactive Content Calendar</p>
+                <p className="text-sm">Drag and drop interface for scheduling posts across all platforms</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Platform Distribution Chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-6 h-6 bg-blue-500 rounded-full"></div>
+                <h3 className="text-xl font-bold text-gray-800">Platform Distribution</h3>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-8 border-2 border-dashed border-gray-300">
+                <div className="text-center text-gray-500">
+                  <svg className="w-12 h-12 mx-auto mb-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                  <p className="text-sm font-medium">Pie Chart</p>
+                  <p className="text-xs">Posts by platform</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-6 h-6 bg-green-500 rounded-full"></div>
+                <h3 className="text-xl font-bold text-gray-800">Weekly Schedule</h3>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-8 border-2 border-dashed border-gray-300">
+                <div className="text-center text-gray-500">
+                  <svg className="w-12 h-12 mx-auto mb-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                  </svg>
+                  <p className="text-sm font-medium">Bar Chart</p>
+                  <p className="text-xs">Posts per day this week</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Scheduled Posts List */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center space-x-3">
+                <div className="w-6 h-6 bg-orange-500 rounded-full"></div>
+                <h3 className="text-2xl font-bold text-gray-800">Upcoming Posts</h3>
+              </div>
+            </div>
+            
+            <div className="divide-y divide-gray-200">
+              {scheduledPosts.map((post) => (
+                <div key={post.id} className="p-6 hover:bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-4 mb-2">
+                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
+                          post.platform === 'Facebook' ? 'bg-blue-100 text-blue-800' :
+                          post.platform === 'Instagram' ? 'bg-pink-100 text-pink-800' :
+                          post.platform === 'Twitter/X' ? 'bg-gray-100 text-gray-800' :
+                          'bg-blue-100 text-blue-800'
+                        }`}>
+                          {post.platform}
+                        </span>
+                        <span className="text-sm text-gray-500">{post.client}</span>
+                        <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                          post.status === 'Scheduled' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {post.status}
+                        </span>
+                      </div>
+                      <p className="text-gray-800 mb-2">{post.content}</p>
+                      <p className="text-sm text-gray-500">Scheduled for: {post.scheduledTime}</p>
+                    </div>
+                    <div className="ml-4">
+                      <button 
+                        onClick={() => handleEditPost(post.id)}
+                        className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

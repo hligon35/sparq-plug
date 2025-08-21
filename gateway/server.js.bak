@@ -1,0 +1,92 @@
+const crypto = require('crypto');
+const express = require('express');
+const helmet = require('helmet');
+const session = require('express-session');
+const { createProxyMiddleware } = require('http-proxy-middleware');
+
+// Try modern class, then legacy factory
+let RedisStoreClass = null;
+try { RedisStoreClass = require('connect-redis').default; } catch (_) {}
+if (!RedisStoreClass) { try { RedisFactory = require('connect-redis'); } catch (_) {} }
+
+async function makeStore() {
+  const url = process.env.REDIS_URL || 'redis://host.docker.internal:6379';
+  try {
+    const { createClient } = require('redis');
+    const client = createClient({ url, legacyMode: true });
+    client.on('error', (err) => console.error('Redis error:', err));
+    await client.connect();
+    if (RedisStoreClass) return new RedisStoreClass({ client, prefix: 'sess:' });
+    if (RedisFactory) { const LegacyStore = RedisFactory(session); return new LegacyStore({ client, prefix: 'sess:' }); }
+  } catch (err) { console.warn('Redis unavailable; using MemoryStore temporarily:', err && err.message); }
+  return undefined; // MemoryStore
+}
+
+function b64url(buf){return buf.toString('base64').replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function b64urlDecode(s){s=s.replace(/-/g,'+').replace(/_/g,'/');return Buffer.from(s,'base64');}
+function verifyToken(t, secret){
+  if(!t || !t.includes('.')) return null;
+  const [b,sig]=t.split('.');
+  const body=b64urlDecode(b);
+  const expect=crypto.createHmac('sha256', secret).update(body).digest();
+  const got=b64urlDecode(sig);
+  if(expect.length!==got.length || !crypto.timingSafeEqual(expect,got)) return null;
+  const payload=JSON.parse(body.toString('utf8'));
+  const now=Math.floor(Date.now()/1000);
+  if(payload.exp && now>payload.exp+10) return null;
+  return payload;
+}
+
+const app = express();
+app.set('trust proxy', 1);
+app.use(helmet());
+
+const cookieName = process.env.SESSION_NAME || 'portal.sid';
+const sessionSecret = process.env.SESSION_SECRET || 'changeme';
+const cookieDomain = process.env.SESSION_DOMAIN || undefined;
+
+let store = undefined;
+let storeReady = false;
+makeStore().then((s)=>{store=s; storeReady=!!s;}).catch(()=>{});
+
+app.use((req,res,next)=>{
+  session({
+    store,
+    name: cookieName,
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    proxy: true,
+    cookie: { httpOnly: true, sameSite: 'lax', secure: 'auto', domain: cookieDomain, maxAge: 1000*60*60*12 },
+  })(req,res,next);
+});
+
+app.get('/healthz', (req,res)=>res.json({ ok:true, service:'sparqplug-gateway', storeReady }));
+
+// Signed entry only: accepts token and sets session, then redirects to target path
+app.get('/_entry', (req,res)=>{
+  const secret = process.env.SSO_SECRET || process.env.SESSION_SECRET || 'changeme';
+  const token = req.query.t;
+  const target = (req.query.path && String(req.query.path).startsWith('/')) ? req.query.path : '/';
+  const claims = verifyToken(token, secret);
+  if(!claims) return res.status(403).send('Invalid or expired token');
+  // Minimal session data; extend as needed
+  req.session.user = claims.user || { email: claims.email || '', role: claims.role || '' };
+  return res.redirect(target);
+});
+
+// Everything else requires a session (direct hits get bounced to portal)
+const requireAuth = (req,res,next)=>{
+  if (req.session && req.session.user) return next();
+  const portalHost = process.env.PORTAL_HOST || 'portal.getsparqd.com';
+  const nextUrl = encodeURIComponent(`https://${req.headers.host}${req.originalUrl}`);
+  return res.redirect(`https://${portalHost}/login?next=${nextUrl}`);
+};
+app.use(requireAuth);
+
+// Proxy to internal app
+const target = process.env.APP_URL || 'http://app:4000';
+app.use('/', createProxyMiddleware({ target, changeOrigin: true, ws: true, xfwd: true, proxyTimeout: 30000 }));
+
+const port = process.env.PORT || 3000;
+app.listen(port, ()=>console.log(`Gateway listening on ${port}, proxying to ${target}`));

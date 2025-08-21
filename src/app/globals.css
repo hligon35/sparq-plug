@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+:root {
+	--brand-blue: #1d74d0;
+	--brand-blue-600: #1d74d0;
+	--brand-blue-700: #1667bd;
+	--bg-app: #f5f7fb;
+}
+
+html, body {
+	background: var(--bg-app);
+	color: #0f172a; /* slate-900 */
+}
