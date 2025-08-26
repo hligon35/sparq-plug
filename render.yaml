@@ -16,7 +16,7 @@ services:
       # - key: STRIPE_SECRET_KEY
       #   sync: false
       # - key: PUBLIC_URL
-      #   value: https://your-render-domain
+      #   value: https://sparq-plug.onrender.com
     healthCheckPath: /app/api/healthz
     headers:
       - path: /*

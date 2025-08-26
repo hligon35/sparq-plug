@@ -18,48 +18,61 @@ Environment variables
 
 Local development
 
-1) npm install
+1. Install dependencies:
 
-2) npm run dev
+```bash
+npm install
+```
 
-3) App will run on <http://localhost:3000> (or next available). If APP_BASE_PATH=/app, your routes are under <http://localhost:3000/app>.
+1. Start the dev server:
+
+```bash
+npm run dev
+```
+
+1. App will run on <http://localhost:3000> (or next available). If APP_BASE_PATH=/app, your routes are under <http://localhost:3000/app>.
 
 Render deployment
 
 Prereqs: A Render account with GitHub repo connected.
 
-1) Push to main. Render will detect render.yaml.
-2) In Render, create a Web Service from this repo if not auto-created.
-3) Build command: npm ci --no-audit --no-fund && npm run build (from render.yaml)
-4) Start command: npm run start (from render.yaml)
-5) Environment variables:
+1. Push to main. Render will detect render.yaml.
+1. In Render, create a Web Service from this repo if not auto-created.
+1. Build command: npm ci --no-audit --no-fund && npm run build (from render.yaml)
+1. Start command: npm run start (from render.yaml)
+1. Environment variables:
    - NODE_ENV=production
    - APP_BASE_PATH=/app (or set to empty for root)
    - PUBLIC_URL=<https://your-render-domain>
    - STRIPE_SECRET_KEY=sk_live_xxx (optional until ready)
-6) Health check path: /app/api/healthz (or /api/healthz if APP_BASE_PATH is empty).
+1. Health check path: /app/api/healthz (or /api/healthz if APP_BASE_PATH is empty).
 
 Self-host (Docker)
 
 Build image and run the container.
 
-1) Build image:
+1. Build image:
 
-    - docker build -t sparq-plug .
-       - Optionally set build arg APP_BASE_PATH to bake it into the build: --build-arg APP_BASE_PATH="/app"
+```bash
+docker build -t sparq-plug .
+# Optionally set build arg APP_BASE_PATH to bake it into the build
+# docker build -t sparq-plug --build-arg APP_BASE_PATH="/app" .
+```
 
-2) Run container:
+1. Run container:
 
-    - docker run -p 3000:3000 \
-       -e NODE_ENV=production \
-       -e APP_BASE_PATH="/app" \
-       -e PUBLIC_URL="<https://your-domain>" \
-       -e STRIPE_SECRET_KEY="sk_live_xxx" \
-       --name sparq-plug sparq-plug
+```bash
+docker run -p 3000:3000 \
+   -e NODE_ENV=production \
+   -e APP_BASE_PATH="/app" \
+   -e PUBLIC_URL="https://your-domain" \
+   -e STRIPE_SECRET_KEY="sk_live_xxx" \
+   --name sparq-plug sparq-plug
+```
 
-3) Nginx/Load balancer: proxy pass to container:3000. Do not strip APP_BASE_PATH if you set one.
+1. Nginx/Load balancer: proxy pass to container:3000. Do not strip APP_BASE_PATH if you set one.
 
-4) Health check: GET <https://your-domain/app/api/healthz> (or /api/healthz at root).
+1. Health check: GET <https://your-domain/app/api/healthz> (or /api/healthz at root).
 
 Auth note
 Current login is demo-only and sets a role cookie on the client. Replace with real auth (e.g., NextAuth) before production. Middleware enforces role-based access based on cookie/header.
