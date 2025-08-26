@@ -26,6 +26,10 @@ export default function Home() {
       const user = TEST_USERS.find(u => u.username === username && u.password === password);
       if (user) {
         setError('');
+  // Set lightweight role cookie for demo auth; middleware reads this
+  // NOTE: Replace with real auth for production
+  const maxAge = 60 * 60 * 8; // 8 hours
+  document.cookie = `role=${user.role}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
         if (user.role === 'admin') router.push('/admin');
         else if (user.role === 'manager') router.push('/manager');
         else router.push('/client');

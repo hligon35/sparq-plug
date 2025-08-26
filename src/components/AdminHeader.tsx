@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation';
 type Props = {
   title: string;
   subtitle?: string;
-  onSecurityClick?: () => void;
+  onSecurityClick?: () => void; // kept for backward compatibility; no longer rendered
 };
 
-export default function AdminHeader({ title, subtitle, onSecurityClick }: Props) {
+export default function AdminHeader({ title, subtitle, onSecurityClick: _onSecurityClick }: Props) {
   const router = useRouter();
 
   const logout = () => {
@@ -33,28 +33,17 @@ export default function AdminHeader({ title, subtitle, onSecurityClick }: Props)
             {subtitle && <p className="text-white/85 text-sm mt-1">{subtitle}</p>}
           </div>
 
-          {/* Right */}
+          {/* Right: Combined Signed In + Logout button */}
           <div className="flex items-center justify-end gap-2">
-            {onSecurityClick && (
-              <button
-                onClick={onSecurityClick}
-                className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 text-white px-3 py-2 rounded-full text-sm font-medium transition-colors"
-                aria-label="Security"
-              >
-                <span aria-hidden>🔒</span>
-                Security
-              </button>
-            )}
-            <span className="hidden sm:inline-flex items-center gap-2 bg-white/15 px-3 py-2 rounded-full text-sm">
-              <span aria-hidden>🧑</span>
-              Signed In
-            </span>
             <button
               onClick={logout}
               className="inline-flex items-center gap-2 bg-white text-[#1d74d0] hover:bg-blue-50 px-3 py-2 rounded-full text-sm font-semibold shadow"
-              aria-label="Logout"
+              aria-label="Signed in - Logout"
+              title="Click to logout"
             >
-              Logout
+              <span aria-hidden>🧑</span>
+              <span className="hidden sm:inline">Signed In • Logout</span>
+              <span className="sm:hidden">Logout</span>
             </button>
           </div>
         </div>

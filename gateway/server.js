@@ -5,20 +5,26 @@ const app = express();
 const session = require('express-session');
 const connectRedis = require('connect-redis');
 const { createClient } = require('redis');
+const helmet = require('helmet');
 
-const redisClient = createClient({ url: process.env.REDIS_URL });
+const basePath = process.env.APP_BASE_PATH || '/app';
+const upstream = process.env.APP_URL || 'http://localhost:3000';
+
+const redisClient = process.env.REDIS_URL ? createClient({ url: process.env.REDIS_URL }) : null;
 let storeReady = false;
 
-redisClient.on('error', (err) => { console.error('Redis error:', err); storeReady = false; });
-(async () => {
-  try {
-    await redisClient.connect();
-    storeReady = true;
-    console.log('Redis connected for session store');
-  } catch (e) {
-    console.error('Redis connect failed:', e.message);
-  }
-})();
+if (redisClient) {
+  redisClient.on('error', (err) => { console.error('Redis error:', err); storeReady = false; });
+  (async () => {
+    try {
+      await redisClient.connect();
+      storeReady = true;
+      console.log('Redis connected for session store');
+    } catch (e) {
+      console.error('Redis connect failed:', e.message);
+    }
+  })();
+}
 
 // Handle connect-redis v6 and v7
 let RedisStore;
@@ -36,6 +42,7 @@ if (connectRedis && connectRedis.RedisStore) {
 }
 
 app.set('trust proxy', 1);
+app.use(helmet({ contentSecurityPolicy: false, frameguard: false }));
 const SESSION_SECRETS = (process.env.SESSION_SECRETS || process.env.SESSION_SECRET || 'changeme')
   .split(',')
   .map(s => s.trim())
@@ -47,18 +54,18 @@ app.use(session({
   saveUninitialized: false,
   proxy: true,
   cookie: {
-    domain: process.env.SESSION_DOMAIN || '.getsparqd.com',
+    domain: process.env.SESSION_DOMAIN || undefined,
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
   },
-  store: new RedisStore({ client: redisClient }),
+  store: redisClient ? new RedisStore({ client: redisClient }) : undefined,
 }));
 
 // Normalize duplicate basePath occurrences like /app/app/login -> /app/login
 app.use((req, res, next) => {
-  const bp = process.env.APP_BASE_PATH || '';
+  const bp = basePath || '';
   if (!bp) return next();
   if (req.url.startsWith(bp + bp)) {
     let fixed = req.url;
@@ -79,21 +86,21 @@ app.get('/healthz', (req, res) => {
 
 // Upstream app health: probe Next.js directly (bypasses auth/SSO)
 app.get('/_app_health', async (req, res) => {
-  const results = { ok: false, target: process.env.APP_URL || 'http://app:4000', checks: {} };
-  const bp = process.env.APP_BASE_PATH || '';
+  const results = { ok: false, target: upstream, checks: {} };
+  const bp = basePath || '';
   try {
     const t0 = Date.now();
-    const rRoot = await fetch((process.env.APP_URL || 'http://app:4000') + (bp || '') + '/', { method: 'HEAD' }).catch(() => null);
+    const rRoot = await fetch(upstream + (bp || '') + '/', { method: 'HEAD' }).catch(() => null);
     results.checks.root = rRoot ? { status: rRoot.status, ms: Date.now() - t0 } : { error: 'no response' };
   } catch (e) {
     results.checks.root = { error: e.message };
   }
   try {
     const t1 = Date.now();
-    const rChunk = await fetch((process.env.APP_URL || 'http://app:4000') + (bp || '') + '/_next/static/chunks', { method: 'HEAD' }).catch(() => null);
+    const rChunk = await fetch(upstream + (bp || '') + '/_next/static/chunks', { method: 'HEAD' }).catch(() => null);
     results.checks.chunks = rChunk ? { status: rChunk.status, ms: Date.now() - t1 } : { error: 'no response' };
   } catch (e) {
-  const basePath = process.env.APP_BASE_PATH || '/app';
+    results.checks.chunks = { error: e.message };
   }
   results.ok = [results.checks.root?.status, results.checks.chunks?.status].some(s => s && s >= 200 && s < 500);
   res.status(results.ok ? 200 : 502).json(results);
@@ -104,9 +111,6 @@ function rolePath(role) {
   return role === 'admin' ? '/admin' : role === 'manager' ? '/manager' : '/client';
 }
 
-    (bp && req.path === `${bp}`) ||
-    (bp && req.path === `${bp}/`) ||
-
 // Require authenticated session for all non-health routes except login endpoints we handle below
 app.use((req, res, next) => {
   if (req.path === '/healthz') return next();
@@ -116,15 +120,14 @@ app.use((req, res, next) => {
     (bp && req.path.startsWith(`${bp}/_next`)) ||
     (bp && req.path.startsWith(`${bp}/assets`)) ||
     (bp && req.path.startsWith(`${bp}/favicon`)) ||
-  (bp && req.path === `${bp}`) ||
-  (bp && req.path === `${bp}/`) ||
+    (bp && (req.path === `${bp}` || req.path === `${bp}/`)) ||
     req.path === '/_diag' ||
     req.path.startsWith('/_next') || req.path.startsWith('/assets') || req.path.startsWith('/favicon')
   ) {
     return next();
   }
   // Allow raw login paths to fall through to our login handler
-  const loginLike = req.path === '/login' || req.path === `${basePath}/login` || req.path.startsWith(`${basePath}${basePath}/login`);
+  const loginLike = req.path === '/login' || req.path === `${bp}/login` || req.path.startsWith(`${bp}${bp}/login`);
   if (loginLike) return next();
   if (req.session && req.session.user) return next();
   const portal = process.env.PORTAL_HOST || 'portal.getsparqd.com';
@@ -180,18 +183,17 @@ app.get('/whoami', (req, res) => {
 });
 
 // Proxy everything else to the SparqPlug app
-const target = process.env.APP_URL || 'http://app:4000';
 app.use(
   '/',
   createProxyMiddleware({
-    target,
+  target: upstream,
     changeOrigin: true,
     xfwd: true,
     ws: true,
     logLevel: 'warn',
     // Avoid double-prefixing when incoming path already has basePath
     pathRewrite: (path) => {
-      const bp = basePath || '';
+  const bp = basePath || '';
       // Normalize duplicate base paths just in case
       if (bp && path.startsWith(bp + bp)) {
         let fixed = path; while (fixed.startsWith(bp + bp)) fixed = fixed.slice(bp.length); path = fixed;
@@ -270,5 +272,5 @@ app.use(
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Gateway listening on ${PORT}, proxying to ${process.env.APP_URL || 'http://app:4000'}`);
+  console.log(`Gateway listening on ${PORT}, proxying to ${upstream}`);
 });

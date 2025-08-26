@@ -1,0 +1,24 @@
+# Render configuration for the Next.js app
+services:
+  - type: web
+    name: sparq-plug
+    env: node
+    plan: starter
+    buildCommand: npm ci --no-audit --no-fund && npm run build
+    startCommand: npm run start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_BASE_PATH
+        value: /app
+      # Uncomment and set your real keys
+      # - key: STRIPE_SECRET_KEY
+      #   sync: false
+      # - key: PUBLIC_URL
+      #   value: https://your-render-domain
+    healthCheckPath: /app/api/healthz
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: ALLOWALL

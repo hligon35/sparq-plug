@@ -1,34 +1,76 @@
-<<<<<<< HEAD
-# SparQ Social Media Management Platform
+# SparQ Plug — Deploy to Render or Your Own Server
 
-This project is a Hootsuite-like platform built with Next.js, TypeScript, Tailwind CSS, and App Router. It supports:
-- Facebook, Twitter(X), Instagram, TikTok, LinkedIn integrations
-- Multi-client management
-- Analytics dashboard
-- Admin and client dashboards
-- Post scheduling
+Next.js (App Router) app with TypeScript and Tailwind. This README covers only Render and self-host deployment.
 
-## Getting Started
+Key paths and files
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-2. Run the development server:
-   ```bash
-   npm run dev
-   ```
-3. Open [http://localhost:3000](http://localhost:3000) in your browser.
+- Base path: configurable via APP_BASE_PATH (default /app).
+- Health check: /api/healthz (respects APP_BASE_PATH).
+- Stripe checkout: POST /api/create-stripe-session (uses STRIPE_SECRET_KEY if set, otherwise mocked).
+- Artifacts: Dockerfile (self-host), render.yaml (Render deploy).
 
-## Next Steps
-- Implement social media integrations (API keys required)
-- Build dashboards and analytics
-- Add post scheduling logic
-- Set up authentication and multi-client support
+Environment variables
 
----
-For more details, see `.github/copilot-instructions.md`.
-=======
-# sparq-plug
-A social media management platform (Hootsuite-like) built with Next.js, TypeScript, Tailwind CSS, and App Router. Features: multi-client management, analytics, admin dashboard, client dashboard, post scheduling, and integrations for Facebook, Twitter(X), Instagram, TikTok, LinkedIn.
->>>>>>> 4e12dbed0403098b6473fc8ee4ee111adee0765f
+- APP_BASE_PATH: "/app" (default). Set to empty string "" to serve at root.
+- NODE_ENV: "production" in production.
+- PUBLIC_URL: Your public site URL (e.g., <https://example.com>). Used in Stripe redirects.
+- STRIPE_SECRET_KEY: Live or test secret key (optional for mocked flow).
+
+Local development
+
+1) npm install
+
+2) npm run dev
+
+3) App will run on <http://localhost:3000> (or next available). If APP_BASE_PATH=/app, your routes are under <http://localhost:3000/app>.
+
+Render deployment
+
+Prereqs: A Render account with GitHub repo connected.
+
+1) Push to main. Render will detect render.yaml.
+2) In Render, create a Web Service from this repo if not auto-created.
+3) Build command: npm ci --no-audit --no-fund && npm run build (from render.yaml)
+4) Start command: npm run start (from render.yaml)
+5) Environment variables:
+   - NODE_ENV=production
+   - APP_BASE_PATH=/app (or set to empty for root)
+   - PUBLIC_URL=<https://your-render-domain>
+   - STRIPE_SECRET_KEY=sk_live_xxx (optional until ready)
+6) Health check path: /app/api/healthz (or /api/healthz if APP_BASE_PATH is empty).
+
+Self-host (Docker)
+
+Build image and run the container.
+
+1) Build image:
+
+    - docker build -t sparq-plug .
+       - Optionally set build arg APP_BASE_PATH to bake it into the build: --build-arg APP_BASE_PATH="/app"
+
+2) Run container:
+
+    - docker run -p 3000:3000 \
+       -e NODE_ENV=production \
+       -e APP_BASE_PATH="/app" \
+       -e PUBLIC_URL="<https://your-domain>" \
+       -e STRIPE_SECRET_KEY="sk_live_xxx" \
+       --name sparq-plug sparq-plug
+
+3) Nginx/Load balancer: proxy pass to container:3000. Do not strip APP_BASE_PATH if you set one.
+
+4) Health check: GET <https://your-domain/app/api/healthz> (or /api/healthz at root).
+
+Auth note
+Current login is demo-only and sets a role cookie on the client. Replace with real auth (e.g., NextAuth) before production. Middleware enforces role-based access based on cookie/header.
+
+Stripe note
+With STRIPE_SECRET_KEY set, the checkout session is real. Without it, session creation returns a mocked success URL so the UI flow can be tested.
+
+Common adjustments
+
+- To use root URLs, set APP_BASE_PATH="" in both build/runtime environments and update Render healthCheckPath accordingly.
+- For error pages, add app/error.tsx and app/not-found.tsx if desired.
+
+License
+Proprietary/All rights reserved (update as needed).

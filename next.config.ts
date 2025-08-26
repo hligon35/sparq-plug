@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
+const basePath = process.env.APP_BASE_PATH || "/app";
+
 const nextConfig: NextConfig = {
-  basePath: "/app",
+  basePath,
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
 };

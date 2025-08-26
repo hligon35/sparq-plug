@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "next start"
+  "start": "next start",
+  "lint": "next lint"
   },
   "dependencies": {
     "@types/axios": "^0.9.36",
@@ -27,5 +28,9 @@
     "eslint-config-next": "15.4.5",
     "tailwindcss": "^4.1.11",
     "typescript": "^5.9.2"
+  }
+  ,
+  "engines": {
+    "node": ">=18.18.0"
   }
 }
