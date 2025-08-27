@@ -31,9 +31,11 @@ export default function Home() {
   const maxAge = 60 * 60 * 8; // 8 hours
   document.cookie = `role=${user.role}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
   document.cookie = `username=${encodeURIComponent(username)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
-        if (user.role === 'admin') router.push('/admin');
-        else if (user.role === 'manager') router.push('/manager');
-        else router.push('/client');
+  const bp = process.env.NEXT_PUBLIC_BASE_PATH || '';
+  const go = (p: string) => router.push(`${bp}${p}`);
+  if (user.role === 'admin') go('/admin');
+  else if (user.role === 'manager') go('/manager');
+  else go('/client');
       } else {
         setError('Invalid username or password. Please try again.');
         setIsLoading(false);

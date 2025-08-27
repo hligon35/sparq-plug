@@ -25,9 +25,11 @@ export default function LoginPage() {
       // 1-day lifetime, works under basePath
       document.cookie = `role=${user.role}; Path=/; Max-Age=86400; SameSite=Lax`;
       document.cookie = `username=${encodeURIComponent(username)}; Path=/; Max-Age=86400; SameSite=Lax`;
-      if (user.role === 'admin') router.push('/admin');
-      else if (user.role === 'manager') router.push('/manager');
-      else router.push('/client');
+  const bp = process.env.NEXT_PUBLIC_BASE_PATH || '';
+  const go = (p: string) => router.push(`${bp}${p}`);
+  if (user.role === 'admin') go('/admin');
+  else if (user.role === 'manager') go('/manager');
+  else go('/client');
     } else {
       setError('Invalid credentials');
     }
