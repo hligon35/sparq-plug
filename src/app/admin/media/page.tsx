@@ -1,13 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState, DragEvent, useEffect } from 'react';
 import AdminTopNav from '@/components/AdminTopNav';
 import AdminHeader from '@/components/AdminHeader';
+import { withBasePath } from '@/lib/basePath';
 
 export default function MediaLibrary() {
   const [selectedTab, setSelectedTab] = useState('All');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [uploaded, setUploaded] = useState<Array<{ id: string; url: string; name: string; type: string }>>([]);
   
   // Map progress (0-100) to Tailwind width utility classes (in 10% steps)
   const progressWidthClass = (p: number) => {
@@ -35,19 +38,64 @@ export default function MediaLibrary() {
 
   const tabs = ['All', 'Images', 'Videos', 'GIFs', 'Documents'];
 
-  const handleFileUpload = () => {
+  const uploadFiles = async (files: File[]) => {
+    if (!files.length) return;
     setIsUploading(true);
-    setUploadProgress(0);
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsUploading(false);
-          return 0;
-        }
-        return prev + 10;
-      });
+    setUploadProgress(5);
+    const form = new FormData();
+    for (const f of files) form.append('files', f);
+    // Simulated progress while uploading
+    let prog = 5;
+    const tick = setInterval(() => {
+      prog = Math.min(prog + 7, 90);
+      setUploadProgress(prog);
     }, 200);
+    try {
+      const res = await fetch(withBasePath('/api/upload'), {
+        method: 'POST',
+        body: form,
+      });
+      clearInterval(tick);
+      if (!res.ok) throw new Error(await res.text());
+      setUploadProgress(100);
+      // In a real app, merge returned files into state
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadProgress(0);
+      }, 400);
+  // Refresh list
+  await refreshList();
+    } catch (e) {
+      clearInterval(tick);
+      setIsUploading(false);
+      setUploadProgress(0);
+      console.error('Upload failed', e);
+      alert('Upload failed');
+    }
+  };
+
+  const refreshList = async () => {
+    try {
+      const res = await fetch(withBasePath('/api/media/list'));
+      if (!res.ok) return;
+      const data = await res.json();
+      setUploaded((data.items || []).map((i: any) => ({ id: i.id, url: i.url, name: i.name, type: i.type })));
+    } catch {}
+  };
+
+  useEffect(() => {
+    refreshList();
+  }, []);
+
+  const onDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (isUploading) return;
+    const files = Array.from(e.dataTransfer.files || []);
+    uploadFiles(files);
+  };
+
+  const onBrowseClick = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
   };
 
   // Top nav handles routing; sidebar removed
@@ -70,7 +118,7 @@ export default function MediaLibrary() {
                 <h2 className="text-2xl font-bold text-gray-800">Upload Media</h2>
               </div>
               <button 
-                onClick={handleFileUpload}
+                onClick={onBrowseClick}
                 disabled={isUploading}
                 className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200"
               >
@@ -78,22 +126,34 @@ export default function MediaLibrary() {
               </button>
             </div>
             
-            <div className="border-2 border-dashed border-purple-300 rounded-xl p-12 text-center">
-              <div className="text-6xl mb-4">📁</div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">Drag & Drop Files Here</h3>
-              <p className="text-gray-500 mb-4">or click to browse your computer</p>
-              <p className="text-sm text-gray-400">Supports: JPG, PNG, GIF, MP4, MOV (Max 50MB)</p>
-              
-              {isUploading && (
-                <div className="mt-6">
-                  <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
-                    <div 
-                      className={`bg-purple-600 h-2 transition-all duration-300 ease-out ${progressWidthClass(uploadProgress)}`}
-                    ></div>
+            <div onDragOver={(e) => e.preventDefault()} onDrop={onDrop} className="">
+              <input
+                id="admin-media-file-input"
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={(e) => uploadFiles(Array.from(e.target.files || []))}
+                className="hidden"
+                accept="image/*,video/*,.gif,.jpg,.jpeg,.png,.mp4,.mov"
+                aria-label="Choose files to upload"
+                title="Choose files to upload"
+              />
+              <label htmlFor="admin-media-file-input" className="border-2 border-dashed border-purple-300 rounded-xl p-12 text-center cursor-pointer block">
+                <div className="text-6xl mb-4">📁</div>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">Drag & Drop Files Here</h3>
+                <p className="text-gray-500 mb-4">or click to browse your computer</p>
+                <p className="text-sm text-gray-400">Supports: JPG, PNG, GIF, MP4, MOV (Max 50MB)</p>
+                {isUploading && (
+                  <div className="mt-6">
+                    <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
+                      <div 
+                        className={`bg-purple-600 h-2 transition-all duration-300 ease-out ${progressWidthClass(uploadProgress)}`}
+                      ></div>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-2">{uploadProgress}% uploaded</p>
                   </div>
-                  <p className="text-sm text-gray-600 mt-2">{uploadProgress}% uploaded</p>
-                </div>
-              )}
+                )}
+              </label>
             </div>
           </div>
 
@@ -140,6 +200,28 @@ export default function MediaLibrary() {
               </div>
             ))}
           </div>
+
+          {/* Recently Uploaded (from server) */}
+          {uploaded.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">Recently Uploaded</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {uploaded.map((f) => (
+                  <a key={f.id} href={withBasePath(f.url)} target="_blank" rel="noreferrer" className="block bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="aspect-square bg-gray-100 flex items-center justify-center">
+                      {f.type === 'image' ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={withBasePath(f.url)} alt={f.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-3xl">📄</span>
+                      )}
+                    </div>
+                    <div className="p-2 text-xs truncate" title={f.name}>{f.name}</div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Storage Usage */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

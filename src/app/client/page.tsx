@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Notifications from '@/components/Notifications';
 
 export default function ClientDashboard() {
   const [selectedPlatform, setSelectedPlatform] = useState('all');
@@ -295,6 +296,8 @@ export default function ClientDashboard() {
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Select time range"
+                title="Time range"
               >
                 <option value="7d">Last 7 days</option>
                 <option value="30d">Last 30 days</option>
@@ -370,6 +373,9 @@ export default function ClientDashboard() {
                 <p className="text-green-600 text-sm mt-2">+5% from last period</p>
               </div>
             </div>
+
+            {/* Notifications */}
+            <Notifications />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Platform Performance */}

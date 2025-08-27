@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import AdminTopNav from '@/components/AdminTopNav';
 import AdminHeader from '@/components/AdminHeader';
+import PlatformHealth from '@/components/PlatformHealth';
 
 export default function PlatformIntegrations() {
   const [platforms, setPlatforms] = useState([
@@ -115,22 +116,8 @@ export default function PlatformIntegrations() {
                 </div>
               </div>
             </div>
-
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-6 h-6 bg-green-500 rounded-full"></div>
-                <h3 className="text-xl font-bold text-gray-800">Platform Health</h3>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-8 border-2 border-dashed border-gray-300">
-                <div className="text-center text-gray-500">
-                  <svg className="w-12 h-12 mx-auto mb-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                  </svg>
-                  <p className="text-sm font-medium">Health Score Chart</p>
-                  <p className="text-xs">Platform connection reliability over time</p>
-                </div>
-              </div>
-            </div>
+            {/* Live platform health widget */}
+            <PlatformHealth />
           </div>
 
           {/* API Usage & Limits */}

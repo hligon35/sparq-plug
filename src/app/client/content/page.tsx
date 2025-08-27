@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import TrendingTopics from '@/components/TrendingTopics';
+import ABTesting from '@/components/ABTesting';
 
 export default function ContentPostsPage() {
   const router = useRouter();
@@ -388,7 +390,7 @@ export default function ContentPostsPage() {
                       </div>
                       
                       <div className="ml-4">
-                        <button className="text-gray-400 hover:text-gray-600 p-2">
+                        <button className="text-gray-400 hover:text-gray-600 p-2" aria-label="Post options" title="Post options">
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                           </svg>
@@ -410,9 +412,11 @@ export default function ContentPostsPage() {
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-800">Create New Post</h2>
-                <button
+                  <button
                   onClick={() => setShowCreateModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    aria-label="Close create post modal"
+                    title="Close"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -463,6 +467,12 @@ export default function ContentPostsPage() {
           </div>
         </div>
       )}
+      
+      {/* Content Intelligence Widgets */}
+      <div className="p-8 space-y-6">
+        <TrendingTopics />
+        <ABTesting />
+      </div>
     </div>
   );
 }

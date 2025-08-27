@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdminTopNav from '@/components/AdminTopNav';
 import AdminHeader from '@/components/AdminHeader';
+import PlatformHealth from '@/components/PlatformHealth';
+import Notifications from '@/components/Notifications';
 
 export default function AdminDashboard() {
   const [showSecurityModal, setShowSecurityModal] = useState(false);
@@ -162,6 +164,16 @@ export default function AdminDashboard() {
                   <span className="text-sm text-gray-500 ml-auto">{platform.status}</span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Live Platform Health + Notifications */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="lg:col-span-2">
+              <PlatformHealth />
+            </div>
+            <div>
+              <Notifications />
             </div>
           </div>
 

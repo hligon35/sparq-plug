@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import AdminTopNav from '@/components/AdminTopNav';
 import AdminHeader from '@/components/AdminHeader';
+import AudienceInsights from '@/components/AudienceInsights';
+import CustomReports from '@/components/CustomReports';
 
 export default function Analytics() {
   const [timeframe, setTimeframe] = useState('7d');
@@ -152,6 +154,12 @@ export default function Analytics() {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          {/* Insights and Reports widgets */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+            <AudienceInsights />
+            <CustomReports />
           </div>
         </div>
       </div>

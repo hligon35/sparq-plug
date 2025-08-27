@@ -12,6 +12,10 @@ services:
         value: production
       - key: APP_BASE_PATH
         value: /app
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      - key: DATA_DIR
+        value: /var/data/app-data
       # Uncomment and set your real keys
       # - key: STRIPE_SECRET_KEY
       #   sync: false
@@ -22,3 +26,7 @@ services:
       - path: /*
         name: X-Frame-Options
         value: ALLOWALL
+    disks:
+      - name: app-data
+        mountPath: /var/data
+        sizeGB: 10

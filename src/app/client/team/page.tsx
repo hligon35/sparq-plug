@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import TeamCollaboration from '@/components/TeamCollaboration';
 
 export default function TeamPage() {
   const router = useRouter();
@@ -286,6 +287,8 @@ export default function TeamPage() {
             <button
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
               onClick={() => setShowInviteModal(false)}
+              aria-label="Close invite modal"
+              title="Close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -303,7 +306,10 @@ export default function TeamPage() {
               </div>
               <div>
                 <label className="block text-gray-700 font-medium mb-2">Role</label>
-                <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select 
+                  aria-label="Select role"
+                  title="Role"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                   <option>Content Manager</option>
                   <option>Social Media Specialist</option>
                   <option>Graphic Designer</option>
@@ -337,6 +343,8 @@ export default function TeamPage() {
             <button
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
               onClick={() => setSelectedMember(null)}
+              aria-label="Close edit member modal"
+              title="Close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -346,7 +354,10 @@ export default function TeamPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-700 font-medium mb-2">Role</label>
-                <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select 
+                  aria-label="Select role"
+                  title="Role"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                   <option>Content Manager</option>
                   <option>Social Media Specialist</option>
                   <option>Graphic Designer</option>
@@ -386,6 +397,11 @@ export default function TeamPage() {
           </div>
         </div>
       )}
+      
+      {/* Collaboration Widget */}
+      <div className="p-8">
+        <TeamCollaboration />
+      </div>
     </div>
   );
 }

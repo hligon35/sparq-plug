@@ -1,15 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { DragEvent, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { withBasePath } from '@/lib/basePath';
+
+type MediaImage = { id: number; name: string; type: 'image'; size: string; uploadDate: string; tags: string[]; url: string };
+type MediaVideo = { id: number; name: string; type: 'video'; size: string; uploadDate: string; tags: string[]; duration: string };
+type MediaDoc = { id: number; name: string; type: 'document'; size: string; uploadDate: string; tags: string[] };
+type MediaFile = MediaImage | MediaVideo | MediaDoc;
 
 export default function MediaLibraryPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('images');
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<number[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const mediaFiles = {
+  const mediaFiles: Record<'images' | 'videos' | 'documents', MediaFile[]> = {
     images: [
       { id: 1, name: 'product-launch.jpg', type: 'image', size: '2.3 MB', uploadDate: '2024-08-01', tags: ['product', 'launch'], url: '/api/placeholder/300/200' },
       { id: 2, name: 'team-photo.jpg', type: 'image', size: '1.8 MB', uploadDate: '2024-08-02', tags: ['team', 'office'], url: '/api/placeholder/300/200' },
@@ -39,9 +48,44 @@ export default function MediaLibraryPage() {
     );
   };
 
-  const handleUpload = () => {
-    alert('File upload functionality would be implemented here with cloud storage integration.');
-    setShowUploadModal(false);
+  const uploadFiles = async (files: File[]) => {
+    if (!files.length) return;
+    setIsUploading(true);
+    setUploadProgress(5);
+    const form = new FormData();
+    for (const f of files) form.append('files', f);
+    let prog = 5;
+    const tick = setInterval(() => {
+      prog = Math.min(prog + 7, 90);
+      setUploadProgress(prog);
+    }, 200);
+    try {
+      const res = await fetch(withBasePath('/api/upload'), {
+        method: 'POST',
+        body: form,
+      });
+      clearInterval(tick);
+      if (!res.ok) throw new Error(await res.text());
+      setUploadProgress(100);
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadProgress(0);
+        setShowUploadModal(false);
+      }, 400);
+    } catch (e) {
+      clearInterval(tick);
+      setIsUploading(false);
+      setUploadProgress(0);
+      console.error('Upload failed', e);
+      alert('Upload failed');
+    }
+  };
+
+  const onDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (isUploading) return;
+    const files = Array.from(e.dataTransfer.files || []);
+    uploadFiles(files);
   };
 
   const handleDelete = () => {
@@ -150,7 +194,7 @@ export default function MediaLibraryPage() {
                 <span className="font-medium">2.1 GB</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-500 h-2 rounded-full" style={{width: '42%'}}></div>
+                <div className="bg-blue-500 h-2 rounded-full w-[42%]"></div>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Total</span>
@@ -200,7 +244,7 @@ export default function MediaLibraryPage() {
 
           {/* File Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {(mediaFiles as any)[activeTab].map((file: any) => (
+            {mediaFiles[activeTab as 'images' | 'videos' | 'documents'].map((file: MediaFile) => (
               <div 
                 key={file.id} 
                 className={`bg-white border-2 rounded-xl p-4 cursor-pointer transition-all hover:shadow-md ${
@@ -215,6 +259,8 @@ export default function MediaLibraryPage() {
                     checked={selectedFiles.includes(file.id)}
                     onChange={() => handleFileSelect(file.id)}
                     className="w-4 h-4 text-blue-600 rounded"
+                    aria-label={`Select ${file.name}`}
+                    title={`Select ${file.name}`}
                   />
                 </div>
                 
@@ -228,11 +274,11 @@ export default function MediaLibraryPage() {
                 <div className="mt-2 space-y-1 text-sm text-gray-500">
                   <p>Size: {file.size}</p>
                   <p>Uploaded: {file.uploadDate}</p>
-                  {file.duration && <p>Duration: {file.duration}</p>}
+                  {'duration' in file && file.duration && <p>Duration: {file.duration}</p>}
                 </div>
                 
                 <div className="mt-3 flex flex-wrap gap-1">
-                  {file.tags.map((tag: string) => (
+      {file.tags.map((tag: string) => (
                     <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
                       {tag}
                     </span>
@@ -242,7 +288,7 @@ export default function MediaLibraryPage() {
             ))}
           </div>
 
-          {(mediaFiles as any)[activeTab].length === 0 && (
+    {mediaFiles[activeTab as 'images' | 'videos' | 'documents'].length === 0 && (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-gray-400 text-2xl">{getFileIcon(activeTab.slice(0, -1))}</span>
@@ -261,6 +307,8 @@ export default function MediaLibraryPage() {
             <button
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
               onClick={() => setShowUploadModal(false)}
+              aria-label="Close upload modal"
+              title="Close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -272,12 +320,34 @@ export default function MediaLibraryPage() {
                 <span className="text-gray-400 text-xl">📁</span>
               </div>
               <p className="text-gray-600 mb-4">Drag and drop files here, or click to browse</p>
-              <button
-                onClick={handleUpload}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg"
+              <div
+                className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={onDrop}
+                onClick={() => fileInputRef.current?.click()}
+                role="button"
+                aria-label="Drag and drop files here or click to select files"
               >
-                Choose Files
-              </button>
+                <span className="text-sm text-gray-500">Click to select files</span>
+              </div>
+              {isUploading && (
+                <div className="mt-4">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className={`bg-blue-500 h-2 rounded-full ${uploadProgress >= 100 ? 'w-full' : uploadProgress >= 90 ? 'w-[90%]' : uploadProgress >= 80 ? 'w-[80%]' : uploadProgress >= 70 ? 'w-[70%]' : uploadProgress >= 60 ? 'w-[60%]' : uploadProgress >= 50 ? 'w-1/2' : uploadProgress >= 40 ? 'w-[40%]' : uploadProgress >= 30 ? 'w-[30%]' : uploadProgress >= 20 ? 'w-1/5' : uploadProgress >= 10 ? 'w-[10%]' : 'w-0'}`} />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">{uploadProgress}%</p>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={(e) => uploadFiles(Array.from(e.target.files || []))}
+                className="hidden"
+                accept="image/*,video/*,.gif,.jpg,.jpeg,.png,.mp4,.mov,.pdf,.doc,.docx,.xls,.xlsx"
+                aria-label="File input"
+                title="Choose files to upload"
+              />
             </div>
           </div>
         </div>

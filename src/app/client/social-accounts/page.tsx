@@ -1,59 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { withBasePath } from '@/lib/basePath';
+import type { SocialAccount } from '@/app/api/social-accounts/route';
 
 export default function SocialAccountsPage() {
   const router = useRouter();
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState('');
 
-  const connectedAccounts = [
-    {
-      id: 1,
-      platform: 'Facebook',
-      accountName: 'TechCorp Official',
-      handle: '@techcorp',
-      followers: 12500,
-      status: 'connected',
-      lastSync: '2 minutes ago',
-      posts: 145,
-      engagement: 8.5
-    },
-    {
-      id: 2,
-      platform: 'Instagram',
-      accountName: 'TechCorp',
-      handle: '@techcorp',
-      followers: 8900,
-      status: 'connected',
-      lastSync: '5 minutes ago',
-      posts: 89,
-      engagement: 12.3
-    },
-    {
-      id: 3,
-      platform: 'LinkedIn',
-      accountName: 'TechCorp Solutions',
-      handle: 'techcorp-solutions',
-      followers: 5600,
-      status: 'connected',
-      lastSync: '1 hour ago',
-      posts: 67,
-      engagement: 6.8
-    },
-    {
-      id: 4,
-      platform: 'Twitter/X',
-      accountName: 'TechCorp',
-      handle: '@techcorp',
-      followers: 7200,
-      status: 'connected',
-      lastSync: '30 minutes ago',
-      posts: 234,
-      engagement: 4.2
+  const [connectedAccounts, setConnectedAccounts] = useState<SocialAccount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  async function loadAccounts() {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch(withBasePath('/api/social-accounts'), { cache: 'no-store' });
+      if (!res.ok) throw new Error('Failed to load accounts');
+      const data = await res.json();
+      setConnectedAccounts(Array.isArray(data.accounts) ? data.accounts : []);
+    } catch (e: any) {
+      setError(e.message || 'Failed to load accounts');
+    } finally {
+      setLoading(false);
     }
-  ];
+  }
+  useEffect(() => { loadAccounts(); }, []);
 
   const availablePlatforms = [
     {
@@ -140,9 +115,13 @@ export default function SocialAccountsPage() {
     setShowConnectModal(true);
   };
 
-  const handleDisconnect = (accountId: number) => {
-    if (confirm('Are you sure you want to disconnect this account?')) {
-      alert('Account disconnected successfully!');
+  const handleDisconnect = async (accountId: string) => {
+    if (!confirm('Disconnect this account?')) return;
+    const res = await fetch(withBasePath(`/api/social-accounts?id=${encodeURIComponent(accountId)}`), { method: 'DELETE' });
+    if (res.ok) {
+      await loadAccounts();
+    } else {
+      alert('Failed to disconnect');
     }
   };
 
@@ -361,6 +340,8 @@ export default function SocialAccountsPage() {
               <h3 className="text-xl font-semibold text-gray-900">Connected Accounts</h3>
             </div>
             <div className="p-6">
+              {loading && <div className="text-gray-600">Loading accounts…</div>}
+              {error && <div className="text-red-600">{error}</div>}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {connectedAccounts.map((account) => (
                   <div key={account.id} className="bg-gray-50 rounded-xl p-6 border border-gray-200">
@@ -380,6 +361,8 @@ export default function SocialAccountsPage() {
                       <button 
                         onClick={() => handleDisconnect(account.id)}
                         className="text-gray-400 hover:text-red-600 transition-colors"
+                        aria-label={`Disconnect ${account.accountName}`}
+                        title="Disconnect account"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
@@ -389,7 +372,7 @@ export default function SocialAccountsPage() {
                     
                     <div className="grid grid-cols-3 gap-4 mb-4">
                       <div className="text-center">
-                        <p className="text-lg font-bold text-gray-900">{account.followers.toLocaleString()}</p>
+                        <p className="text-lg font-bold text-gray-900">{account.followers?.toLocaleString?.() || account.followers}</p>
                         <p className="text-xs text-gray-600">Followers</p>
                       </div>
                       <div className="text-center">
@@ -459,6 +442,8 @@ export default function SocialAccountsPage() {
                 <button
                   onClick={() => setShowConnectModal(false)}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Close connect platform modal"
+                  title="Close"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -479,9 +464,26 @@ export default function SocialAccountsPage() {
                   </p>
                   <div className="space-y-3">
                     <button 
-                      onClick={() => {
-                        alert(`Connecting to ${selectedPlatform}...`);
-                        setShowConnectModal(false);
+                      onClick={async () => {
+                        if (!selectedPlatform) return;
+                        // For demo: create a placeholder connected account
+                        const payload = {
+                          platform: selectedPlatform,
+                          accountName: `${selectedPlatform} Account`,
+                          handle: '@myhandle',
+                        };
+                        const res = await fetch(withBasePath('/api/social-accounts'), {
+                          method: 'POST',
+                          headers: { 'content-type': 'application/json' },
+                          body: JSON.stringify(payload),
+                        });
+                        if (res.ok) {
+                          await loadAccounts();
+                          setShowConnectModal(false);
+                          setSelectedPlatform('');
+                        } else {
+                          alert('Failed to connect');
+                        }
                       }}
                       className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
                     >

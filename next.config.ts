@@ -6,6 +6,9 @@ const assetPrefix = basePath || "";
 const nextConfig: NextConfig = {
   basePath,
   assetPrefix,
+  env: {
+    NEXT_PUBLIC_BASE_PATH: basePath,
+  },
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
 };

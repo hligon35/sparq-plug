@@ -1,16 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AdminTopNav from '@/components/AdminTopNav';
 import AdminHeader from '@/components/AdminHeader';
 
 export default function ClientsPage() {
-  const [clients, setClients] = useState([
+  type Client = {
+    id: number;
+    name: string;
+    accounts: number;
+    lastActivity: string;
+    status: 'Active' | 'Inactive';
+    revenue: string;
+  };
+
+  const [clients, setClients] = useState<Client[]>([
     { id: 1, name: 'TechCorp', accounts: 8, lastActivity: '2 hours ago', status: 'Active', revenue: '$2,400' },
     { id: 2, name: 'FashionBrand', accounts: 12, lastActivity: '1 day ago', status: 'Active', revenue: '$3,200' },
     { id: 3, name: 'LocalRestaurant', accounts: 5, lastActivity: '3 hours ago', status: 'Active', revenue: '$1,800' },
     { id: 4, name: 'HealthClinic', accounts: 6, lastActivity: '5 hours ago', status: 'Inactive', revenue: '$2,100' }
   ]);
+
+  const [showClientDetails, setShowClientDetails] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   const [showNewClientForm, setShowNewClientForm] = useState(false);
   const [formData, setFormData] = useState<{
@@ -149,9 +161,25 @@ export default function ClientsPage() {
     alert('New client added successfully!');
   };
 
-  const handleViewClient = (clientName: string) => {
-    alert(`View ${clientName} details would open here`);
+  const handleViewClient = (client: Client) => {
+    setSelectedClient(client);
+    setShowClientDetails(true);
   };
+
+  const handleCloseClientDetails = () => {
+    setShowClientDetails(false);
+    setSelectedClient(null);
+  };
+
+  // Allow closing the details modal with Escape key
+  useEffect(() => {
+    if (!showClientDetails) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleCloseClientDetails();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showClientDetails]);
 
   // Top nav handles routing via links; removed sidebar
 
@@ -268,7 +296,7 @@ export default function ClientsPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">{client.revenue}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button 
-                          onClick={() => handleViewClient(client.name)}
+                          onClick={() => handleViewClient(client)}
                           className="text-blue-600 hover:text-blue-800 font-medium"
                         >
                           View Details
@@ -589,6 +617,87 @@ export default function ClientsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Client Details Modal */}
+      {showClientDetails && selectedClient && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={handleCloseClientDetails}
+        >
+          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 font-semibold text-sm">
+                    {selectedClient.name.substring(0, 2).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">{selectedClient.name}</h2>
+                  <p className="text-sm text-gray-500">Client Details</p>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseClientDetails}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Close client details"
+                title="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500">Social Accounts</p>
+                  <p className="text-lg font-semibold text-gray-900">{selectedClient.accounts}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500">Last Activity</p>
+                  <p className="text-lg font-semibold text-gray-900">{selectedClient.lastActivity}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500">Status</p>
+                  <p>
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      selectedClient.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {selectedClient.status}
+                    </span>
+                  </p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500">Monthly Revenue</p>
+                  <p className="text-lg font-semibold text-gray-900">{selectedClient.revenue}</p>
+                </div>
+              </div>
+
+              <div className="mt-2">
+                <h3 className="text-sm font-semibold text-gray-800 mb-2">Quick Actions</h3>
+                <div className="flex flex-wrap gap-3">
+                  <button className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">View Analytics</button>
+                  <button className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Manage Accounts</button>
+                  <button className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Open Inbox</button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 rounded-b-2xl">
+              <button
+                onClick={handleCloseClientDetails}
+                className="px-5 py-2.5 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
