@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# server_setup: Install Nginx and Docker, deploy the app, and proxy sparqplug.getsparqd.com -> local app
+# Usage (Ubuntu/Debian):
+#   curl -fsSL https://raw.githubusercontent.com/hligon35/sparq-plug/main/server_setup -o server_setup
+#   sudo DOMAIN=sparqplug.getsparqd.com bash server_setup
+#
+# Env overrides:
+#   DOMAIN=sparqplug.getsparqd.com APP_DIR=/srv/sparqplug/sparq-plug REPO_URL=https://github.com/hligon35/sparq-plug.git
+# Optional TLS + Auto-update:
+#   ENABLE_TLS=true CERTBOT_EMAIL=admin@example.com
+#   AUTO_UPDATE=true UPDATE_INTERVAL=6h GIT_BRANCH=main
+
+DOMAIN="${DOMAIN:-sparqplug.getsparqd.com}"
+APP_ROOT="${APP_DIR:-/srv/sparqplug/sparq-plug}"
+REPO_URL="${REPO_URL:-https://github.com/hligon35/sparq-plug.git}"
+NGINX_SITE="/etc/nginx/sites-available/sparqplug.conf"
+NGINX_LINK="/etc/nginx/sites-enabled/sparqplug.conf"
+ENABLE_TLS="${ENABLE_TLS:-false}"
+CERTBOT_EMAIL="${CERTBOT_EMAIL:-}"
+AUTO_UPDATE="${AUTO_UPDATE:-true}"
+UPDATE_INTERVAL="${UPDATE_INTERVAL:-6h}"
+GIT_BRANCH="${GIT_BRANCH:-main}"
+
+if [[ $EUID -ne 0 ]]; then
+  echo "Please run as root (sudo)." >&2
+  exit 1
+fi
+
+echo "[1/10] Detecting OS..."
+if [[ -f /etc/debian_version ]]; then
+  PKG=apt
+else
+  echo "This script currently supports Debian/Ubuntu only." >&2
+  exit 1
+fi
+
+echo "[2/10] Installing prerequisites (nginx, git, curl)..."
+apt-get update -y
+DEBIAN_FRONTEND=noninteractive apt-get install -y nginx git curl ca-certificates gnupg lsb-release
+
+echo "[3/10] Installing Docker (if missing)..."
+if ! command -v docker >/dev/null 2>&1; then
+  install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  chmod a+r /etc/apt/keyrings/docker.gpg
+  . /etc/os-release
+  echo \
+"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+$(. /etc/os-release && echo $VERSION_CODENAME) stable" | tee /etc/apt/sources.list.d/docker.list >/dev/null || true
+  apt-get update -y
+  DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  systemctl enable --now docker
+else
+  echo "Docker is already installed."
+fi
+
+echo "[4/10] Ensure app directory exists at ${APP_ROOT} ..."
+mkdir -p "${APP_ROOT}"
+if [[ ! -d "${APP_ROOT}/.git" ]]; then
+  echo "Cloning repo ${REPO_URL} ..."
+  git clone "${REPO_URL}" "${APP_ROOT}"
+else
+  echo "Repo exists; pulling latest from ${GIT_BRANCH}..."
+  git -C "${APP_ROOT}" fetch --all --prune
+  git -C "${APP_ROOT}" reset --hard "origin/${GIT_BRANCH}"
+fi
+
+echo "[5/10] Building and starting app with docker compose..."
+cd "${APP_ROOT}"
+docker compose down || true
+docker compose up -d --build
+
+echo "[6/10] Configuring Nginx reverse proxy for ${DOMAIN} ..."
+cat > "${NGINX_SITE}" <<CONF
+map $http_upgrade $connection_upgrade { default upgrade; '' close; }
+
+server {
+    listen 80;
+    server_name ${DOMAIN};
+
+    # Forward real IPs from Cloudflare/Proxy (optional)
+    set_real_ip_from 0.0.0.0/0;
+    real_ip_header X-Forwarded-For;
+
+    # Proxy to app on 3000
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    # Cache static Next assets a bit longer
+    location ~* ^/_next/static/ { expires 7d; add_header Cache-Control "public, max-age=604800"; }
+    location ~* \.(png|jpg|jpeg|gif|svg|ico|css|js|woff2?)$ { expires 30d; add_header Cache-Control "public, max-age=2592000"; }
+}
+CONF
+
+ln -sf "${NGINX_SITE}" "${NGINX_LINK}"
+nginx -t
+systemctl reload nginx
+
+echo "[7/10] UFW (optional) opening ports 80/443 if ufw is present..."
+if command -v ufw >/dev/null 2>&1; then
+  ufw allow 80/tcp || true
+  ufw allow 443/tcp || true
+fi
+
+if [[ "${ENABLE_TLS}" == "true" ]]; then
+  echo "[8/10] Enabling TLS via Let's Encrypt (certbot) for ${DOMAIN} ..."
+  if [[ -z "${CERTBOT_EMAIL}" ]]; then
+    echo "  CERTBOT_EMAIL not set; cannot enable TLS automatically." >&2
+    exit 1
+  fi
+  DEBIAN_FRONTEND=noninteractive apt-get install -y certbot python3-certbot-nginx
+  # Obtain and install cert; also enable redirect to HTTPS
+  certbot --nginx -d "${DOMAIN}" --non-interactive --agree-tos -m "${CERTBOT_EMAIL}" --redirect || {
+    echo "Certbot failed; continuing without TLS." >&2
+  }
+  # Optionally add HSTS
+  if grep -q "server_name ${DOMAIN}" "${NGINX_SITE}"; then
+    sed -i '/server_name ${DOMAIN}/,/}/ s|^\(\s*server_name.*\)$|\1\n\n    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;|' "${NGINX_SITE}" || true
+    nginx -t && systemctl reload nginx || true
+  fi
+else
+  echo "[8/10] Skipping TLS (ENABLE_TLS=false). You can enable later by running certbot." 
+fi
+
+echo "[9/10] Configuring auto-update (git pull + docker compose up) ..."
+UPDATE_SCRIPT="/usr/local/bin/sparqplug-update.sh"
+cat > "${UPDATE_SCRIPT}" <<'UPD'
+#!/usr/bin/env bash
+set -euo pipefail
+APP_ROOT_PLACEHOLDER="__APP_ROOT__"
+GIT_BRANCH_PLACEHOLDER="__GIT_BRANCH__"
+cd "${APP_ROOT_PLACEHOLDER}"
+echo "[update] Fetching latest ${GIT_BRANCH_PLACEHOLDER}..."
+git fetch --all --prune
+git reset --hard "origin/${GIT_BRANCH_PLACEHOLDER}"
+echo "[update] Rebuilding and restarting containers..."
+docker compose pull || true
+docker compose up -d --build
+echo "[update] Done."
+UPD
+chmod +x "${UPDATE_SCRIPT}"
+sed -i "s|__APP_ROOT__|${APP_ROOT}|g" "${UPDATE_SCRIPT}"
+sed -i "s|__GIT_BRANCH__|${GIT_BRANCH}|g" "${UPDATE_SCRIPT}"
+
+SERVICE_FILE="/etc/systemd/system/sparqplug-update.service"
+TIMER_FILE="/etc/systemd/system/sparqplug-update.timer"
+cat > "${SERVICE_FILE}" <<SVC
+[Unit]
+Description=SparQ Plug auto update (git pull and docker compose up)
+Wants=docker.service
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+ExecStart=${UPDATE_SCRIPT}
+User=root
+Group=root
+SVC
+
+cat > "${TIMER_FILE}" <<TMR
+[Unit]
+Description=Run SparQ Plug auto update every ${UPDATE_INTERVAL}
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=${UPDATE_INTERVAL}
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+TMR
+
+systemctl daemon-reload
+if [[ "${AUTO_UPDATE}" == "true" ]]; then
+  systemctl enable --now sparqplug-update.timer
+  echo "  Auto-update enabled. Interval: ${UPDATE_INTERVAL}"
+else
+  systemctl disable --now sparqplug-update.timer 2>/dev/null || true
+  echo "  Auto-update disabled (AUTO_UPDATE=false). Trigger manually: systemctl start sparqplug-update.service"
+fi
+
+echo "[10/10] Final checks"
+echo " - App containers:"
+docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | sed '1,1!d;1q' >/dev/null || true
+docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+echo " - Nginx sites-enabled:"
+ls -l "/etc/nginx/sites-enabled/" | sed 's/^/   /'
+
+echo
+echo "Done!"
+echo "Next steps:"
+echo "  1) Ensure DNS for ${DOMAIN} points to this server or Cloudflare Tunnel routes to http://localhost:80."
+echo "  2) If using Cloudflare Tunnel, set ingress service for ${DOMAIN} to http://localhost:80 in /etc/cloudflared/config.yml and restart cloudflared."
+echo "  3) Visit: http://${DOMAIN}/ and /api/healthz"
+if [[ "${ENABLE_TLS}" == "true" ]]; then
+  echo "  4) HTTPS should be active: https://${DOMAIN}/ (HSTS enabled)."
+fi

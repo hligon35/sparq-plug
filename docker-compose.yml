@@ -1,4 +1,5 @@
 version: "3.9"
+
 services:
   web:
     build:
@@ -8,16 +9,17 @@ services:
         # Root deployment on sparqplug.getsparqd.com
         APP_BASE_PATH: ""
     environment:
-  - NODE_ENV=production
-  - APP_BASE_PATH=
-  - NEXT_PUBLIC_BASE_PATH=
-  - PUBLIC_URL=https://sparqplug.getsparqd.com
-  - UPLOAD_DIR=/data/uploads
-  - DATA_DIR=/data/app-data
+      NODE_ENV: "production"
+      APP_BASE_PATH: ""
+      NEXT_PUBLIC_BASE_PATH: ""
+      PUBLIC_URL: "https://sparqplug.getsparqd.com"
+      UPLOAD_DIR: "/data/uploads"
+      DATA_DIR: "/data/app-data"
     ports:
       - "3000:3000"
     volumes:
       - data:/data
     restart: unless-stopped
+
 volumes:
   data: {}

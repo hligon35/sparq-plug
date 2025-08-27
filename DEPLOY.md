@@ -1,88 +1,101 @@
-# Deploying sparq-plug on 68.54.208.207 with Cloudflare Tunnel
+# Deploying sparq-plug on 68.54.208.207 (Docker + Nginx, optional Cloudflare Tunnel/TLS)
 
-This app is Next.js (App Router). It supports a basePath. Below uses `/app` so the site is served at `https://sparqplug.getsparqd.com/app`.
+This is a Next.js App Router app. It's configured to run at the root path on `https://sparqplug.getsparqd.com`.
 
-## 1) Build and run with Docker
+## 0) One-command bootstrap (recommended)
 
-- Install Docker on the server 68.54.208.207
-- Copy the repo to the server and run:
+On a fresh Ubuntu/Debian server:
 
-```powershell
-# Build and start (Windows PowerShell examples)
+1) As root (or with sudo), run the bootstrap script:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hligon35/sparq-plug/main/server_setup -o server_setup
+sudo DOMAIN=sparqplug.getsparqd.com bash server_setup
+```
+
+Options:
+
+- `ENABLE_TLS=true CERTBOT_EMAIL=you@example.com` → issues a Let's Encrypt cert and enables HTTPS
+- `AUTO_UPDATE=true UPDATE_INTERVAL=6h` → creates a systemd timer to pull and redeploy every 6 hours
+
+1) Point DNS for `sparqplug.getsparqd.com` to this server (A/AAAA) or use Cloudflare Tunnel (see below).
+
+Health: http(s)://sparqplug.getsparqd.com/api/healthz
+
+## 1) Manual build and run with Docker (if not using the script)
+
+- Install Docker and Docker Compose plugin
+- Copy the repo to the server, then from the repo directory:
+
+```bash
 docker compose up -d --build
+```
 
-# Check logs
+  Check logs:
+
+```bash
 docker compose logs -f web
 ```
 
-The app listens on port 3000 locally.
+The app listens on port 3000 locally. Nginx can reverse proxy 80/443 → 3000.
 
-## 2) Cloudflare Tunnel and DNS
+## 2) Cloudflare Tunnel and DNS (optional)
 
-DNS (from your provided records):
+DNS examples:
 
-- CNAME `sparqplug.getsparqd.com` -> `4a40b7d3-cbb6-4a46-adfd-2017990af6e8.cfargotunnel.com` (Proxied)
-- CNAME `portal.getsparqd.com` -> same tunnel hostname (Proxied)
-- Apex `getsparqd.com` -> GitHub Pages (CNAME to hligon35.github.io)
-- `www.getsparqd.com` CNAME -> getsparqd.com
+- CNAME `sparqplug.getsparqd.com` → `TUNNEL_ID.cfargotunnel.com` (Proxied)
+- Apex `getsparqd.com` → GitHub Pages (CNAME to hligon35.github.io)
+- `www.getsparqd.com` CNAME → getsparqd.com
 
-Run Cloudflare Tunnel on the server and route to the local service:
+Cloudflare Tunnel config (Linux):
 
-```powershell
-# One-time login
-cloudflared tunnel login
-# Create or use existing tunnel (ID shown matches your DNS)
-cloudflared tunnel create sparqplug
-# Route the hostname to the local port 3000
-cloudflared tunnel route dns sparqplug sparqplug.getsparqd.com
-# Start the tunnel
-cloudflared tunnel run sparqplug
-```
-
-Alternatively with a config file (Linux paths shown; adapt as needed):
+`/etc/cloudflared/config.yml`
 
 ```yaml
-# /etc/cloudflared/config.yml
-
-# Replace with your actual Tunnel ID
-"tunnel": "4a40b7d3-cbb6-4a46-adfd-2017990af6e8"
-"credentials-file": "/etc/cloudflared/4a40b7d3-cbb6-4a46-adfd-2017990af6e8.json"
+tunnel: "TUNNEL_ID"
+credentials-file: "/etc/cloudflared/TUNNEL_ID.json"
 
 ingress:
   - hostname: sparqplug.getsparqd.com
-    service: http://localhost:3000
-  - hostname: portal.getsparqd.com
-    service: http://localhost:3000
+    service: http://localhost:80
   - service: http_status:404
 ```
 
-Then run:
+Then:
 
 ```bash
 sudo systemctl enable cloudflared
 sudo systemctl start cloudflared
 ```
 
-## 3) App configuration for subpath
+## 3) App configuration and data persistence
 
-- We use a subpath `/app`:
-  - APP_BASE_PATH=/app
-  - NEXT_PUBLIC_BASE_PATH=/app
-- These are set in `docker-compose.yml`. If you want to serve at root, set them to empty string `""` and rebuild.
+- Base path is root. In `docker-compose.yml` APP_BASE_PATH and NEXT_PUBLIC_BASE_PATH are empty; do not change unless you serve under a subpath.
+- Uploads and JSON data are stored under `/data` in the container, mapped to a named Docker volume `data`.
 
-Health check endpoint for Cloudflare or monitors: `https://sparqplug.getsparqd.com/app/api/healthz`
+## 4) TLS with Let's Encrypt (optional)
 
-## 4) Data persistence
+- If you run `server_setup` with `ENABLE_TLS=true CERTBOT_EMAIL=you@example.com`, it will request and install a cert via Certbot (nginx plugin) and enable HTTPS with HSTS.
+- Renewals are automatic via Certbot's systemd timer.
 
-- Uploads and JSON data are stored under `/data` volume in the container.
-- Mapped by docker-compose to a named volume `data`.
+## 5) Auto-update every 6 hours (optional)
 
-## 5) Stripe (optional)
+- `server_setup` creates a systemd service and timer that:
+  - git fetch/reset to origin/main
+  - docker compose up -d --build
+- Controlled by env: `AUTO_UPDATE=true UPDATE_INTERVAL=6h GIT_BRANCH=main`
+- To trigger manually:
 
-Set `STRIPE_SECRET_KEY` and `PUBLIC_URL` as env vars if you enable billing. Public URL should include protocol and host, e.g. `https://sparqplug.getsparqd.com`.
+```bash
+sudo systemctl start sparqplug-update.service
+```
 
-## 6) Troubleshooting
+## 6) Stripe (optional)
 
-- If styling is missing, ensure the basePath matches env vars and the Cloudflare hostname path (see Section 3).
-- If login loops back to /login, check browser cookies and ensure the app is served from the same hostname (SameSite=Lax) and that the middleware is using the correct basePath (it is by default).
-- Check `/app/api/healthz` responds 200.
+Set `STRIPE_SECRET_KEY` and `PUBLIC_URL` as env vars if you enable billing. PUBLIC_URL should include protocol and host, e.g. `https://sparqplug.getsparqd.com`.
+
+## 7) Troubleshooting
+
+- If styling is missing, ensure basePath envs are empty (root) and you're accessing the correct hostname.
+- If login loops to /login, check cookies and that Nginx preserves Host; this setup does.
+- Check `/api/healthz` responds 200.
