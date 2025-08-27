@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
 import { DragEvent, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Header from '@/components/Header';
+import ClientTopNav from '@/components/ClientTopNav';
 import { withBasePath } from '@/lib/basePath';
 
 type MediaImage = { id: number; name: string; type: 'image'; size: string; uploadDate: string; tags: string[]; url: string };
@@ -10,7 +11,6 @@ type MediaDoc = { id: number; name: string; type: 'document'; size: string; uplo
 type MediaFile = MediaImage | MediaVideo | MediaDoc;
 
 export default function MediaLibraryPage() {
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState('images');
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<number[]>([]);
@@ -33,11 +33,6 @@ export default function MediaLibraryPage() {
       { id: 7, name: 'brand-guidelines.pdf', type: 'document', size: '1.2 MB', uploadDate: '2024-08-01', tags: ['brand', 'guidelines'] },
       { id: 8, name: 'content-calendar.xlsx', type: 'document', size: '0.8 MB', uploadDate: '2024-08-03', tags: ['calendar', 'planning'] }
     ]
-  };
-
-  const handleNavClick = (section: string) => {
-    if (section === 'media-library') return;
-  router.push(`/client/${section}`);
   };
 
   const handleFileSelect = (fileId: number) => {
@@ -116,114 +111,30 @@ export default function MediaLibraryPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      {/* Header */}
-      <div className="bg-[#1d74d0] text-white p-6 shadow">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-              <span className="text-white text-2xl">📁</span>
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Media Library</h1>
-              <p className="text-white/80 text-sm mt-1">Manage your visual content and assets</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowUploadModal(true)}
-              className="bg-green-500/20 hover:bg-green-500/30 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-            >
-              Upload Files
-            </button>
-            <button
-              onClick={() => router.push('/login')}
-              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
+      <Header title="Media Library" subtitle="Manage your visual content and assets" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <ClientTopNav />
       </div>
-
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="w-80 bg-gray-50 border-r border-gray-200 min-h-screen p-6">
-          <nav className="space-y-3">
-            <button 
-              onClick={() => handleNavClick('')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-blue-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Dashboard</span>
-              </div>
-            </button>
-
-            <div className="bg-purple-600 rounded-xl p-4 text-white shadow-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm">📁</span>
-                </div>
-                <span className="font-medium">Media Library</span>
-              </div>
-            </div>
-
-            <button 
-              onClick={() => handleNavClick('content')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-green-400 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm">📝</span>
-                </div>
-                <span className="font-medium">Content & Posts</span>
-              </div>
-            </button>
-          </nav>
-
-          {/* Storage Info */}
-          <div className="mt-8 bg-white rounded-xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-900 mb-3">Storage Usage</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Used</span>
-                <span className="font-medium">2.1 GB</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-500 h-2 rounded-full w-[42%]"></div>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Total</span>
-                <span className="font-medium">5.0 GB</span>
-              </div>
-            </div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        {/* Controls */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex space-x-2 bg-gray-100 p-1 rounded-lg">
+            {['images', 'videos', 'documents'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === tab
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
           </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 p-8">
-          {/* Controls */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex space-x-2 bg-gray-100 p-1 rounded-lg">
-              {['images', 'videos', 'documents'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === tab
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-800'
-                  }`}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
-            </div>
-
+          <div className="flex items-center gap-3">
             {selectedFiles.length > 0 && (
               <div className="flex space-x-2">
                 <button
@@ -240,8 +151,14 @@ export default function MediaLibraryPage() {
                 </button>
               </div>
             )}
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+            >
+              Upload Files
+            </button>
           </div>
-
+        </div>
           {/* File Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {mediaFiles[activeTab as 'images' | 'videos' | 'documents'].map((file: MediaFile) => (
@@ -297,8 +214,26 @@ export default function MediaLibraryPage() {
               <p className="text-gray-500">Upload some {activeTab} to get started.</p>
             </div>
           )}
-        </div>
-      </div>
+          {/* Storage Info */}
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-start-3 bg-white rounded-xl p-4 border border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-3">Storage Usage</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Used</span>
+                  <span className="font-medium">2.1 GB</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-blue-500 h-2 rounded-full w-[42%]"></div>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Total</span>
+                  <span className="font-medium">5.0 GB</span>
+                </div>
+              </div>
+            </div>
+          </div>
+      </main>
 
       {/* Upload Modal */}
       {showUploadModal && (
@@ -352,6 +287,6 @@ export default function MediaLibraryPage() {
           </div>
         </div>
       )}
-    </div>
+  </div>
   );
 }

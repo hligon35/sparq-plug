@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Header from '@/components/Header';
+import ClientTopNav from '@/components/ClientTopNav';
 
 export default function BillingPage() {
-  const router = useRouter();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
@@ -32,11 +32,6 @@ export default function BillingPage() {
     { id: 1, type: 'card', last4: '4242', brand: 'Visa', expiryMonth: 12, expiryYear: 2026, isDefault: true },
     { id: 2, type: 'card', last4: '0005', brand: 'Mastercard', expiryMonth: 8, expiryYear: 2025, isDefault: false }
   ];
-
-  const handleNavClick = (section: string) => {
-    if (section === 'billing') return;
-  router.push(`/client/${section}`);
-  };
 
   const handleUpgradePlan = () => {
     alert('Plan upgrade functionality would redirect to payment processor.');
@@ -77,96 +72,10 @@ export default function BillingPage() {
 
   return (
     <div className="min-h-screen bg-white">
-  <div className="bg-[#1d74d0] text-white p-6 shadow">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-              <span className="text-white text-2xl">💳</span>
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Billing & Payments</h1>
-              <p className="text-white/80 text-sm mt-1">Manage your subscription and payment methods</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={handleUpgradePlan}
-              className="bg-green-500/20 hover:bg-green-500/30 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-            >
-              Upgrade Plan
-            </button>
-            <button
-              onClick={() => router.push('/login')}
-              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="w-80 bg-gray-50 border-r border-gray-200 min-h-screen p-6">
-          <nav className="space-y-3">
-            <button 
-              onClick={() => handleNavClick('')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-blue-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Dashboard</span>
-              </div>
-            </button>
-
-            <div className="bg-purple-600 rounded-xl p-4 text-white shadow-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm">💳</span>
-                </div>
-                <span className="font-medium">Billing</span>
-              </div>
-            </div>
-
-            <button 
-              onClick={() => handleNavClick('content')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-green-400 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm">📝</span>
-                </div>
-                <span className="font-medium">Content & Posts</span>
-              </div>
-            </button>
-          </nav>
-
-          {/* Billing Summary */}
-          <div className="mt-8 bg-white rounded-xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-900 mb-3">Quick Summary</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Current Plan</span>
-                <span className="font-semibold text-blue-600">{currentPlan.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Monthly Cost</span>
-                <span className="font-semibold text-green-600">${currentPlan.price}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Next Billing</span>
-                <span className="font-semibold text-orange-600">{currentPlan.nextBilling}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 p-8">
+      <Header title="Billing & Payments" subtitle="Manage your subscription and payment methods" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ClientTopNav />
+        <div className="pb-8">
           {/* Current Plan */}
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Current Plan</h2>
@@ -202,8 +111,8 @@ export default function BillingPage() {
                     </div>
                   ))}
                 </div>
+                </div>
               </div>
-            </div>
           </div>
 
           {/* Payment Methods */}
@@ -246,6 +155,7 @@ export default function BillingPage() {
                         <button
                           onClick={() => alert('Set as default payment method')}
                           className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm"
+                          title="Set as default"
                         >
                           Set Default
                         </button>
@@ -254,6 +164,7 @@ export default function BillingPage() {
                         onClick={() => handleRemovePaymentMethod(method.id)}
                         className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm"
                         disabled={method.isDefault}
+                        title="Remove payment method"
                       >
                         Remove
                       </button>
@@ -324,8 +235,8 @@ export default function BillingPage() {
               </div>
             </div>
           </div>
+          </div>
         </div>
-      </div>
 
       {/* Add Payment Method Modal */}
       {showPaymentModal && (
@@ -334,6 +245,8 @@ export default function BillingPage() {
             <button
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
               onClick={() => setShowPaymentModal(false)}
+              aria-label="Close"
+              title="Close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -376,19 +289,21 @@ export default function BillingPage() {
                 />
               </div>
               <div className="flex items-center">
-                <input type="checkbox" className="mr-2" />
+                <input type="checkbox" className="mr-2" aria-label="Set as default payment method" title="Set as default payment method" />
                 <label className="text-sm text-gray-600">Set as default payment method</label>
               </div>
               <div className="flex space-x-3 pt-4">
                 <button
                   onClick={() => setShowPaymentModal(false)}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  title="Cancel"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAddPaymentMethod}
                   className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+                  title="Add card"
                 >
                   Add Card
                 </button>
@@ -405,6 +320,8 @@ export default function BillingPage() {
             <button
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
               onClick={() => setShowInvoiceModal(false)}
+              aria-label="Close"
+              title="Close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -418,16 +335,20 @@ export default function BillingPage() {
                   <input
                     type="date"
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    aria-label="Start date"
+                    title="Start date"
                   />
                   <input
                     type="date"
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    aria-label="End date"
+                    title="End date"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Format</label>
-                <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <label className="block text-gray-700 font-medium mb-2" htmlFor="invoice-format">Format</label>
+                <select id="invoice-format" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" aria-label="Format" title="Format">
                   <option>PDF</option>
                   <option>CSV</option>
                   <option>Excel</option>

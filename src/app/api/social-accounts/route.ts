@@ -11,13 +11,17 @@ export type SocialAccount = {
   lastSync: string;
   posts: number;
   engagement: number; // percentage
+  clientId?: string; // optional owner client
 };
 
 const STORE_KEY = 'social-accounts';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const clientId = searchParams.get('clientId') || undefined;
   const accounts = await readJson<SocialAccount[]>(STORE_KEY, []);
-  return NextResponse.json({ accounts });
+  const filtered = clientId ? accounts.filter(a => a.clientId === clientId) : accounts;
+  return NextResponse.json({ accounts: filtered });
 }
 
 export async function POST(req: NextRequest) {
@@ -38,6 +42,7 @@ export async function POST(req: NextRequest) {
     lastSync: 'just now',
     posts: 0,
     engagement: 0,
+    clientId: body.clientId ? String(body.clientId) : undefined,
   };
   accounts.push(newAcc);
   await writeJson(STORE_KEY, accounts);
@@ -53,4 +58,26 @@ export async function DELETE(req: NextRequest) {
   const removed = next.length !== accounts.length;
   if (removed) await writeJson(STORE_KEY, next);
   return NextResponse.json({ ok: removed });
+}
+
+export async function PATCH(req: NextRequest) {
+  const url = new URL(req.url);
+  const id = url.searchParams.get('id');
+  const body = await req.json().catch(() => ({}));
+  const targetId = String(id || body?.id || '');
+  if (!targetId) return NextResponse.json({ error: 'id is required' }, { status: 400 });
+  const accounts = await readJson<SocialAccount[]>(STORE_KEY, []);
+  const idx = accounts.findIndex(a => a.id === targetId);
+  if (idx === -1) return NextResponse.json({ error: 'not found' }, { status: 404 });
+  const current = accounts[idx];
+  const updated: SocialAccount = {
+    ...current,
+    accountName: body.accountName !== undefined ? String(body.accountName) : current.accountName,
+    handle: body.handle !== undefined ? String(body.handle) : current.handle,
+    status: body.status !== undefined ? (body.status as SocialAccount['status']) : current.status,
+    lastSync: body.lastSync !== undefined ? String(body.lastSync) : current.lastSync,
+  };
+  accounts[idx] = updated;
+  await writeJson(STORE_KEY, accounts);
+  return NextResponse.json({ account: updated });
 }

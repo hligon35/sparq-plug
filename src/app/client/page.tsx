@@ -1,19 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Notifications from '@/components/Notifications';
+import Header from '@/components/Header';
+import ClientTopNav from '@/components/ClientTopNav';
 
 export default function ClientDashboard() {
-  const [selectedPlatform, setSelectedPlatform] = useState('all');
-  const [timeRange, setTimeRange] = useState('7d');
-  const [showSecurityModal, setShowSecurityModal] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   // Mock data for client dashboard
   const accountStats = {
     totalPosts: 156,
@@ -62,226 +54,16 @@ export default function ClientDashboard() {
     return colors[platform] || 'bg-gray-500';
   };
 
-  const router = useRouter();
-  const handleNavClick = (section: string) => {
-    if (section === '') {
-      // Stay on current dashboard
-      return;
-    }
-    router.push(`/client/${section}`);
-  };
-
-  // Security handlers
-  const handlePasswordUpdate = () => {
-    if (!newPassword || !confirmPassword) {
-      alert('Please fill in both password fields');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      alert('Passwords do not match');
-      return;
-    }
-    if (newPassword.length < 8) {
-      alert('Password must be at least 8 characters long');
-      return;
-    }
-    alert('Client password updated successfully!');
-    setNewPassword('');
-    setConfirmPassword('');
-    setShowSecurityModal(false);
-  };
-
-  const handleToggle2FA = () => {
-    if (!twoFactorEnabled) {
-      alert('Client 2FA setup initiated! In production, this would show QR code setup.');
-      setTwoFactorEnabled(true);
-    } else {
-      alert('Client 2FA disabled successfully!');
-      setTwoFactorEnabled(false);
-    }
-  };
-
-  const handleManageConnections = () => {
-    alert('Managing social media connections... In production, this would show connected accounts.');
-  };
+  const [timeRange, setTimeRange] = useState('7d');
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      {/* Header Bar */}
-      <div className="bg-[#1d74d0] text-white p-6 shadow">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center justify-center space-x-4 flex-1">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-              <span className="text-white text-2xl">📱</span>
-            </div>
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-white">Sparq Client Portal</h1>
-              <p className="text-white/80 text-sm mt-1">Manage Your Social Media Presence</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowSecurityModal(true)}
-              className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-            >
-              Security
-            </button>
-            <button
-              onClick={() => router.push('/login')}
-              className="bg-white text-[#1d74d0] px-4 py-2 rounded-lg transition-colors font-semibold"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
+      <Header title="SparQ Client Portal" subtitle="Manage Your Social Media Presence" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <ClientTopNav />
       </div>
-
-      <div className="flex">
-        {/* Left Sidebar */}
-        <div className="w-80 bg-gray-50 border-r border-gray-200 min-h-screen p-6">
-          <nav className="space-y-3">
-            <div className="bg-blue-600 rounded-xl p-4 text-white shadow-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Dashboard</span>
-              </div>
-            </div>
-
-            <button 
-              onClick={() => handleNavClick('content')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-purple-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <span className="font-medium">Content & Posts</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNavClick('calendar')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-green-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <span className="font-medium">Content Calendar</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNavClick('analytics')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-pink-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Analytics & Reports</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNavClick('social-accounts')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-teal-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <span className="font-medium">Social Accounts</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNavClick('inbox')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-indigo-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Social Inbox</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNavClick('media-library')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-purple-500 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <span className="font-medium">Media Library</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNavClick('team')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-cyan-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Team & Collaboration</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNavClick('billing')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-orange-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zM14 6a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2h6zM4 14a2 2 0 002 2h8a2 2 0 002-2v-2H4v2z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Billing & Plans</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNavClick('settings')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-gray-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Account Settings</span>
-              </div>
-            </button>
-          </nav>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 p-8">
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -484,107 +266,7 @@ export default function ClientDashboard() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Security Modal */}
-      {showSecurityModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[1000]">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-md border border-gray-200 shadow-lg relative">
-            <button
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              onClick={() => setShowSecurityModal(false)}
-              aria-label="Close"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Client Security Settings</h2>
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Change Password</label>
-                <div className="relative">
-                  <input 
-                    type={showNewPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10" 
-                    placeholder="New password" 
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    {showNewPassword ? (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                      </svg>
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-                <div className="relative mt-2">
-                  <input 
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10" 
-                    placeholder="Confirm new password" 
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    {showConfirmPassword ? (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                      </svg>
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-                <button 
-                  onClick={handlePasswordUpdate}
-                  className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow"
-                >
-                  Update Password
-                </button>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Two-Factor Authentication (2FA)</label>
-                <button 
-                  onClick={handleToggle2FA}
-                  className={`${twoFactorEnabled ? 'bg-green-500 hover:bg-green-600' : 'bg-yellow-500 hover:bg-yellow-600'} text-white px-4 py-2 rounded-lg font-medium shadow`}
-                >
-                  {twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}
-                </button>
-                <p className="text-xs text-gray-500 mt-1">
-                  {twoFactorEnabled ? '2FA is currently enabled for your account.' : 'Protect your social media accounts with 2FA.'}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Connected Accounts</label>
-                <button 
-                  onClick={handleManageConnections}
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium shadow"
-                >
-                  Manage Connections
-                </button>
-                <p className="text-xs text-gray-500 mt-1">Review and secure your social media connections.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+        </main>
     </div>
   );
 }

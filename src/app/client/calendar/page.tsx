@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Header from '@/components/Header';
+import ClientTopNav from '@/components/ClientTopNav';
 
 export default function CalendarPage() {
-  const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -155,10 +155,6 @@ export default function CalendarPage() {
     return icons[type] || '📄';
   };
 
-  const handleNavClick = (section: string) => {
-    router.push(`/client/${section}`);
-  };
-
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -168,173 +164,10 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      {/* Header Bar */}
-      <div className="bg-[#1d74d0] text-white p-6 shadow">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center justify-center space-x-4 flex-1">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-              <span className="text-white text-2xl">📅</span>
-            </div>
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-white">SparQ Content Calendar</h1>
-              <p className="text-white/80 text-sm mt-1">Plan & Schedule Your Social Media Content</p>
-            </div>
-          </div>
-          <button
-            onClick={() => router.push('/login')}
-            className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-
-      <div className="flex">
-        {/* Left Sidebar */}
-        <div className="w-80 bg-gray-50 border-r border-gray-200 min-h-screen p-6">
-          <nav className="space-y-3">
-            <button 
-              onClick={() => handleNavClick('')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-blue-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Dashboard</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNavClick('content')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-purple-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <span className="font-medium">Content & Posts</span>
-              </div>
-            </button>
-
-            <div className="bg-green-600 rounded-xl p-4 text-white shadow-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <span className="font-medium">Content Calendar</span>
-              </div>
-            </div>
-
-            <button 
-              onClick={() => handleNavClick('analytics')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-pink-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Analytics & Reports</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNavClick('social-accounts')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-teal-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <span className="font-medium">Social Accounts</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNavClick('inbox')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-indigo-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Social Inbox</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNavClick('media-library')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-purple-500 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <span className="font-medium">Media Library</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNavClick('team')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-cyan-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Team & Collaboration</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNavClick('billing')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-orange-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zM14 6a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2h6zM4 14a2 2 0 002 2h8a2 2 0 002-2v-2H4v2z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Billing & Plans</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNavClick('settings')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-gray-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Account Settings</span>
-              </div>
-            </button>
-          </nav>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 p-8">
+      <Header title="SparQ Content Calendar" subtitle="Plan & Schedule Your Social Media Content" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ClientTopNav />
+        <div className="pb-8">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
@@ -377,6 +210,8 @@ export default function CalendarPage() {
               <button
                 onClick={() => navigateMonth('prev')}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Previous month"
+                title="Previous month"
               >
                 <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -390,6 +225,8 @@ export default function CalendarPage() {
               <button
                 onClick={() => navigateMonth('next')}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Next month"
+                title="Next month"
               >
                 <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
@@ -469,6 +306,8 @@ export default function CalendarPage() {
                 <button
                   onClick={() => setShowCreateModal(false)}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Close"
+                  title="Close"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -502,6 +341,8 @@ export default function CalendarPage() {
                   <input
                     type="date"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    aria-label="Post date"
+                    title="Post date"
                   />
                 </div>
                 <div>
@@ -509,6 +350,8 @@ export default function CalendarPage() {
                   <input
                     type="time"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    aria-label="Post time"
+                    title="Post time"
                   />
                 </div>
               </div>

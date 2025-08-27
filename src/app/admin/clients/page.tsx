@@ -3,26 +3,49 @@
 import { useEffect, useState } from 'react';
 import AdminTopNav from '@/components/AdminTopNav';
 import AdminHeader from '@/components/AdminHeader';
+import { withBasePath } from '@/lib/basePath';
 
 export default function ClientsPage() {
   type Client = {
-    id: number;
+    id: string;
     name: string;
-    accounts: number;
-    lastActivity: string;
+    contactPerson?: string;
+    email?: string;
+    phone?: string;
+    website?: string;
+    industry?: string;
+    companySize?: string;
+    services?: string[];
+    socialPlatforms?: string[];
+    monthlyBudget?: number;
+    goals?: string;
+    currentFollowers?: number;
+    targetAudience?: string;
+    contentPreferences?: string[];
+    postingFrequency?: string;
+    timezone?: string;
+    billingAddress?: string;
+    notes?: string;
     status: 'Active' | 'Inactive';
-    revenue: string;
+    createdAt: string;
+    updatedAt: string;
   };
 
-  const [clients, setClients] = useState<Client[]>([
-    { id: 1, name: 'TechCorp', accounts: 8, lastActivity: '2 hours ago', status: 'Active', revenue: '$2,400' },
-    { id: 2, name: 'FashionBrand', accounts: 12, lastActivity: '1 day ago', status: 'Active', revenue: '$3,200' },
-    { id: 3, name: 'LocalRestaurant', accounts: 5, lastActivity: '3 hours ago', status: 'Active', revenue: '$1,800' },
-    { id: 4, name: 'HealthClinic', accounts: 6, lastActivity: '5 hours ago', status: 'Inactive', revenue: '$2,100' }
-  ]);
+  type SocialAccount = {
+    id: string;
+    platform: string;
+    accountName: string;
+    handle: string;
+    status: 'connected' | 'disconnected' | 'syncing';
+    clientId?: string;
+  };
+
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [showClientDetails, setShowClientDetails] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedClientAccounts, setSelectedClientAccounts] = useState<SocialAccount[]>([]);
 
   const [showNewClientForm, setShowNewClientForm] = useState(false);
   const [formData, setFormData] = useState<{
@@ -141,28 +164,48 @@ export default function ClientsPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically send the data to your backend
-    console.log('New client data:', formData);
-    
-    // Add the new client to the list (in a real app, this would come from the backend)
-    const newClient = {
-      id: clients.length + 1,
+    const payload = {
       name: formData.companyName,
-      accounts: formData.socialPlatforms.length,
-      lastActivity: 'Just now',
-      status: 'Active',
-      revenue: `$${formData.monthlyBudget}`
+      contactPerson: formData.contactPerson,
+      email: formData.email,
+      phone: formData.phone,
+      website: formData.website,
+      industry: formData.industry,
+      companySize: formData.companySize,
+      services: formData.services,
+      socialPlatforms: formData.socialPlatforms,
+      monthlyBudget: Number(formData.monthlyBudget || 0),
+      goals: formData.goals,
+      currentFollowers: Number(formData.currentFollowers || 0),
+      targetAudience: formData.targetAudience,
+      contentPreferences: formData.contentPreferences,
+      postingFrequency: formData.postingFrequency,
+      timezone: formData.timezone,
+      billingAddress: formData.billingAddress,
+      notes: formData.notes,
     };
-    
-    setClients(prev => [...prev, newClient]);
+    const res = await fetch(withBasePath('/api/clients'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+    if (!res.ok) { alert('Failed to add client'); return; }
+    const { client } = await res.json();
+    setClients(prev => [...prev, client]);
     handleCloseForm();
-    alert('New client added successfully!');
   };
 
-  const handleViewClient = (client: Client) => {
+  const handleViewClient = async (client: Client) => {
     setSelectedClient(client);
+    try {
+      const res = await fetch(withBasePath(`/api/social-accounts?clientId=${encodeURIComponent(client.id)}`));
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedClientAccounts(data.accounts || []);
+      } else {
+        setSelectedClientAccounts([]);
+      }
+    } catch {
+      setSelectedClientAccounts([]);
+    }
     setShowClientDetails(true);
   };
 
@@ -180,6 +223,21 @@ export default function ClientsPage() {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [showClientDetails]);
+
+  // initial load
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(withBasePath('/api/clients'));
+        if (res.ok) {
+          const data = await res.json();
+          setClients(data.clients || []);
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   // Top nav handles routing via links; removed sidebar
 
@@ -260,15 +318,12 @@ export default function ClientsPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Social Accounts</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Activity</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Revenue</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {clients.map((client) => (
+          {(!loading ? clients : []).map((client) => (
                     <tr key={client.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -282,8 +337,6 @@ export default function ClientsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">{client.accounts}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">{client.lastActivity}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           client.status === 'Active'
@@ -293,7 +346,6 @@ export default function ClientsPage() {
                           {client.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">{client.revenue}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button 
                           onClick={() => handleViewClient(client)}
@@ -306,6 +358,8 @@ export default function ClientsPage() {
                   ))}
                 </tbody>
               </table>
+        {loading && <div className="p-6 text-gray-500">Loading...</div>}
+              {!loading && clients.length === 0 && <div className="p-6 text-gray-500">No clients yet. Click Add New Client to get started.</div>}
             </div>
           </div>
         </div>
@@ -629,7 +683,7 @@ export default function ClientsPage() {
           aria-modal="true"
           onClick={handleCloseClientDetails}
         >
-          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl w-full max-w-3xl shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-2xl">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -655,15 +709,7 @@ export default function ClientsPage() {
             </div>
 
             <div className="px-6 py-5 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500">Social Accounts</p>
-                  <p className="text-lg font-semibold text-gray-900">{selectedClient.accounts}</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500">Last Activity</p>
-                  <p className="text-lg font-semibold text-gray-900">{selectedClient.lastActivity}</p>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-xs text-gray-500">Status</p>
                   <p>
@@ -675,18 +721,63 @@ export default function ClientsPage() {
                   </p>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500">Monthly Revenue</p>
-                  <p className="text-lg font-semibold text-gray-900">{selectedClient.revenue}</p>
+                  <p className="text-xs text-gray-500">Industry</p>
+                  <p className="text-lg font-semibold text-gray-900">{selectedClient.industry || '—'}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500">Budget</p>
+                  <p className="text-lg font-semibold text-gray-900">{selectedClient.monthlyBudget ? `$${selectedClient.monthlyBudget}` : '—'}</p>
                 </div>
               </div>
 
               <div className="mt-2">
-                <h3 className="text-sm font-semibold text-gray-800 mb-2">Quick Actions</h3>
-                <div className="flex flex-wrap gap-3">
-                  <button className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">View Analytics</button>
-                  <button className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Manage Accounts</button>
-                  <button className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Open Inbox</button>
+                <h3 className="text-sm font-semibold text-gray-800 mb-2">Social Accounts</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {selectedClientAccounts.length === 0 && (
+                    <div className="text-sm text-gray-500">No connected accounts for this client.</div>
+                  )}
+                  {selectedClientAccounts.map((a) => (
+                    <div key={a.id} className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-3">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{a.accountName}</div>
+                        <div className="text-xs text-gray-500">{a.platform} — @{a.handle}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded-full text-xs ${a.status === 'connected' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{a.status}</span>
+                        {a.status === 'disconnected' ? (
+                          <button
+                            onClick={async () => {
+                              await fetch(withBasePath(`/api/social-accounts?id=${encodeURIComponent(a.id)}`), { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ status: 'connected', lastSync: 'just now' }) });
+                              const res = await fetch(withBasePath(`/api/social-accounts?clientId=${encodeURIComponent(selectedClient!.id)}`));
+                              const data = await res.json();
+                              setSelectedClientAccounts(data.accounts || []);
+                            }}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >Reconnect</button>
+                        ) : (
+                          <button
+                            onClick={async () => {
+                              await fetch(withBasePath(`/api/social-accounts?id=${encodeURIComponent(a.id)}`), { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ status: 'disconnected', lastSync: new Date().toISOString() }) });
+                              const res = await fetch(withBasePath(`/api/social-accounts?clientId=${encodeURIComponent(selectedClient!.id)}`));
+                              const data = await res.json();
+                              setSelectedClientAccounts(data.accounts || []);
+                            }}
+                            className="text-gray-600 hover:text-gray-800 text-sm"
+                          >Disconnect</button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
+              </div>
+
+              <div className="mt-4">
+                <h3 className="text-sm font-semibold text-gray-800 mb-2">Quick Add Account</h3>
+                <QuickAddAccount clientId={selectedClient.id} onAdded={async () => {
+                  const res = await fetch(withBasePath(`/api/social-accounts?clientId=${encodeURIComponent(selectedClient!.id)}`));
+                  const data = await res.json();
+                  setSelectedClientAccounts(data.accounts || []);
+                }} />
               </div>
             </div>
 
@@ -701,6 +792,45 @@ export default function ClientsPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function QuickAddAccount({ clientId, onAdded }: { clientId: string; onAdded: () => void }) {
+  const [platform, setPlatform] = useState('Facebook');
+  const [accountName, setAccountName] = useState('');
+  const [handle, setHandle] = useState('');
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="bg-gray-50 rounded-xl p-4 flex flex-col md:flex-row gap-3 items-end">
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+  <select aria-label="Platform" value={platform} onChange={(e) => setPlatform(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg">
+          {['Facebook','Instagram','Twitter/X','LinkedIn','TikTok'].map(p => <option key={p} value={p}>{p}</option>)}
+        </select>
+        <input value={accountName} onChange={(e) => setAccountName(e.target.value)} placeholder="Account name" className="px-3 py-2 border border-gray-300 rounded-lg" />
+        <input value={handle} onChange={(e) => setHandle(e.target.value)} placeholder="Handle" className="px-3 py-2 border border-gray-300 rounded-lg" />
+      </div>
+      <button
+        disabled={busy || !accountName || !handle}
+        onClick={async () => {
+          setBusy(true);
+          try {
+            const res = await fetch(withBasePath('/api/social-accounts'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ platform, accountName, handle, clientId }) });
+            if (res.ok) {
+              setAccountName('');
+              setHandle('');
+              onAdded();
+            } else {
+              alert('Failed to add account');
+            }
+          } finally {
+            setBusy(false);
+          }
+        }}
+        className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white px-4 py-2 rounded-lg"
+      >
+        {busy ? 'Adding...' : 'Add'}
+      </button>
     </div>
   );
 }

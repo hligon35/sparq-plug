@@ -1,0 +1,24 @@
+[
+  {
+    "id": "1756256623783-zqs08i",
+    "content": "Sample scheduled post",
+    "platforms": [
+      "Facebook",
+      "Instagram"
+    ],
+    "client": "DemoClient",
+    "scheduledAt": "2025-08-27T01:33:43.661Z",
+    "status": "Scheduled"
+  },
+  {
+    "id": "1756256626033-2nzbve",
+    "content": "Sample scheduled post",
+    "platforms": [
+      "Facebook",
+      "Instagram"
+    ],
+    "client": "DemoClient",
+    "scheduledAt": "2025-08-27T01:33:45.913Z",
+    "status": "Scheduled"
+  }
+]

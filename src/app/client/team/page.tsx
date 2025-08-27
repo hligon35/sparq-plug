@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Header from '@/components/Header';
+import ClientTopNav from '@/components/ClientTopNav';
 import TeamCollaboration from '@/components/TeamCollaboration';
 
 export default function TeamPage() {
-  const router = useRouter();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<number | null>(null);
 
@@ -57,11 +57,6 @@ export default function TeamPage() {
     { id: 2, email: 'lisa@company.com', role: 'Community Manager', sentDate: '2024-08-02' }
   ];
 
-  const handleNavClick = (section: string) => {
-    if (section === 'team') return;
-  router.push(`/client/${section}`);
-  };
-
   const handleInviteMember = () => {
     alert('Invite sent! In production, this would send an email invitation.');
     setShowInviteModal(false);
@@ -88,97 +83,22 @@ export default function TeamPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      {/* Header */}
-      <div className="bg-[#1d74d0] text-white p-6 shadow">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-              <span className="text-white text-2xl">👥</span>
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Team Management</h1>
-              <p className="text-white/80 text-sm mt-1">Manage your team members and permissions</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowInviteModal(true)}
-              className="bg-green-500/20 hover:bg-green-500/30 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-            >
-              Invite Member
-            </button>
-            <button
-              onClick={() => router.push('/login')}
-              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
+      <Header title="Team Management" subtitle="Manage your team members and permissions" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <ClientTopNav />
       </div>
-
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="w-80 bg-gray-50 border-r border-gray-200 min-h-screen p-6">
-          <nav className="space-y-3">
-            <button 
-              onClick={() => handleNavClick('')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-blue-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Dashboard</span>
-              </div>
-            </button>
-
-            <div className="bg-purple-600 rounded-xl p-4 text-white shadow-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm">👥</span>
-                </div>
-                <span className="font-medium">Team</span>
-              </div>
-            </div>
-
-            <button 
-              onClick={() => handleNavClick('content')}
-              className="w-full bg-white hover:bg-blue-50 rounded-xl p-4 text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-green-400 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm">📝</span>
-                </div>
-                <span className="font-medium">Content & Posts</span>
-              </div>
-            </button>
-          </nav>
-
-          {/* Team Stats */}
-          <div className="mt-8 bg-white rounded-xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-900 mb-3">Team Overview</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total Members</span>
-                <span className="font-semibold text-green-600">{teamMembers.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Active Now</span>
-                <span className="font-semibold text-blue-600">{teamMembers.filter(m => m.status === 'active').length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Pending Invites</span>
-                <span className="font-semibold text-orange-600">{pendingInvites.length}</span>
-              </div>
-            </div>
-          </div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-3xl font-bold text-gray-800">Team</h2>
+          <button
+            onClick={() => setShowInviteModal(true)}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+          >
+            Invite Member
+          </button>
         </div>
-
         {/* Main Content */}
-        <div className="flex-1 p-8">
           {/* Team Members */}
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Team Members</h2>
@@ -277,9 +197,7 @@ export default function TeamPage() {
               </div>
             </div>
           )}
-        </div>
-      </div>
-
+      </main>
       {/* Invite Modal */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[1000]">
@@ -399,7 +317,7 @@ export default function TeamPage() {
       )}
       
       {/* Collaboration Widget */}
-      <div className="p-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <TeamCollaboration />
       </div>
     </div>
