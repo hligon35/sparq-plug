@@ -1,0 +1,14 @@
+# Copy to /etc/cloudflared/config.yml (Linux) or an appropriate path on Windows
+# Replace TUNNEL_ID and credentials file path accordingly.
+
+tunnel: TUNNEL_ID
+credentials-file: /etc/cloudflared/TUNNEL_ID.json
+
+ingress:
+  # App at root on sparqplug.getsparqd.com
+  - hostname: sparqplug.getsparqd.com
+    service: http://localhost:3000
+  # Keep portal host free or point it to a different local port when your other app is ready
+  # - hostname: portal.getsparqd.com
+  #   service: http://localhost:4000
+  - service: http_status:404

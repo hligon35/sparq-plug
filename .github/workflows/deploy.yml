@@ -1,17 +1,46 @@
-name: Deploy sparqplug (self-hosted)
+name: Deploy to 68.54.208.207
 
 on:
   push:
-    branches: [ live ]
+    branches:
+      - main
 
 jobs:
-  deploy:
-    runs-on: self-hosted
+  build-and-deploy:
+    runs-on: ubuntu-latest
     steps:
-      - name: Sync live app dir with origin/live
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build (CI)
         run: |
-          git -C /srv/core/sparqplug/sparq-plug fetch --all --prune
-          git -C /srv/core/sparqplug/sparq-plug reset --hard origin/live
-      - name: Restart gateway + app
-        run: |
-          docker compose -f /srv/core/sparqplug/docker-compose.yml up -d --force-recreate gateway app
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Copy project to server via SSH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "."
+          target: "~/apps/sparq-plug"
+          rm: true
+
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd ~/apps/sparq-plug
+            docker compose down || true
+            docker compose up -d --build
+            docker system prune -f || true

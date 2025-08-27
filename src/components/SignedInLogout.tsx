@@ -39,7 +39,8 @@ export default function SignedInLogout({ className }: Props) {
     // Clear role cookie and go to login
   document.cookie = 'role=; Path=/; Max-Age=0; SameSite=Lax';
   document.cookie = 'username=; Path=/; Max-Age=0; SameSite=Lax';
-    router.push('/login');
+  const bp = process.env.NEXT_PUBLIC_BASE_PATH || '';
+  router.push(`${bp}/login`);
   };
 
   return (
