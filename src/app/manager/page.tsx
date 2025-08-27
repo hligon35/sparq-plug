@@ -1,19 +1,13 @@
 'use client';
 
-
 import InvoiceModule from '@/components/InvoiceModule';
-import { useRouter } from 'next/navigation';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
+import Header from '@/components/Header';
+import ManagerTopNav from '@/components/ManagerTopNav';
+
+type TabKey = 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings';
 
 export default function ManagerInvoicePage() {
-  const router = useRouter();
-
-  // Placeholder signOut function
-  const signOut = useCallback(() => {
-    // TODO: Replace with real sign out logic
-    document.cookie = 'role=; Path=/; Max-Age=0; SameSite=Lax';
-    router.push('/login');
-  }, [router]);
 
 
   // Security modal state
@@ -57,17 +51,14 @@ export default function ManagerInvoicePage() {
   };
 
   // Navigation state
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState<TabKey>('dashboard');
 
   // Navigation handler
-  const handleNav = (section: string) => {
+  const handleNav = (section: TabKey) => {
     setActiveTab(section);
     if (section === 'dashboard') return; // Stay on dashboard
     if (section === 'invoices') return; // Show invoices section
-    if (section === 'security') {
-      setShowSecurityModal(true);
-      return;
-    }
+  // other tabs handled inline
     // For now, show coming soon alert for other sections
     // In production, these would navigate to actual pages
     // alert('Section coming soon: ' + section);
@@ -75,170 +66,10 @@ export default function ManagerInvoicePage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      {/* Header */}
-      <div className="bg-[#1d74d0] text-white p-6 shadow">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-              <span className="text-white text-2xl">🏢</span>
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Manager Dashboard</h1>
-              <p className="text-white/80 text-sm mt-1">Account & Business Management Portal</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowSecurityModal(true)}
-              className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-            >
-              Security
-            </button>
-            <button
-              onClick={signOut}
-              className="bg-white text-[#1d74d0] px-4 py-2 rounded-lg transition-colors font-semibold"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex">
-        {/* Left Sidebar */}
-        <div className="w-80 bg-gray-50 border-r border-gray-200 min-h-screen p-6">
-          <nav className="space-y-3">
-            <button 
-              onClick={() => handleNav('dashboard')}
-              className={`w-full rounded-xl p-4 border transition-all duration-200 shadow-sm hover:shadow ${
-                activeTab === 'dashboard' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 border-gray-200 hover:border-blue-300'
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                  activeTab === 'dashboard' ? 'bg-white/20' : 'bg-blue-400'
-                }`}>
-                  <svg className={`w-4 h-4 ${activeTab === 'dashboard' ? 'text-white' : 'text-white'}`} fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Dashboard</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNav('invoices')}
-              className={`w-full rounded-xl p-4 border transition-all duration-200 shadow-sm hover:shadow ${
-                activeTab === 'invoices' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 border-gray-200 hover:border-blue-300'
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                  activeTab === 'invoices' ? 'bg-white/20' : 'bg-green-400'
-                }`}>
-                  <span className={`text-sm ${activeTab === 'invoices' ? 'text-white' : 'text-white'}`}>💳</span>
-                </div>
-                <span className="font-medium">Invoices & Payments</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNav('clients')}
-              className={`w-full rounded-xl p-4 border transition-all duration-200 shadow-sm hover:shadow ${
-                activeTab === 'clients' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 border-gray-200 hover:border-blue-300'
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                  activeTab === 'clients' ? 'bg-white/20' : 'bg-cyan-400'
-                }`}>
-                  <svg className={`w-4 h-4 ${activeTab === 'clients' ? 'text-white' : 'text-white'}`} fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Client Management</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNav('analytics')}
-              className={`w-full rounded-xl p-4 border transition-all duration-200 shadow-sm hover:shadow ${
-                activeTab === 'analytics' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 border-gray-200 hover:border-blue-300'
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                  activeTab === 'analytics' ? 'bg-white/20' : 'bg-pink-400'
-                }`}>
-                  <svg className={`w-4 h-4 ${activeTab === 'analytics' ? 'text-white' : 'text-white'}`} fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Analytics & Reports</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleNav('settings')}
-              className={`w-full rounded-xl p-4 border transition-all duration-200 shadow-sm hover:shadow ${
-                activeTab === 'settings' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 border-gray-200 hover:border-blue-300'
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                  activeTab === 'settings' ? 'bg-white/20' : 'bg-gray-400'
-                }`}>
-                  <svg className={`w-4 h-4 ${activeTab === 'settings' ? 'text-white' : 'text-white'}`} fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" />
-                  </svg>
-                </div>
-                <span className="font-medium">Settings</span>
-              </div>
-            </button>
-          </nav>
-
-          {/* Manager Credentials */}
-          <div className="mt-8 bg-white rounded-xl p-4 border border-gray-200">
-            <h3 className="font-semibold text-gray-900 mb-3">Manager Credentials</h3>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-                  JM
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">John Manager</p>
-                  <p className="text-gray-600 text-sm">Business Manager</p>
-                </div>
-              </div>
-              <div className="text-sm text-gray-600 space-y-1">
-                <p><span className="font-medium">ID:</span> MGR-2024-001</p>
-                <p><span className="font-medium">Level:</span> Premium Access</p>
-                <p><span className="font-medium">Since:</span> Jan 2024</p>
-              </div>
-              <div className="flex space-x-2 pt-2">
-                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
-                  Verified
-                </span>
-                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                  Pro Plan
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 p-8">
+      <Header title="Manager Dashboard" subtitle="Account & Business Management Portal" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <ManagerTopNav active={activeTab} onChange={handleNav} />
+        <div className="p-1">
       {activeTab === 'invoices' && (
             <>
         <div className="bg-[#1d74d0] text-white p-6 rounded-2xl shadow mb-8">
@@ -350,6 +181,15 @@ export default function ManagerInvoicePage() {
               <p className="text-gray-500">This section is under development and will be available soon.</p>
             </div>
           )}
+        </div>
+        <div className="mt-4 flex justify-end">
+          <button
+            onClick={() => setShowSecurityModal(true)}
+            className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm transition-colors hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
+          >
+            <span className="w-2 h-2 rounded-full bg-blue-600" />
+            Account Security
+          </button>
         </div>
       </div>
       {/* Security Modal */}

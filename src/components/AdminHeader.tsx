@@ -18,7 +18,13 @@ export default function AdminHeader({ title, subtitle, onSecurityClick: _onSecur
         <div className="grid grid-cols-3 items-center">
           {/* Left */}
           <div className="flex items-center gap-2">
-            <Link href="/" className="hidden sm:inline text-white/90 hover:text-white text-sm">Back to Portal</Link>
+            <Link
+              href="/"
+              className="hidden sm:inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1d74d0]"
+            >
+              <span aria-hidden>←</span>
+              <span>Back to Portal</span>
+            </Link>
           </div>
 
           {/* Centered Title */}

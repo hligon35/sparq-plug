@@ -24,6 +24,7 @@ export default function LoginPage() {
       // Set role cookie so middleware authorizes protected routes
       // 1-day lifetime, works under basePath
       document.cookie = `role=${user.role}; Path=/; Max-Age=86400; SameSite=Lax`;
+      document.cookie = `username=${encodeURIComponent(username)}; Path=/; Max-Age=86400; SameSite=Lax`;
       if (user.role === 'admin') router.push('/admin');
       else if (user.role === 'manager') router.push('/manager');
       else router.push('/client');

@@ -30,6 +30,7 @@ export default function Home() {
   // NOTE: Replace with real auth for production
   const maxAge = 60 * 60 * 8; // 8 hours
   document.cookie = `role=${user.role}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+  document.cookie = `username=${encodeURIComponent(username)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
         if (user.role === 'admin') router.push('/admin');
         else if (user.role === 'manager') router.push('/manager');
         else router.push('/client');
