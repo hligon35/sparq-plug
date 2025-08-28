@@ -6,7 +6,8 @@ After=network-online.target docker.service
 [Service]
 Type=oneshot
 WorkingDirectory=/opt/sparqplug/server
-ExecStart=/usr/local/bin/sparqplug-update.sh
+Environment=REPO_ROOT=/opt/sparqplug/server
+ExecStart=/usr/bin/env bash -lc "/usr/local/bin/sparqplug-update.sh"
 User=root
 Group=root
 
