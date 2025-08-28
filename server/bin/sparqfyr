@@ -1,0 +1,268 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# SparQ Plug Stack Troubleshooter & Fixer
+# Run from anywhere on the server. Tries to auto-detect stack root and fix common issues.
+# Tested on Debian/Ubuntu (Raspberry Pi Bookworm) with Docker Engine + docker compose v2.
+
+VERSION="1.0.0"
+
+# ---- Pretty output helpers ----
+if [[ -t 1 ]]; then
+  RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; BLUE='\033[0;34m'; NC='\033[0m'
+else
+  RED=''; GREEN=''; YELLOW=''; BLUE=''; NC=''
+fi
+note()   { echo -e "${BLUE}==>${NC} $*"; }
+ok()     { echo -e "${GREEN}[OK]${NC} $*"; }
+warn()   { echo -e "${YELLOW}[WARN]${NC} $*"; }
+err()    { echo -e "${RED}[ERR]${NC} $*"; }
+
+# ---- Defaults / Flags ----
+DO_FIX=1            # attempt automated fixes by default
+ENSURE_SWAP=0       # create swap automatically if OOM detected
+STACK_ROOT=""       # auto-detect if empty
+SERVICES_WANTED=(cloudflared static-site portal-app sparqplug gateway deployer)
+TIMEOUT=20
+CLOUD_DOMAIN="getsparqd.com"
+
+usage(){
+  cat <<USAGE
+sparqfyr v${VERSION} — diagnose and fix the SparQ stack
+
+Usage: sparqfyr [options]
+
+Options:
+  --check-only         Run diagnostics, no changes
+  --ensure-swap        Auto-create 2G swap if no swap and OOM/Exit(137) seen
+  --root <path>        Stack root (default: autodetect, usually /opt/sparqplug/server)
+  --timeout <sec>      HTTP/DNS test timeout (default: ${TIMEOUT})
+  --help               Show this help
+
+Runs:
+  1) System checks: OS, RAM, disk, Docker engine
+  2) Docker & Compose: health, services list, container states
+  3) Cloudflared: container up, tunnel config exists
+  4) DNS: hooks.${CLOUD_DOMAIN} CNAME resolves to Cloudflare tunnel (advisory)
+  5) Stack bringup: cloudflared first, then core services (if --check-only not set)
+  6) Health probes: portal & plug endpoints via tunnel
+  7) OOM/Exit(137): advise swap; optionally create with --ensure-swap
+USAGE
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --help|-h) usage; exit 0;;
+  esac
+done
+
+# Parse flags
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --check-only) DO_FIX=0; shift;;
+    --ensure-swap) ENSURE_SWAP=1; shift;;
+    --root) STACK_ROOT="${2:-}"; shift 2;;
+    --timeout) TIMEOUT="${2:-20}"; shift 2;;
+    *) err "Unknown option: $1"; usage; exit 1;;
+  esac
+done
+
+# ---- Utilities ----
+needsudo(){ if command -v sudo >/dev/null 2>&1; then echo sudo; else echo; fi; }
+
+run(){
+  local cmd="$*"
+  eval "$cmd"
+}
+
+have(){ command -v "$1" >/dev/null 2>&1; }
+
+# docker compose wrapper
+compose_cmd(){
+  if have docker; then echo "docker compose"; return; fi
+  if have docker-compose; then echo "docker-compose"; return; fi
+  echo ""; return 1
+}
+
+# ---- Step 0: System profile ----
+note "Collecting system info"
+KERNEL=$(uname -r || true)
+ARCH=$(uname -m || true)
+OS=$(grep -E '^PRETTY_NAME=' /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '"' || echo "Unknown Linux")
+MEM=$(free -h | awk '/Mem:/ {print $2" total, "$3" used, "$4" free"}')
+DISK=$(df -h / | awk 'NR==2 {print $2" total, "$3" used, "$4" avail"}')
+SWAP_ON=$(swapon --show 2>/dev/null | wc -l | awk '{print $1}')
+cat <<SYS
+- OS: ${OS}
+- Kernel: ${KERNEL}
+- Arch: ${ARCH}
+- Memory: ${MEM}
+- Root FS: ${DISK}
+- Swap entries: ${SWAP_ON}
+SYS
+
+# ---- Step 1: Docker engine ----
+if ! have docker; then
+  err "Docker not installed or not in PATH"
+  exit 2
+fi
+ok "Docker CLI found: $(docker --version 2>/dev/null || echo unknown)"
+
+DOCKER_ACTIVE=$(systemctl is-active docker 2>/dev/null || echo unknown)
+if [[ "$DOCKER_ACTIVE" != "active" ]]; then
+  warn "Docker service is not active: ${DOCKER_ACTIVE}"
+  if [[ $DO_FIX -eq 1 ]]; then
+    note "Starting Docker service"
+    $(needsudo) systemctl start docker || true
+    sleep 2
+  fi
+  DOCKER_ACTIVE=$(systemctl is-active docker 2>/dev/null || echo unknown)
+fi
+[[ "$DOCKER_ACTIVE" == "active" ]] && ok "Docker service active" || warn "Docker service state: ${DOCKER_ACTIVE}"
+
+# ---- Step 2: Compose detection & stack root ----
+CCMD=$(compose_cmd || true)
+if [[ -z "$CCMD" ]]; then
+  err "docker compose not available. Install Docker Compose v2."
+  exit 3
+fi
+ok "Compose command: ${CCMD}"
+
+if [[ -z "${STACK_ROOT}" ]]; then
+  for cand in \
+    /opt/sparqplug/server \
+    /home/*/sparqplug/server \
+    /srv/sparqplug/server \
+    $(pwd); do
+    if [[ -f "$cand/docker-compose.yml" ]]; then STACK_ROOT="$cand"; break; fi
+  done
+fi
+
+if [[ -z "$STACK_ROOT" ]]; then
+  err "Could not locate docker-compose.yml. Use --root <path>"
+  exit 4
+fi
+ok "Stack root: ${STACK_ROOT}"
+
+pushd "$STACK_ROOT" >/dev/null || { err "Cannot cd to ${STACK_ROOT}"; exit 5; }
+
+# ---- Step 3: Compose services inventory ----
+SERVICES=($($CCMD --no-ansi config --services || true))
+if [[ ${#SERVICES[@]} -eq 0 ]]; then
+  err "No services found in compose."
+  popd >/dev/null; exit 6
+fi
+ok "Compose services: ${SERVICES[*]}"
+
+svc_exists(){ local s="$1"; for x in "${SERVICES[@]}"; do [[ "$x" == "$s" ]] && return 0; done; return 1; }
+
+# ---- Step 4: Bring up cloudflared early ----
+if svc_exists cloudflared; then
+  note "Ensuring cloudflared is up"
+  if [[ $DO_FIX -eq 1 ]]; then
+    $CCMD up -d --build cloudflared || $CCMD up -d cloudflared || true
+  fi
+  $CCMD ps | grep -E "cloudflared" || warn "cloudflared not listed in ps"
+else
+  warn "cloudflared service not found in compose"
+fi
+
+# ---- Step 5: Inspect container states / fix Created/Exited ----
+note "Checking container states"
+DOCKER_PS_ALL=$(docker ps -a --format '{{.Names}} {{.Status}}' || true)
+if [[ -n "$DOCKER_PS_ALL" ]]; then echo "$DOCKER_PS_ALL" | sed 's/^/  - /'; fi
+if echo "$DOCKER_PS_ALL" | grep -qE 'Created|Exited|Restarting'; then
+  warn "Found containers not running"
+  if [[ $DO_FIX -eq 1 ]]; then
+    note "Attempting to (re)create and start core services"
+    # Figure out which of the desired services exist in this compose
+    TO_START=()
+    for s in "${SERVICES_WANTED[@]}"; do svc_exists "$s" && TO_START+=("$s"); done
+    if [[ ${#TO_START[@]} -gt 0 ]]; then
+      $CCMD up -d --no-build "${TO_START[@]}" || true
+      $CCMD up -d --build "${TO_START[@]}" || true
+      $CCMD start "${TO_START[@]}" || true
+    else
+      $CCMD up -d || true
+    fi
+  fi
+else
+  ok "All containers appear running"
+fi
+
+# ---- Step 6: Exit(137) / OOM detection ----
+OOM=0
+if docker ps -a --format '{{.Names}} {{.Status}}' | grep -q 'Exit (137)'; then
+  warn "Detected containers previously killed with Exit(137) (possible OOM)"
+  OOM=1
+fi
+
+if [[ $OOM -eq 1 ]]; then
+  if [[ "$SWAP_ON" == "0" ]]; then
+    warn "No swap configured; OOM likely."
+    if [[ $ENSURE_SWAP -eq 1 && $DO_FIX -eq 1 ]]; then
+      note "Creating 2G swapfile at /swapfile"
+      $(needsudo) fallocate -l 2G /swapfile || $(needsudo) dd if=/dev/zero of=/swapfile bs=1M count=2048
+      $(needsudo) chmod 600 /swapfile
+      $(needsudo) mkswap /swapfile
+      $(needsudo) swapon /swapfile
+      if ! grep -q '/swapfile' /etc/fstab; then echo '/swapfile none swap sw 0 0' | $(needsudo) tee -a /etc/fstab >/dev/null; fi
+      ok "Swap enabled"
+    else
+      note "Tip: re-run with --ensure-swap to auto-create swap"
+    fi
+  else
+    ok "Swap is present; consider increasing size if OOM persists"
+  fi
+fi
+
+# ---- Step 7: cloudflared config and status ----
+CLOUDF_CFG="cloudflared/config.yml"
+if [[ -f "$CLOUDF_CFG" ]]; then ok "cloudflared config present: $CLOUDF_CFG"; else warn "Missing $CLOUDF_CFG"; fi
+$CCMD ps | grep -q cloudflared && ok "cloudflared container present" || warn "cloudflared container not found"
+
+# ---- Step 8: DNS check for webhook host ----
+DNS_OK=0
+if have dig; then
+  CNAME=$(dig +short CNAME hooks.${CLOUD_DOMAIN} || true)
+  if [[ -n "$CNAME" ]]; then
+    ok "hooks.${CLOUD_DOMAIN} CNAME -> ${CNAME}"
+    DNS_OK=1
+  else
+    warn "hooks.${CLOUD_DOMAIN} has no CNAME (GitHub webhook may fail to reach deployer)"
+  fi
+else
+  warn "dig not installed; skipping DNS CNAME check (install: dnsutils)"
+fi
+
+# ---- Step 9: Try health probes via public tunnel (advisory) ----
+probe(){ local url="$1"; curl -fsS --max-time "$TIMEOUT" "$url" 2>/dev/null | head -c 200 | tr -d '\n' || return 1; }
+
+PORTAL_HOST="https://portal.${CLOUD_DOMAIN}"
+PLUG_HOST="https://sparqplug.${CLOUD_DOMAIN}"
+
+note "Probing portal health"
+if OUT=$(probe "$PORTAL_HOST/api/health"); then ok "Portal /api/health responded: ${OUT}"; else warn "Portal health probe failed"; fi
+
+note "Probing SparQ Plug health"
+if OUT=$(probe "$PLUG_HOST/_app_health"); then ok "Plug _app_health responded"; else warn "Plug health probe failed (may not expose endpoint)"; fi
+
+# ---- Step 10: Final pass — start services if still down ----
+if [[ $DO_FIX -eq 1 ]]; then
+  RUNNING_COUNT=$(docker ps --format '{{.Names}}' | wc -l | awk '{print $1}')
+  if [[ "$RUNNING_COUNT" -lt 3 ]]; then
+    warn "Few containers detected running; attempting full stack bring-up"
+    $CCMD up -d || true
+  fi
+fi
+
+# ---- Summary ----
+note "Summary"
+[[ "$DOCKER_ACTIVE" == "active" ]] && ok "Docker active" || warn "Docker inactive"
+$CCMD ps | sed 's/^/  /'
+[[ $OOM -eq 1 ]] && warn "OOM/Exit(137) observed" || ok "No recent OOM detected"
+[[ $DNS_OK -eq 1 ]] && ok "Webhook DNS looks OK" || warn "Webhook DNS may be missing CNAME"
+
+popd >/dev/null || true
+
+note "Done. You can re-run with --check-only for diagnostics only, or --ensure-swap to auto-create swap."

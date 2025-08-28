@@ -62,3 +62,45 @@ Notes:
 - For portal-app, ensure the repo contains a Dockerfile at its root (or set PORTAL_DOCKERFILE in .env).
 - For static-site, set STATIC_BUILD_CMD if the site needs a build (e.g., npm ci && npm run build), and STATIC_OUTPUT_DIR accordingly.
 - All images chosen support linux/arm64 (Pi 5).
+
+## sparqfyr — Diagnose and Fix (Ops)
+
+A helper script to troubleshoot the Docker + Cloudflared stack.
+
+Location in repo:
+
+- `sparq-plug/server/bin/sparqfyr`
+
+Install on the Pi to run from anywhere:
+
+```bash
+sudo install -m 0755 sparq-plug/server/bin/sparqfyr /usr/local/bin/sparqfyr
+```
+
+Run checks only (no changes):
+
+```bash
+sparqfyr --check-only
+```
+
+Run with fixes (default) and ensure swap if Exit(137)/OOM is seen:
+
+```bash
+sparqfyr --ensure-swap
+```
+
+Options:
+
+- `--root <path>` set stack root (defaults to autodetect, typically `/opt/sparqplug/server`)
+- `--timeout <sec>` HTTP/DNS probe timeout (default 20)
+
+What it does:
+
+- Verifies Docker engine/service and Compose availability
+- Locates the stack (docker-compose.yml)
+- Ensures cloudflared is up first
+- Starts core services: cloudflared, static-site, portal-app, sparqplug, gateway, deployer
+- Detects Exited/Created and tries up/start again
+- Detects Exit(137) OOM and suggests swap; can create 2G swap with `--ensure-swap`
+- Checks DNS CNAME for `hooks.getsparqd.com` (webhook reachability)
+- Probes portal `/api/health` and plug `/_app_health`
