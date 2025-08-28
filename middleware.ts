@@ -46,27 +46,31 @@ export async function middleware(req: NextRequest) {
       }
     }
     if (!role) {
-      // Not authenticated/role unknown: redirect to login
-      const url = req.nextUrl.clone();
-      url.pathname = `${bp}/login`;
-      return NextResponse.redirect(url);
+      // Not authenticated/role unknown: redirect to portal login with returnTo
+      const currentUrl = req.nextUrl.clone();
+      const rt = encodeURIComponent(currentUrl.toString());
+      const target = `https://portal.getsparqd.com/login.html?rt=${rt}`;
+      return NextResponse.redirect(target);
     }
 
     // Role-based enforcement: allow admin for /admin, manager for /manager, client for /client
     if (path.startsWith('/admin') && role !== 'admin') {
-      const url = req.nextUrl.clone();
-      url.pathname = `${bp}/login`;
-      return NextResponse.redirect(url);
+      const currentUrl = req.nextUrl.clone();
+      const rt = encodeURIComponent(currentUrl.toString());
+      const target = `https://portal.getsparqd.com/login.html?rt=${rt}`;
+      return NextResponse.redirect(target);
     }
     if (path.startsWith('/manager') && role !== 'manager' && role !== 'admin') {
-      const url = req.nextUrl.clone();
-      url.pathname = `${bp}/login`;
-      return NextResponse.redirect(url);
+      const currentUrl = req.nextUrl.clone();
+      const rt = encodeURIComponent(currentUrl.toString());
+      const target = `https://portal.getsparqd.com/login.html?rt=${rt}`;
+      return NextResponse.redirect(target);
     }
     if (path.startsWith('/client') && role !== 'client' && role !== 'admin' && role !== 'manager') {
-      const url = req.nextUrl.clone();
-      url.pathname = `${bp}/login`;
-      return NextResponse.redirect(url);
+      const currentUrl = req.nextUrl.clone();
+      const rt = encodeURIComponent(currentUrl.toString());
+      const target = `https://portal.getsparqd.com/login.html?rt=${rt}`;
+      return NextResponse.redirect(target);
     }
   }
 
