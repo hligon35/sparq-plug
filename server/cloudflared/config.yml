@@ -2,10 +2,12 @@ tunnel: cf882a61-b782-4cf3-89c8-e5d82541d367
 credentials-file: /etc/cloudflared/cf882a61-b782-4cf3-89c8-e5d82541d367.json
 
 ingress:
+  - hostname: www.getsparqd.com
+    service: http://static-site:80
   - hostname: getsparqd.com
     service: http://static-site:80
   - hostname: portal.getsparqd.com
-  service: http://portal-app:3003
+    service: http://portal-app:3003
   - hostname: sparqplug.getsparqd.com
     service: http://sparqplug:3000
   - service: http_status:404
