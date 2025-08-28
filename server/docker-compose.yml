@@ -117,15 +117,6 @@ services:
       autoheal: "true"
       com.sparq.service: "cloudflared"
       com.sparq.role: "tunnel"
-    depends_on:
-      deployer:
-        condition: service_started
-      sparqplug:
-        condition: service_healthy
-      portal-app:
-        condition: service_healthy
-      static-site:
-        condition: service_healthy
     healthcheck:
       # Verify the public edge can reach our origins via the tunnel. If this fails repeatedly, autoheal will restart cloudflared.
   test: ["CMD-SHELL", "wget -q --spider --timeout=5 https://portal.getsparqd.com/healthz && wget -q --spider --timeout=5 https://sparqplug.getsparqd.com/api/version || exit 1"]
@@ -144,11 +135,11 @@ services:
       - CHECK_INTERVAL_MS=30000
       - FAIL_THRESHOLD=3
       - PUBLIC_PORTAL_URL=https://portal.getsparqd.com/healthz
-      - PUBLIC_SPARGPLUG_URL=https://sparqplug.getsparqd.com/_app_health
+  - PUBLIC_SPARGPLUG_URL=https://sparqplug.getsparqd.com/api/version
       - PUBLIC_STATIC_URL=https://getsparqd.com/
       - INTERNAL_PORTAL_URL=http://portal-app:3003/healthz
-      - INTERNAL_SPARGPLUG_URL=http://sparqplug:3000/_app_health
-      - INTERNAL_STATIC_URL=http://static-site:80/
+  - INTERNAL_SPARGPLUG_URL=http://sparqplug:3000/api/version
+  - INTERNAL_STATIC_URL=http://static-site:80/health
       - TUNNEL_CONTAINER=cloudflared
       - LOG_LEVEL=info
     volumes:
