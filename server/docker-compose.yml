@@ -99,7 +99,8 @@ services:
       com.sparq.role: "app"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost >/dev/null 2>&1 || exit 1"]
+      # Use IPv4 loopback and explicit health endpoint to avoid IPv6 localhost issues
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/health || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 6
@@ -127,7 +128,7 @@ services:
         condition: service_healthy
     healthcheck:
       # Verify the public edge can reach our origins via the tunnel. If this fails repeatedly, autoheal will restart cloudflared.
-      test: ["CMD-SHELL", "wget -q --spider --timeout=5 https://portal.getsparqd.com/healthz && wget -q --spider --timeout=5 https://sparqplug.getsparqd.com/_app_health || exit 1"]
+  test: ["CMD-SHELL", "wget -q --spider --timeout=5 https://portal.getsparqd.com/healthz && wget -q --spider --timeout=5 https://sparqplug.getsparqd.com/api/version || exit 1"]
       interval: 15s
       timeout: 6s
       retries: 6
