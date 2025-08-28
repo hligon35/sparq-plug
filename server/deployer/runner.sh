@@ -80,9 +80,26 @@ fi
 log "compose up --build..."
 if command -v docker >/dev/null 2>&1; then
   if docker compose version >/dev/null 2>&1; then
+    set +e
     DOCKER_BUILDKIT=1 docker compose -f "$ROOT/docker-compose.yml" up -d --build
+    rc=$?
+    set -e
+    if [ $rc -ne 0 ]; then
+      log "compose up --build failed (rc=$rc); attempting to start existing containers"
+      docker compose -f "$ROOT/docker-compose.yml" up -d || true
+    fi
+    # Ensure any Created services are actually started
+    docker compose -f "$ROOT/docker-compose.yml" start || true
   elif command -v docker-compose >/dev/null 2>&1; then
+    set +e
     DOCKER_BUILDKIT=1 docker-compose -f "$ROOT/docker-compose.yml" up -d --build
+    rc=$?
+    set -e
+    if [ $rc -ne 0 ]; then
+      log "docker-compose up --build failed (rc=$rc); attempting to start existing containers"
+      docker-compose -f "$ROOT/docker-compose.yml" up -d || true
+    fi
+    docker-compose -f "$ROOT/docker-compose.yml" start || true
   else
     log "ERROR: neither docker compose nor docker-compose found"
     exit 1
