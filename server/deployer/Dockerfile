@@ -1,6 +1,10 @@
 FROM node:20-alpine
 
-RUN apk add --no-cache bash git openssh-client curl
+# Tools: bash, git/ssh, curl, and Docker CLI + Compose (both plugin and legacy as fallback)
+RUN apk add --no-cache \
+	bash git openssh-client curl \
+	docker-cli docker-cli-compose docker-compose || \
+	apk add --no-cache bash git openssh-client curl docker docker-compose
 
 WORKDIR /app
 

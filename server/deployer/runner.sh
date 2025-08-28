@@ -16,15 +16,18 @@ fi
 log() { echo "[runner] $*"; }
 
 log "pull main repo..."
+git config --global --add safe.directory /workspace || true
 git -C /workspace pull || true
 
 log "update portal repo..."
 if [[ -d portal-app/src/.git ]]; then
+  git config --global --add safe.directory /workspace/server/portal-app/src || true
   git -C portal-app/src pull --ff-only || true
 fi
 
 log "update static repo..."
 if [[ -d static-site/src/.git ]]; then
+  git config --global --add safe.directory /workspace/server/static-site/src || true
   git -C static-site/src pull --ff-only || true
 
   SRC_DIR="static-site/src/${STATIC_SUBDIR:-.}"
@@ -53,5 +56,17 @@ if [[ -d static-site/src/.git ]]; then
 fi
 
 log "compose up --build..."
-DOCKER_BUILDKIT=1 docker compose -f "$ROOT/docker-compose.yml" up -d --build
+if command -v docker >/dev/null 2>&1; then
+  if docker compose version >/dev/null 2>&1; then
+    DOCKER_BUILDKIT=1 docker compose -f "$ROOT/docker-compose.yml" up -d --build
+  elif command -v docker-compose >/dev/null 2>&1; then
+    DOCKER_BUILDKIT=1 docker-compose -f "$ROOT/docker-compose.yml" up -d --build
+  else
+    log "ERROR: neither docker compose nor docker-compose found"
+    exit 1
+  fi
+else
+  log "ERROR: docker CLI not found in deployer container"
+  exit 1
+fi
 log "done"
