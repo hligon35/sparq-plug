@@ -19,6 +19,11 @@ log() { echo "[update] $*"; }
 # Helper to ensure directory exists
 ensure_dir() { mkdir -p "$1"; }
 
+# Ensure git safe.directory for sub-repos when running under systemd/root
+git config --global --add safe.directory "$REPO_ROOT" || true
+git config --global --add safe.directory "$REPO_ROOT/portal-app/src" || true
+git config --global --add safe.directory "$REPO_ROOT/static-site/src" || true
+
 # 1) Update this repo
 log "Updating sparqplug repo..."
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -58,22 +63,37 @@ if [[ -n "${STATIC_REPO:-}" ]]; then
     git -C static-site/src pull --ff-only || true
   fi
 
-  # Build or copy
+  # Build or copy (atomic): copy to tmp, validate, then swap into build_out
   SRC_DIR="static-site/src/${STATIC_SUBDIR:-.}"
   OUT_DIR="static-site/build_out"
-  rm -rf "$OUT_DIR" && mkdir -p "$OUT_DIR"
+  TMP_OUT="static-site/.tmp_build_out_$(date +%s)"
+  rm -rf "$TMP_OUT" && mkdir -p "$TMP_OUT"
+
   if [[ -n "${STATIC_BUILD_CMD:-}" ]]; then
     log "Building static site: $STATIC_BUILD_CMD"
     (cd "$SRC_DIR" && bash -lc "$STATIC_BUILD_CMD")
     if [[ -n "${STATIC_OUTPUT_DIR:-}" ]]; then
-      cp -a "$SRC_DIR/${STATIC_OUTPUT_DIR}/." "$OUT_DIR/"
+      # Copy built output
+      cp -a "$SRC_DIR/${STATIC_OUTPUT_DIR}/." "$TMP_OUT/" || true
     else
       log "STATIC_OUTPUT_DIR empty after build; copying entire source subdir"
-      cp -a "$SRC_DIR/." "$OUT_DIR/"
+      cp -a "$SRC_DIR/." "$TMP_OUT/" || true
     fi
   else
     log "No build command; copying static files from $SRC_DIR"
-    cp -a "$SRC_DIR/." "$OUT_DIR/"
+    cp -a "$SRC_DIR/." "$TMP_OUT/" || true
+  fi
+
+  # Remove any VCS dirs that shouldn't be served
+  rm -rf "$TMP_OUT/.git" "$TMP_OUT/.github" "$TMP_OUT/.gitignore" 2>/dev/null || true
+
+  # Validate we have content (at least an index.html or any file)
+  if [[ ! -f "$TMP_OUT/index.html" ]] && [[ -z "$(find "$TMP_OUT" -type f -maxdepth 1 | head -n1)" ]]; then
+    log "WARNING: No files copied to temp output; keeping existing $OUT_DIR"
+    rm -rf "$TMP_OUT"
+  else
+    log "Publishing static site atomically"
+    rm -rf "$OUT_DIR" && mv "$TMP_OUT" "$OUT_DIR"
   fi
 fi
 
