@@ -24,6 +24,40 @@
     return el;
   }
 
+  // Resolve API URL with multiple candidates to support different base paths
+  function resolveCandidates(basePath, rawPath) {
+    var clean = String(rawPath || '');
+    clean = clean.startsWith('/') ? clean : '/' + clean;
+    var out = [];
+    // 1) basePath join
+    out.push(joinUrl(basePath, clean));
+    // 2) If __withBase__ exists, try it
+    try {
+      if (typeof window !== 'undefined' && typeof window.__withBase__ === 'function') {
+        var noSlash = clean.replace(/^\//, '');
+        var withBase = window.__withBase__(noSlash);
+        if (withBase) out.push(withBase);
+      }
+    } catch (_) {}
+    // 3) If current path sits under /portal, also try prefixed
+    try {
+      if (typeof window !== 'undefined') {
+        var locPath = String(window.location && window.location.pathname || '');
+        if (locPath.startsWith('/portal') && !clean.startsWith('/portal/')) {
+          out.push('/portal' + clean);
+        }
+      }
+    } catch (_) {}
+    // Deduplicate
+    var seen = Object.create(null);
+    var uniq = [];
+    for (var i=0; i<out.length; i++) {
+      var u = out[i];
+      if (!seen[u]) { seen[u] = true; uniq.push(u); }
+    }
+    return uniq;
+  }
+
   function msgBubble(text, role) {
     const wrap = createEl('div', {
       style: {
@@ -90,6 +124,7 @@
   function createWidget(opts) {
     var basePath = (opts && opts.basePath) || '';
     var attachTo = (opts && opts.attachTo) || document.body;
+    var hideLauncher = !!(opts && opts.hideLauncher);
     var announced404 = false;
 
     // Root container (positioned)
@@ -103,8 +138,8 @@
       }
     });
 
-    // Launcher button
-    var launcher = createEl('button', {
+  // Launcher button (optional)
+  var launcher = createEl('button', {
       text: 'Need Help?',
       attrs: { type: 'button', 'aria-label': 'Open SparQy assistant' },
       style: {
@@ -230,7 +265,9 @@
 
     // Attach
     root.appendChild(panel);
-    root.appendChild(launcher);
+    if (!hideLauncher) {
+      root.appendChild(launcher);
+    }
     attachTo.appendChild(root);
 
     // Helper: scroll to bottom
@@ -249,36 +286,54 @@
 
     // Network helpers
     function getJson(url) {
-      return fetch(url, { credentials: 'include' }).then(function (r) {
-        if (!r.ok) {
-          var err = new Error('HTTP ' + r.status);
-          err.status = r.status;
-          throw err;
-        }
-        return r.json();
-      });
+      var cands = resolveCandidates(basePath, url);
+      var lastErr;
+      var i = 0;
+      function next() {
+        if (i >= cands.length) throw lastErr || new Error('Network error');
+        var u = cands[i++];
+        return fetch(u, { credentials: 'include' }).then(function (r) {
+          if (!r.ok) {
+            var err = new Error('HTTP ' + r.status);
+            err.status = r.status;
+            lastErr = err;
+            return next();
+          }
+          return r.json();
+        }).catch(function (e) { lastErr = e; return next(); });
+      }
+      return next();
     }
 
     function postJson(url, body) {
-      return fetch(url, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body || {})
-      }).then(function (r) {
-        if (!r.ok) {
-          var err = new Error('HTTP ' + r.status);
-          err.status = r.status;
-          throw err;
-        }
-        return r.json();
-      });
+      var cands = resolveCandidates(basePath, url);
+      var lastErr;
+      var i = 0;
+      function next() {
+        if (i >= cands.length) throw lastErr || new Error('Network error');
+        var u = cands[i++];
+        return fetch(u, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body || {})
+        }).then(function (r) {
+          if (!r.ok) {
+            var err = new Error('HTTP ' + r.status);
+            err.status = r.status;
+            lastErr = err;
+            return next();
+          }
+          return r.json();
+        }).catch(function (e) { lastErr = e; return next(); });
+      }
+      return next();
     }
 
     // Public API
     function open() {
       panel.style.display = 'block';
-      launcher.style.display = 'none';
+      if (launcher && launcher.parentNode) launcher.style.display = 'none';
       // Health check (best-effort)
       getJson(joinUrl(basePath, '/api/sparqy/health'))
         .then(function () { status.textContent = ''; })
@@ -301,7 +356,7 @@
 
     function close() {
       panel.style.display = 'none';
-      launcher.style.display = 'inline-block';
+      if (!hideLauncher && launcher) launcher.style.display = 'inline-block';
     }
 
     function clear() {
@@ -352,7 +407,7 @@
     }
 
     // Wire events
-    launcher.addEventListener('click', open);
+  if (!hideLauncher && launcher) launcher.addEventListener('click', open);
     closeBtn.addEventListener('click', close);
     sendBtn.addEventListener('click', function () { send(); });
     clearBtn.addEventListener('click', clear);
