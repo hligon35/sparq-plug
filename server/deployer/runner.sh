@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Ensure readable perms regardless of environment umask
+umask 022
+
 # Where this repo's server folder is mounted inside the container
 ROOT=/workspace/server
 cd "$ROOT"
@@ -10,26 +13,45 @@ if [[ -f .env ]]; then
   set -a; source .env; set +a
 fi
 
-echo "[runner] pull main repo..."
+log() { echo "[runner] $*"; }
+
+log "pull main repo..."
 git -C /workspace pull || true
 
-echo "[runner] update portal repo..."
+log "update portal repo..."
 if [[ -d portal-app/src/.git ]]; then
   git -C portal-app/src pull --ff-only || true
 fi
 
-echo "[runner] update static repo..."
+log "update static repo..."
 if [[ -d static-site/src/.git ]]; then
   git -C static-site/src pull --ff-only || true
-  rm -rf static-site/build_out
-  mkdir -p static-site/build_out
-  cp -a "static-site/src/${STATIC_SUBDIR:-.}/." static-site/build_out/
-  # Normalize permissions to prevent Nginx 403
-  chmod 755 static-site/build_out || true
-  find static-site/build_out -type d -exec chmod 755 {} + || true
-  find static-site/build_out -type f -exec chmod 644 {} + || true
+
+  SRC_DIR="static-site/src/${STATIC_SUBDIR:-.}"
+  OUT_DIR="static-site/build_out"
+  TMP_OUT="static-site/.tmp_build_out_$(date +%s)"
+  rm -rf "$TMP_OUT" && mkdir -p "$TMP_OUT"
+
+  log "copying static files from $SRC_DIR -> $TMP_OUT"
+  cp -a "$SRC_DIR/." "$TMP_OUT/" || true
+
+  # Strip VCS artifacts
+  rm -rf "$TMP_OUT/.git" "$TMP_OUT/.github" "$TMP_OUT/.gitignore" 2>/dev/null || true
+
+  # Validate content exists (index.html or any top-level file)
+  if [[ ! -f "$TMP_OUT/index.html" ]] && [[ -z "$(find "$TMP_OUT" -maxdepth 1 -type f | head -n1)" ]]; then
+    log "WARNING: No files copied into temp; keeping existing $OUT_DIR"
+    rm -rf "$TMP_OUT"
+  else
+    log "publishing static site atomically"
+    rm -rf "$OUT_DIR" && mv "$TMP_OUT" "$OUT_DIR"
+    # Normalize permissions to prevent Nginx 403
+    chmod 755 "$OUT_DIR" || true
+    find "$OUT_DIR" -type d -exec chmod 755 {} + || true
+    find "$OUT_DIR" -type f -exec chmod 644 {} + || true
+  fi
 fi
 
-echo "[runner] compose up --build..."
+log "compose up --build..."
 DOCKER_BUILDKIT=1 docker compose -f "$ROOT/docker-compose.yml" up -d --build
-echo "[runner] done"
+log "done"
