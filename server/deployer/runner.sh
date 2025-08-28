@@ -24,15 +24,32 @@ export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=accept-new -o UserKnownHost
 
 log "skip main repo pull (managed on host)"
 
-log "update portal repo..."
+REPO_OWNER="${REPO_OWNER:-hligon35}"
+PORTAL_REPO_NAME="${PORTAL_REPO_NAME:-sparq-dash}"
+STATIC_REPO_NAME="${STATIC_REPO_NAME:-sparq-landing}"
+
+# Ensure parent dirs exist
+mkdir -p portal-app/src static-site/src || true
+
+log "ensure portal repo present..."
+if [[ ! -d portal-app/src/.git ]]; then
+  log "cloning https://github.com/${REPO_OWNER}/${PORTAL_REPO_NAME}.git -> portal-app/src"
+  git clone "https://github.com/${REPO_OWNER}/${PORTAL_REPO_NAME}.git" portal-app/src || true
+fi
 if [[ -d portal-app/src/.git ]]; then
   git config --global --add safe.directory /workspace/server/portal-app/src || true
+  git -C portal-app/src fetch --all --prune || true
   git -C portal-app/src pull --ff-only || true
 fi
 
-log "update static repo..."
+log "ensure static repo present..."
+if [[ ! -d static-site/src/.git ]]; then
+  log "cloning https://github.com/${REPO_OWNER}/${STATIC_REPO_NAME}.git -> static-site/src"
+  git clone "https://github.com/${REPO_OWNER}/${STATIC_REPO_NAME}.git" static-site/src || true
+fi
 if [[ -d static-site/src/.git ]]; then
   git config --global --add safe.directory /workspace/server/static-site/src || true
+  git -C static-site/src fetch --all --prune || true
   git -C static-site/src pull --ff-only || true
 
   SRC_DIR="static-site/src/${STATIC_SUBDIR:-.}"
