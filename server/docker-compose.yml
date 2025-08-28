@@ -31,6 +31,7 @@ services:
       PUBLIC_URL: "https://sparqplug.getsparqd.com"
       UPLOAD_DIR: "/data/uploads"
       DATA_DIR: "/data/app-data"
+      SSO_JWT_SECRET: "${SSO_JWT_SECRET:-change-me}"
     volumes:
       - sparqplug-data:/data
     restart: unless-stopped
@@ -42,6 +43,7 @@ services:
       dockerfile: ${PORTAL_DOCKERFILE:-Dockerfile}
     environment:
       NODE_ENV: production
+      SSO_JWT_SECRET: "${SSO_JWT_SECRET:-change-me}"
     expose:
       - "3003"
     restart: unless-stopped

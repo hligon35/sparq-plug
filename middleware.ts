@@ -1,9 +1,21 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
 
 const ROLE_COOKIE = 'role';
+const SSO_COOKIE = 'sparq_sso';
 
-function getRole(req: NextRequest) {
+async function verifySsoCookie(token: string) {
+  try {
+    const secret = new TextEncoder().encode(process.env.SSO_JWT_SECRET || process.env.JWT_SECRET || 'email-admin-secret');
+    const { payload } = await jwtVerify(token, secret);
+    return payload as any;
+  } catch {
+    return null;
+  }
+}
+
+function getRoleFromHeaderOrCookie(req: NextRequest) {
   // Prefer a header (for integration with external portal), then cookie
   const header = req.headers.get('x-portal-role');
   if (header) return header;
@@ -12,7 +24,7 @@ function getRole(req: NextRequest) {
   return null;
 }
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const bp = process.env.NEXT_PUBLIC_BASE_PATH || '';
   const path = bp && pathname.startsWith(bp) ? pathname.slice(bp.length) || '/' : pathname;
@@ -24,7 +36,15 @@ export function middleware(req: NextRequest) {
 
   // Protect admin/manager/client routes
   if (path.startsWith('/admin') || path.startsWith('/manager') || path.startsWith('/client')) {
-    const role = getRole(req);
+    let role = getRoleFromHeaderOrCookie(req);
+    // If no role cookie, try verifying SSO cookie JWT for role
+    if (!role) {
+      const sso = req.cookies.get(SSO_COOKIE)?.value;
+      if (sso) {
+        const claims = await verifySsoCookie(sso);
+        role = (claims && (claims as any).role) || null;
+      }
+    }
     if (!role) {
       // Not authenticated/role unknown: redirect to login
       const url = req.nextUrl.clone();
