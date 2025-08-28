@@ -1,5 +1,5 @@
-tunnel: cf882a61-b782-4cf3-89c8-e5d82541d367
-credentials-file: /etc/cloudflared/cf882a61-b782-4cf3-89c8-e5d82541d367.json
+tunnel: 8c45f6e9-ae6d-47aa-9d04-73182b1eb3fb
+credentials-file: /etc/cloudflared/8c45f6e9-ae6d-47aa-9d04-73182b1eb3fb.json
 
 ingress:
   - hostname: www.getsparqd.com
