@@ -3,7 +3,8 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
-RUN npm ci --no-audit --no-fund
+# Use npm install to be tolerant of minor lockfile drift in self-hosted builds
+RUN npm install --no-audit --no-fund
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 # Allow overriding basePath at build time
