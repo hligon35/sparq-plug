@@ -22,9 +22,7 @@ touch "$HOME_DIR/.ssh/known_hosts" && chmod 600 "$HOME_DIR/.ssh/known_hosts" || 
 ssh-keyscan -T 3 -t ed25519 github.com >> "$HOME_DIR/.ssh/known_hosts" 2>/dev/null || true
 export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$HOME_DIR/.ssh/known_hosts"
 
-log "pull main repo..."
-git config --global --add safe.directory /workspace || true
-git -C /workspace pull || true
+log "skip main repo pull (managed on host)"
 
 log "update portal repo..."
 if [[ -d portal-app/src/.git ]]; then
