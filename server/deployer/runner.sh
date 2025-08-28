@@ -18,6 +18,7 @@ log() { echo "[runner] $*"; }
 # Ensure SSH won't prompt for GitHub host key; prefer non-interactive add
 HOME_DIR="${HOME:-/root}"
 mkdir -p "$HOME_DIR/.ssh" && chmod 700 "$HOME_DIR/.ssh" || true
+touch "$HOME_DIR/.ssh/known_hosts" && chmod 600 "$HOME_DIR/.ssh/known_hosts" || true
 ssh-keyscan -T 3 -t ed25519 github.com >> "$HOME_DIR/.ssh/known_hosts" 2>/dev/null || true
 export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$HOME_DIR/.ssh/known_hosts"
 

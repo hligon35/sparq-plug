@@ -15,5 +15,8 @@ COPY index.js ./
 COPY runner.sh ./
 RUN chmod +x runner.sh
 
+USER root
+ENV HOME=/root
+
 EXPOSE 8787
 CMD ["node", "index.js"]
