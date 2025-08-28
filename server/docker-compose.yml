@@ -17,6 +17,18 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
 
+  # Auto-heal: restarts containers marked unhealthy (via healthcheck)
+  autoheal:
+    image: willfarrell/autoheal:latest
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+      - AUTOHEAL_INTERVAL=10
+      - AUTOHEAL_START_PERIOD=60
+      - AUTOHEAL_DEFAULT_STOP_TIMEOUT=10
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
   # This Next.js app (sparqplug.getsparqd.com)
   sparqplug:
     build:
@@ -38,6 +50,10 @@ services:
       BUILD_TIME: "${BUILD_TIME:-}"
     volumes:
       - sparqplug-data:/data
+    labels:
+      autoheal: "true"
+      com.sparq.service: "sparqplug"
+      com.sparq.role: "app"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000/_app_health',{method:'HEAD'}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
@@ -59,6 +75,10 @@ services:
       SSO_JWT_SECRET: "${SSO_JWT_SECRET:-change-me}"
     expose:
       - "3003"
+    labels:
+      autoheal: "true"
+      com.sparq.service: "portal"
+      com.sparq.role: "app"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3003/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
@@ -73,6 +93,10 @@ services:
     volumes:
       - ./static-site/build_out:/usr/share/nginx/html:ro
       - ./static-site/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    labels:
+      autoheal: "true"
+      com.sparq.service: "static"
+      com.sparq.role: "app"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost >/dev/null 2>&1 || exit 1"]
@@ -88,6 +112,10 @@ services:
     volumes:
       - ./cloudflared:/etc/cloudflared:rw
     user: "0:0"
+    labels:
+      autoheal: "true"
+      com.sparq.service: "cloudflared"
+      com.sparq.role: "tunnel"
     depends_on:
       deployer:
         condition: service_started
@@ -97,7 +125,42 @@ services:
         condition: service_healthy
       static-site:
         condition: service_healthy
+    healthcheck:
+      # Verify the public edge can reach our origins via the tunnel. If this fails repeatedly, autoheal will restart cloudflared.
+      test: ["CMD-SHELL", "wget -q --spider --timeout=5 https://portal.getsparqd.com/healthz && wget -q --spider --timeout=5 https://sparqplug.getsparqd.com/_app_health || exit 1"]
+      interval: 15s
+      timeout: 6s
+      retries: 6
+      start_period: 30s
     restart: unless-stopped
 
+  # Watchdog: probes public/internal health; restarts tunnel on repeated public failures
+  watchdog:
+    build:
+      context: ./watchdog
+      dockerfile: Dockerfile
+    environment:
+      - CHECK_INTERVAL_MS=30000
+      - FAIL_THRESHOLD=3
+      - PUBLIC_PORTAL_URL=https://portal.getsparqd.com/healthz
+      - PUBLIC_SPARGPLUG_URL=https://sparqplug.getsparqd.com/_app_health
+      - PUBLIC_STATIC_URL=https://getsparqd.com/
+      - INTERNAL_PORTAL_URL=http://portal-app:3003/healthz
+      - INTERNAL_SPARGPLUG_URL=http://sparqplug:3000/_app_health
+      - INTERNAL_STATIC_URL=http://static-site:80/
+      - TUNNEL_CONTAINER=cloudflared
+      - LOG_LEVEL=info
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      cloudflared:
+        condition: service_started
+      portal-app:
+        condition: service_healthy
+      sparqplug:
+        condition: service_healthy
+      static-site:
+        condition: service_healthy
+    restart: unless-stopped
 volumes:
   sparqplug-data: {}
