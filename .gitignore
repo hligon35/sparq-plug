@@ -42,3 +42,9 @@ next-env.d.ts
 # gateway runtime deps
 gateway/node_modules
 .next
+
+# server deployment outputs
+/server/static-site/build_out/
+/server/portal-app/src/
+/server/cloudflared/*.json
+/server/.env

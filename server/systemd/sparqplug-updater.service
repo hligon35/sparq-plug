@@ -1,0 +1,14 @@
+[Unit]
+Description=SparQ stack updater (pull repos, rebuild containers)
+Wants=docker.service
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/sparqplug/server
+ExecStart=/usr/local/bin/sparqplug-update.sh
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

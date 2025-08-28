@@ -1,0 +1,11 @@
+[Unit]
+Description=Run SparQ updater every 6 hours
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=6h
+Persistent=true
+Unit=sparqplug-updater.service
+
+[Install]
+WantedBy=timers.target

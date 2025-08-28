@@ -1,0 +1,11 @@
+tunnel: ${TUNNEL_ID}
+credentials-file: /etc/cloudflared/${TUNNEL_ID}.json
+
+ingress:
+  - hostname: ${ROOT_HOST}
+    service: http://static-site:80
+  - hostname: ${PORTAL_HOST}
+    service: http://portal-app:4000
+  - hostname: ${SPARQPLUG_HOST}
+    service: http://sparqplug:3000
+  - service: http_status:404

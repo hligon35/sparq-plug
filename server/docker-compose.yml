@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  # This Next.js app (sparqplug.getsparqd.com)
+  sparqplug:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        APP_BASE_PATH: ""
+    environment:
+      NODE_ENV: "production"
+      APP_BASE_PATH: ""
+      NEXT_PUBLIC_BASE_PATH: ""
+      PUBLIC_URL: "https://sparqplug.getsparqd.com"
+      UPLOAD_DIR: "/data/uploads"
+      DATA_DIR: "/data/app-data"
+    volumes:
+      - sparqplug-data:/data
+    restart: unless-stopped
+
+  # Portal app (portal.getsparqd.com), built from external repo
+  portal-app:
+    build:
+      context: ./portal-app/src
+      dockerfile: ${PORTAL_DOCKERFILE:-Dockerfile}
+    environment:
+      NODE_ENV: production
+    restart: unless-stopped
+
+  # Static landing site (getsparqd.com) served by nginx
+  static-site:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./static-site/build_out:/usr/share/nginx/html:ro
+      - ./static-site/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+
+  # Cloudflare Tunnel routing hostnames -> services
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./cloudflared:/etc/cloudflared:ro
+    depends_on:
+      - sparqplug
+      - portal-app
+      - static-site
+    restart: unless-stopped
+
+volumes:
+  sparqplug-data: {}
