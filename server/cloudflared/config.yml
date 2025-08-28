@@ -10,4 +10,6 @@ ingress:
     service: http://portal-app:3003
   - hostname: sparqplug.getsparqd.com
     service: http://sparqplug:3000
+  - hostname: hooks.getsparqd.com
+    service: http://deployer:8787
   - service: http_status:404
