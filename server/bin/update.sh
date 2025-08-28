@@ -19,6 +19,9 @@ log() { echo "[update] $*"; }
 # Helper to ensure directory exists
 ensure_dir() { mkdir -p "$1"; }
 
+# Ensure predictable file modes even when run under systemd/root with a restrictive umask
+umask ${UMASK:-022}
+
 # Ensure git safe.directory for sub-repos when running under systemd/root
 git config --global --add safe.directory "$REPO_ROOT" || true
 git config --global --add safe.directory "$REPO_ROOT/portal-app/src" || true
@@ -87,13 +90,17 @@ if [[ -n "${STATIC_REPO:-}" ]]; then
   # Remove any VCS dirs that shouldn't be served
   rm -rf "$TMP_OUT/.git" "$TMP_OUT/.github" "$TMP_OUT/.gitignore" 2>/dev/null || true
 
-  # Validate we have content (at least an index.html or any file)
-  if [[ ! -f "$TMP_OUT/index.html" ]] && [[ -z "$(find "$TMP_OUT" -type f -maxdepth 1 | head -n1)" ]]; then
+  # Validate we have content (at least an index.html or any file at top level)
+  if [[ ! -f "$TMP_OUT/index.html" ]] && [[ -z "$(find "$TMP_OUT" -maxdepth 1 -type f | head -n1)" ]]; then
     log "WARNING: No files copied to temp output; keeping existing $OUT_DIR"
     rm -rf "$TMP_OUT"
   else
     log "Publishing static site atomically"
     rm -rf "$OUT_DIR" && mv "$TMP_OUT" "$OUT_DIR"
+    # Normalize permissions so nginx can read everything (prevents 403)
+    chmod 755 "$OUT_DIR" 2>/dev/null || true
+    find "$OUT_DIR" -type d -exec chmod 755 {} + 2>/dev/null || true
+    find "$OUT_DIR" -type f -exec chmod 644 {} + 2>/dev/null || true
   fi
 fi
 
