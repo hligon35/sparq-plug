@@ -5,12 +5,12 @@ ingress:
   - hostname: www.getsparqd.com
     service: http://static-site:80
     health-check:
-      path: /
+  path: /health
       interval: 10s
   - hostname: getsparqd.com
     service: http://static-site:80
     health-check:
-      path: /
+  path: /health
       interval: 10s
   - hostname: portal.getsparqd.com
     service: http://portal-app:3003
@@ -20,7 +20,7 @@ ingress:
   - hostname: sparqplug.getsparqd.com
     service: http://sparqplug:3000
     health-check:
-      path: /_app_health
+  path: /api/version
       interval: 10s
   - hostname: hooks.getsparqd.com
     service: http://deployer:8787
