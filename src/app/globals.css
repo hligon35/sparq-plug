@@ -11,3 +11,6 @@ html, body {
 	background: var(--bg-app);
 	color: #0f172a; /* slate-900 */
 }
+
+/* Basic focus ring */
+:focus-visible { outline: 3px solid var(--brand-blue); outline-offset: 2px; }

@@ -29,6 +29,11 @@ export async function middleware(req: NextRequest) {
   const bp = process.env.NEXT_PUBLIC_BASE_PATH || '';
   const path = bp && pathname.startsWith(bp) ? pathname.slice(bp.length) || '/' : pathname;
 
+  // Allow health/version and Next static without auth interference
+  if (path === '/api/version' || path === '/_next' || path.startsWith('/_next')) {
+    return NextResponse.next();
+  }
+
   // Allow the login page to render freely
   if (path === '/login') {
     return NextResponse.next();
