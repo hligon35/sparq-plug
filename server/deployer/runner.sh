@@ -15,6 +15,11 @@ fi
 
 log() { echo "[runner] $*"; }
 
+# Ensure SSH won't prompt for GitHub host key; prefer non-interactive add
+mkdir -p /root/.ssh && chmod 700 /root/.ssh || true
+ssh-keyscan -T 3 -t ed25519 github.com >> /root/.ssh/known_hosts 2>/dev/null || true
+export GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/root/.ssh/known_hosts'
+
 log "pull main repo..."
 git config --global --add safe.directory /workspace || true
 git -C /workspace pull || true
