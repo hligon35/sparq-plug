@@ -1,4 +1,3 @@
-
 # Raspberry Pi deployment: getsparqd.com, portal.getsparqd.com, sparqplug.getsparqd.com
 
 This folder ships a minimal, repeatable deployment for a Raspberry Pi 5 (8GB):
