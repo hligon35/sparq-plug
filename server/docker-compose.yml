@@ -73,7 +73,8 @@ services:
   # Portal app (portal.getsparqd.com), built from external repo
   portal-app:
     build:
-      context: ../../sparq-dash
+      # Build from the local clone maintained by runner.sh
+      context: ./portal-app/src
       dockerfile: "${PORTAL_DOCKERFILE:-Dockerfile}"
       args:
         COMMIT: ${COMMIT:-}
