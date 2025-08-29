@@ -28,8 +28,16 @@ app.post('/webhook', async (req, res) => {
     if (!SECRET) return res.status(500).send('secret not configured')
     const hmac = crypto.createHmac('sha256', SECRET)
     const digest = 'sha256=' + hmac.update(raw).digest('hex')
+    // Debug logging for signature troubleshooting
+    log('[webhook debug] Received signature: ' + sig)
+    log('[webhook debug] Computed digest:   ' + digest)
+    log('[webhook debug] Raw body (utf8):   ' + raw.toString('utf8'))
+    log('[webhook debug] Raw body (hex):    ' + raw.toString('hex'))
     const ok = sig && crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(sig))
-    if (!ok) return res.status(401).send('invalid signature')
+    if (!ok) {
+      log('[webhook debug] Signature mismatch!')
+      return res.status(401).send('invalid signature')
+    }
     const event = req.header('X-GitHub-Event') || ''
     if (event !== 'push') return res.status(202).send('ignored')
     // Minimal info for observability
@@ -40,7 +48,8 @@ app.post('/webhook', async (req, res) => {
     log(`enqueued push: repo=${repo || 'unknown'} ref=${ref || 'unknown'} qlen=${queue.length}`)
     processQueue()
     return res.status(202).send('queued')
-  } catch {
+  } catch (e) {
+    log('[webhook debug] Exception: ' + (e && e.stack || e))
     return res.status(400).send('bad request')
   }
 })
