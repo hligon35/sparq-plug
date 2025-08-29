@@ -47,7 +47,23 @@ app.post('/webhook', async (req, res) => {
 
 app.get('/healthz', (_req, res) => res.status(200).json({ ok:true, running, qlen: queue.length, last }))
 app.get('/status', (_req, res) => res.json({ running, qlen: queue.length, last }))
-app.get('/recent-logs', (_req, res) => res.type('text/plain').send(ringLog.join('\n')))
+app.get('/recent-logs', (req, res) => {
+  // Optional limit: /recent-logs?n=200 (defaults to MAX_LOG)
+  const n = Math.min(MAX_LOG, Math.max(1, Number(req.query?.n) || MAX_LOG))
+  res.set('Cache-Control', 'no-store')
+  res.type('text/plain').send(ringLog.slice(-n).join('\n'))
+})
+// Alternate endpoints to reduce likelihood of WAF/tooling issues
+app.get('/logs.txt', (req, res) => {
+  const n = Math.min(MAX_LOG, Math.max(1, Number(req.query?.n) || MAX_LOG))
+  res.set('Cache-Control', 'no-store')
+  res.type('text/plain').send(ringLog.slice(-n).join('\n'))
+})
+app.get('/logs.json', (req, res) => {
+  const n = Math.min(MAX_LOG, Math.max(1, Number(req.query?.n) || MAX_LOG))
+  res.set('Cache-Control', 'no-store')
+  res.json({ lines: ringLog.slice(-n) })
+})
 app.get('/', (_req, res) => res.type('text/plain').send('SparQ deployer OK'))
 
 function processQueue(){
