@@ -48,6 +48,7 @@ app.post('/webhook', async (req, res) => {
 app.get('/healthz', (_req, res) => res.status(200).json({ ok:true, running, qlen: queue.length, last }))
 app.get('/status', (_req, res) => res.json({ running, qlen: queue.length, last }))
 app.get('/recent-logs', (_req, res) => res.type('text/plain').send(ringLog.join('\n')))
+app.get('/', (_req, res) => res.type('text/plain').send('SparQ deployer OK'))
 
 function processQueue(){
   if (running) return

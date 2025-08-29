@@ -24,4 +24,7 @@ ingress:
       interval: 10s
   - hostname: hooks.getsparqd.com
     service: http://deployer:8787
+    health-check:
+      path: /healthz
+      interval: 10s
   - service: http_status:404
