@@ -4,27 +4,12 @@ credentials-file: /etc/cloudflared/8c45f6e9-ae6d-47aa-9d04-73182b1eb3fb.json
 ingress:
   - hostname: www.getsparqd.com
     service: http://static-site:80
-    health-check:
-      path: /health
-      interval: 10s
   - hostname: getsparqd.com
     service: http://static-site:80
-    health-check:
-      path: /health
-      interval: 10s
   - hostname: portal.getsparqd.com
     service: http://portal-app:3003
-    health-check:
-      path: /healthz
-      interval: 10s
   - hostname: sparqplug.getsparqd.com
     service: http://sparqplug:3000
-    health-check:
-      path: /api/version
-      interval: 10s
   - hostname: hooks.getsparqd.com
     service: http://deployer:8787
-    health-check:
-      path: /healthz
-      interval: 10s
   - service: http_status:404

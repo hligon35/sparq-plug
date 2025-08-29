@@ -1,6 +1,0 @@
-export default function robots() {
-  return {
-    rules: [{ userAgent: '*', allow: '/' }],
-    sitemap: 'https://sparqplug.getsparqd.com/sitemap.xml',
-  };
-}
