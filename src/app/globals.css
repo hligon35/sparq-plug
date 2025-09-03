@@ -11,3 +11,52 @@ html, body {
 	background: var(--bg-app);
 	color: #0f172a; /* slate-900 */
 }
+
+/* Ensure the app fits the viewport and avoids horizontal scroll */
+html, body, #__next {
+	height: 100%;
+}
+
+/* On iOS Safari, ensure we respect safe areas and viewport units */
+@supports (height: 100dvh) {
+	body {
+		min-height: 100dvh;
+	}
+}
+
+/* Constrain horizontal overflow globally; allow vertical scrolling within pages */
+body {
+	overflow-x: hidden;
+}
+
+/* Utility: a full-viewport app container that children can use */
+.app-viewport {
+	min-height: 100vh;
+	min-height: 100dvh;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+/* Touch-friendly swipe scrolling utilities */
+.swipe-x {
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	overscroll-behavior-x: contain;
+	touch-action: pan-x;
+}
+
+.swipe-y {
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	overscroll-behavior-y: contain;
+	touch-action: pan-y;
+}
+
+/* Improve momentum scrolling on touch devices */
+@media (hover: none) and (pointer: coarse) {
+	.swipe-x,
+	.swipe-y {
+		-webkit-overflow-scrolling: touch;
+	}
+}

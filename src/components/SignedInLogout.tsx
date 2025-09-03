@@ -44,15 +44,15 @@ export default function SignedInLogout({ className }: Props) {
   };
 
   return (
-    <div className={`flex flex-col items-end ${className || ''}`}>
+    <div className={`flex flex-col items-center sm:items-end ${className || ''}`}>
       <button
         onClick={logout}
-        className="inline-flex items-center gap-2 bg-white text-[#1d74d0] hover:bg-blue-50 px-3 py-2 rounded-full text-sm font-semibold shadow"
+        className="inline-flex items-center gap-2 bg-white text-[#1d74d0] hover:bg-blue-50 px-3 py-2 rounded-full text-sm font-semibold shadow max-w-full"
         aria-label={`${displayName} - Logout`}
         title={`Logout ${displayName}`}
       >
         <span aria-hidden>🧑</span>
-        <span className="hidden sm:inline">{displayName} • Logout</span>
+        <span className="hidden sm:inline truncate">{displayName} • Logout</span>
         <span className="sm:hidden">Logout</span>
       </button>
   <div className="w-full mt-1 text-[10px] leading-none text-white/80 text-center" aria-live="polite">{timestamp}</div>

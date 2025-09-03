@@ -26,6 +26,11 @@ function getRoleFromHeaderOrCookie(req: NextRequest) {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const hostname = req.nextUrl.hostname;
+  // Allow everything on localhost/127.0.0.1 to ease local development
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return NextResponse.next();
+  }
   const bp = process.env.NEXT_PUBLIC_BASE_PATH || '';
   const path = bp && pathname.startsWith(bp) ? pathname.slice(bp.length) || '/' : pathname;
 
@@ -49,7 +54,7 @@ export async function middleware(req: NextRequest) {
       // Not authenticated/role unknown: redirect to portal login with returnTo
       const currentUrl = req.nextUrl.clone();
       const rt = encodeURIComponent(currentUrl.toString());
-      const target = `https://portal.getsparqd.com/login.html?rt=${rt}`;
+      const target = `https://portal.getsparqd.com/login?sso=1&returnTo=${rt}`;
       return NextResponse.redirect(target);
     }
 
@@ -57,19 +62,19 @@ export async function middleware(req: NextRequest) {
     if (path.startsWith('/admin') && role !== 'admin') {
       const currentUrl = req.nextUrl.clone();
       const rt = encodeURIComponent(currentUrl.toString());
-      const target = `https://portal.getsparqd.com/login.html?rt=${rt}`;
+      const target = `https://portal.getsparqd.com/login?sso=1&returnTo=${rt}`;
       return NextResponse.redirect(target);
     }
     if (path.startsWith('/manager') && role !== 'manager' && role !== 'admin') {
       const currentUrl = req.nextUrl.clone();
       const rt = encodeURIComponent(currentUrl.toString());
-      const target = `https://portal.getsparqd.com/login.html?rt=${rt}`;
+      const target = `https://portal.getsparqd.com/login?sso=1&returnTo=${rt}`;
       return NextResponse.redirect(target);
     }
     if (path.startsWith('/client') && role !== 'client' && role !== 'admin' && role !== 'manager') {
       const currentUrl = req.nextUrl.clone();
       const rt = encodeURIComponent(currentUrl.toString());
-      const target = `https://portal.getsparqd.com/login.html?rt=${rt}`;
+      const target = `https://portal.getsparqd.com/login?sso=1&returnTo=${rt}`;
       return NextResponse.redirect(target);
     }
   }
