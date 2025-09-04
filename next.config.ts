@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
-// Respect empty string as a valid basePath; default to "/app" only if undefined
-const basePath =
-  process.env.APP_BASE_PATH !== undefined ? process.env.APP_BASE_PATH : "/app";
+// Make the app visible at "/" by default in dev; allow overriding via APP_BASE_PATH
+const basePath = process.env.APP_BASE_PATH !== undefined ? process.env.APP_BASE_PATH : "";
 
 const nextConfig: NextConfig = {
   basePath,

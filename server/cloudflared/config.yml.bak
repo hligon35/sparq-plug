@@ -1,0 +1,15 @@
+tunnel: 8c45f6e9-ae6d-47aa-9d04-73182b1eb3fb
+credentials-file: /etc/cloudflared/8c45f6e9-ae6d-47aa-9d04-73182b1eb3fb.json
+
+ingress:
+  - hostname: www.getsparqd.com
+    service: http://static-site:80
+  - hostname: getsparqd.com
+    service: http://static-site:80
+  - hostname: portal.getsparqd.com
+    service: http://portal-app:3003
+  - hostname: sparqplug.getsparqd.com
+    service: http://sparqplug:3000
+  - hostname: hooks.getsparqd.com
+    service: http://deployer:8787
+  - service: http_status:404

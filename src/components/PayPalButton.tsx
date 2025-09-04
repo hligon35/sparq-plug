@@ -1,94 +1,113 @@
-// TypeScript declaration for PayPal JS SDK
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useRef } from 'react';
+
+// Minimal PayPal SDK types to avoid using `any`
+type PayPalOrderActions = {
+  order: {
+    create: (params: { purchase_units: Array<{ amount: { value: string } }> }) => Promise<string> | string;
+    capture: () => Promise<unknown>;
+  };
+};
+
+type PayPalButtonsOptions = {
+  createOrder: (data: Record<string, unknown>, actions: PayPalOrderActions) => Promise<string> | string;
+  onApprove: (data: Record<string, unknown>, actions: PayPalOrderActions) => Promise<void> | void;
+  onError?: (err: unknown) => void;
+};
+
+type PayPalNamespace = {
+  Buttons: (options: PayPalButtonsOptions) => { render: (container: HTMLElement) => Promise<void> | void };
+};
+
 declare global {
   interface Window {
-    paypal?: any;
+    paypal?: PayPalNamespace;
   }
 }
-import { useEffect, useRef } from 'react';
 
 interface PayPalButtonProps {
   amount: string;
-  onSuccess: (details: any) => void;
-  onError?: (error: any) => void;
+  onSuccess: (details: unknown) => void;
+  onError?: (error: unknown) => void;
 }
 
 export default function PayPalButton({ amount, onSuccess, onError }: PayPalButtonProps) {
   const paypalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Only run in the browser
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
     const sdkSelector = 'script[src*="paypal.com/sdk/js"]';
     const existing = document.querySelector<HTMLScriptElement>(sdkSelector);
 
-    const renderButtonSafe = () => {
+  const renderButtonSafe = () => {
       try {
         if (!window.paypal || !paypalRef.current) return;
-        // Wrap PayPal render in try/catch to prevent unhandled exceptions
         window.paypal
           .Buttons({
-            createOrder: (data: any, actions: any) => {
+            createOrder: (_data, actions) => {
               return actions.order.create({ purchase_units: [{ amount: { value: amount } }] });
             },
-            onApprove: async (data: any, actions: any) => {
+            onApprove: async (_data, actions) => {
               try {
                 const details = await actions.order.capture();
                 onSuccess(details);
               } catch (err) {
                 if (onError) onError(err);
+                // eslint-disable-next-line no-console
                 console.error('PayPal capture error', err);
               }
             },
-            onError: (err: any) => {
+            onError: (err) => {
               if (onError) onError(err);
+              // eslint-disable-next-line no-console
               console.error('PayPal buttons error', err);
             },
           })
           .render(paypalRef.current);
       } catch (err) {
         if (onError) onError(err);
+        // eslint-disable-next-line no-console
         console.error('PayPal render exception', err);
       }
     };
 
     if (existing) {
-      // If the SDK script is already present, try to render (it might still be loading)
-      if ((window as any).paypal) {
+      if (window.paypal) {
         renderButtonSafe();
       } else {
-        // Wait for existing script to load
-        existing.addEventListener('load', renderButtonSafe);
-        existing.addEventListener('error', (e) => {
+        existing.addEventListener('load', renderButtonSafe as EventListener);
+        existing.addEventListener('error', (e: Event) => {
           if (onError) onError(e);
+          // eslint-disable-next-line no-console
           console.error('PayPal SDK script failed to load', e);
         });
       }
       return;
     }
 
-    // Create script if not present
-    const script = document.createElement('script');
-    script.src = 'https://www.paypal.com/sdk/js?client-id=sb&currency=USD'; // Replace 'sb' with real client-id
+  const script = document.createElement('script');
+    script.src = 'https://www.paypal.com/sdk/js?client-id=sb&currency=USD'; // TODO: Replace 'sb' with real client-id
     script.async = true;
-    script.addEventListener('load', renderButtonSafe);
-    script.addEventListener('error', (e) => {
+  const onLoadHandler: EventListener = () => renderButtonSafe();
+  const onErrorHandler: EventListener = (e: Event) => {
       if (onError) onError(e);
+      // eslint-disable-next-line no-console
       console.error('PayPal SDK failed to load', e);
-    });
+  };
+  script.addEventListener('load', onLoadHandler);
+  script.addEventListener('error', onErrorHandler);
     document.body.appendChild(script);
 
-    // Cleanup listeners on unmount
     return () => {
       try {
-        script.removeEventListener('load', renderButtonSafe);
-        script.removeEventListener('error', () => {});
-      } catch (e) {
+    script.removeEventListener('load', onLoadHandler);
+    script.removeEventListener('error', onErrorHandler);
+      } catch {
         /* ignore cleanup errors */
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [amount]);
+  }, [amount, onError, onSuccess]);
 
   return <div ref={paypalRef} />;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, DragEvent, useEffect } from 'react';
+import { useRef, useState, DragEvent, useEffect, useCallback } from 'react';
 import AdminTopNav from '@/components/AdminTopNav';
 import AdminHeader from '@/components/AdminHeader';
 import { withBasePath } from '@/lib/basePath';
@@ -74,18 +74,21 @@ export default function MediaLibrary() {
     }
   };
 
-  const refreshList = async () => {
+  type UploadedItem = { id: string; url: string; name: string; type: string };
+
+  const refreshList = useCallback(async () => {
     try {
       const res = await fetch(withBasePath('/api/media/list'));
       if (!res.ok) return;
       const data = await res.json();
-      setUploaded((data.items || []).map((i: any) => ({ id: i.id, url: i.url, name: i.name, type: i.type })));
+      const items = (data?.items ?? []) as UploadedItem[];
+      setUploaded(items.map((i) => ({ id: i.id, url: i.url, name: i.name, type: i.type })));
     } catch {}
-  };
+  }, []);
 
   useEffect(() => {
     refreshList();
-  }, []);
+  }, [refreshList]);
 
   const onDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
