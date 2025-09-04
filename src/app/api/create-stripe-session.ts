@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe('sk_test_51N...', { // Replace with your real test secret key
-  apiVersion: '2022-11-15',
-});
-
 export async function POST(req: NextRequest) {
   const { amount, invoiceId } = await req.json();
   try {
+    const secret = process.env.STRIPE_SECRET_KEY;
+    if (!secret) {
+      return NextResponse.json({ error: 'Stripe is not configured' }, { status: 500 });
+    }
+    const stripe = new Stripe(secret);
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -27,7 +28,8 @@ export async function POST(req: NextRequest) {
       cancel_url: `${req.nextUrl.origin}/manager?canceled=1`,
     });
     return NextResponse.json({ url: session.url });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 // In production, set STRIPE_SECRET_KEY and call Stripe API.
 export async function POST(req: Request) {
 	try {
-		const body = await req.json().catch(() => ({}));
+		const body = (await req.json().catch(() => ({}))) as { amount?: string | number; invoiceId?: string };
 		const amount = Number(String(body.amount || '0').replace(/[^\d.]/g, '')) || 0;
 		const invoiceId = String(body.invoiceId || 'unknown');
 
@@ -34,7 +34,8 @@ export async function POST(req: Request) {
 		// Mocked URL for local testing without Stripe
 		const url = `${process.env.APP_BASE_PATH || ''}/client/billing?status=success&invoiceId=${encodeURIComponent(invoiceId)}`;
 		return NextResponse.json({ url, mocked: true }, { status: 200 });
-	} catch (e: any) {
-		return NextResponse.json({ error: e?.message || 'Unknown error' }, { status: 500 });
+	} catch (err: unknown) {
+		const message = err instanceof Error ? err.message : 'Unknown error';
+		return NextResponse.json({ error: message }, { status: 500 });
 	}
 }

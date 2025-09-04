@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { withBasePath } from '@/lib/basePath';
 import Header from '@/components/Header';
 import ClientTopNav from '@/components/ClientTopNav';
@@ -18,21 +18,23 @@ export default function SocialAccountsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showDisconnected, setShowDisconnected] = useState(false);
 
-  async function loadAccounts() {
+  type AccountsResp = { accounts?: SocialAccount[] };
+  const loadAccounts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const res = await fetch(withBasePath('/api/social-accounts'), { cache: 'no-store' });
       if (!res.ok) throw new Error('Failed to load accounts');
-      const data = await res.json();
+      const data: AccountsResp = await res.json();
       setConnectedAccounts(Array.isArray(data.accounts) ? data.accounts : []);
-    } catch (e: any) {
-      setError(e.message || 'Failed to load accounts');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Failed to load accounts';
+      setError(msg);
     } finally {
       setLoading(false);
     }
-  }
-  useEffect(() => { loadAccounts(); }, []);
+  }, []);
+  useEffect(() => { loadAccounts(); }, [loadAccounts]);
 
   const availablePlatforms = [
     {
@@ -410,7 +412,7 @@ export default function SocialAccountsPage() {
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Connect your {selectedPlatform} account</h3>
                   <p className="text-gray-600 mb-6">
-                    You'll be redirected to {selectedPlatform} to authorize SparQ to manage your account.
+                    You&apos;ll be redirected to {selectedPlatform} to authorize SparQ to manage your account.
                   </p>
                   <div className="space-y-4 text-left">
                     <div>
