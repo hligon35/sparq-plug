@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe('sk_test_51N...', { // Replace with your real test secret key
-  apiVersion: '2022-11-15',
-});
+const stripeSecret = process.env.STRIPE_SECRET_KEY as string; // must be provided in environment
+const stripe = new Stripe(stripeSecret, {});
 
 export async function POST(req: NextRequest) {
   const { amount, invoiceId } = await req.json();
