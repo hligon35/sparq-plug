@@ -157,8 +157,18 @@ export default function Header({ title, subtitle }: Props) {
           {subtitle && <p className="text-white/80 text-xs sm:text-sm mt-1 truncate">{subtitle}</p>}
         </div>
         <div className="flex items-center justify-center sm:justify-end flex-wrap gap-2 order-3 sm:order-3 min-w-0">
+          {emailEnabled && clientEmailAllowed && (
+            <Link
+              id="btn-email-inbox"
+              href="/client/email"
+              target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-md bg-blue-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1d74d0]"
+            >
+              Email
+            </Link>
+          )}
           {emailEnabled && roleAllowed && (
-            <div className="inline-flex items-center gap-2">
+            <>
               <Link
                 id="btn-email-setup"
                 href="/email-setup"
@@ -173,19 +183,7 @@ export default function Header({ title, subtitle }: Props) {
                   Local {localCap ? 'On' : 'Off'}
                 </span>
               )}
-            </div>
-          )}
-          {emailEnabled && !roleAllowed && clientEmailAllowed && (
-            <div className="inline-flex items-center gap-2">
-              <Link
-                id="btn-email-inbox"
-                href="/client/email"
-                target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-md bg-blue-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1d74d0]"
-              >
-                Email
-              </Link>
-            </div>
+            </>
           )}
           <SignedInLogout />
         </div>

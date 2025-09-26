@@ -10,6 +10,8 @@ const tabs = [
   { key: 'analytics', label: 'Analytics', href: '/client/analytics' },
   { key: 'social-accounts', label: 'Social Accounts', href: '/client/social-accounts' },
   { key: 'inbox', label: 'Inbox', href: '/client/inbox' },
+  // Email unified inbox preview (feature-flag aware client could optionally hide; left unconditional for visibility)
+  { key: 'email', label: 'Email', href: '/client/email' },
   { key: 'media-library', label: 'Media', href: '/client/media-library' },
   { key: 'team', label: 'Team', href: '/client/team' },
   { key: 'billing', label: 'Billing', href: '/client/billing' },
