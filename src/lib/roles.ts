@@ -10,6 +10,7 @@ export const ROLE_CAPABILITIES: Record<string, string[]> = {
     // View inboxes / email module
     'view_email',
     'full_access',
+    'bot_factory',
   ],
   manager: [
     'manage_clients',
@@ -19,6 +20,7 @@ export const ROLE_CAPABILITIES: Record<string, string[]> = {
     // Manager is also allowed to configure business email (no full_access needed)
     'email_setup',
     'view_email',
+    'bot_factory',
   ],
   client: [
     'view_reports',
