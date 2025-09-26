@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { hasBotFactoryAccessClient } from '@/features/bot_factory/access';
+import { useEffect, useState } from 'react';
 
 const tabs = [
   { key: 'dashboard', label: 'Dashboard', href: '/admin' },
@@ -29,7 +30,8 @@ export default function AdminTopNav() {
     return seg ?? 'dashboard';
   })();
 
-  const botAllowed = hasBotFactoryAccessClient();
+  const [botAllowed, setBotAllowed] = useState(false);
+  useEffect(()=>{ setBotAllowed(hasBotFactoryAccessClient()); },[]);
   return (
     <div className="mb-8 overflow-x-auto">
       <nav className="flex items-center gap-3 p-2 min-w-max">

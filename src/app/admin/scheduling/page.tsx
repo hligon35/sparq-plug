@@ -54,7 +54,8 @@ export default function PostScheduling() {
   };
 
   // Bot Factory button gating (duplicate logic with ContentCalendar for now; refactor later)
-  const allowProduceBot = hasBotFactoryAccessClient();
+  const [allowProduceBot, setAllowProduceBot] = useState(false);
+  useEffect(()=>{ setAllowProduceBot(hasBotFactoryAccessClient()); },[]);
 
   // Top nav handles routing; sidebar removed
 

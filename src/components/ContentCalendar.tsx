@@ -1,9 +1,11 @@
 "use client";
 import Link from 'next/link';
 import { hasBotFactoryAccessClient } from '@/features/bot_factory/access';
+import { useEffect, useState } from 'react';
 
 export default function ContentCalendar() {
-  const allow = hasBotFactoryAccessClient();
+  const [allow, setAllow] = useState(false);
+  useEffect(()=>{ setAllow(hasBotFactoryAccessClient()); },[]);
   return (
     <div className="bg-white rounded shadow p-4 mb-6">
       <div className="flex items-start justify-between gap-4 mb-2">
