@@ -27,8 +27,49 @@ function getRoleFromHeaderOrCookie(req: NextRequest) {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const hostname = req.nextUrl.hostname;
-  // Allow everything on localhost/127.0.0.1 to ease local development
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+  
+  // Development mode - allow everything on localhost/127.0.0.1
+  const isDev = process.env.NODE_ENV === 'development' || hostname === 'localhost' || hostname === '127.0.0.1';
+  
+  if (isDev) {
+    // In development, still check for role-based access but don't redirect to external portal
+    const bp = process.env.NEXT_PUBLIC_BASE_PATH || '';
+    const path = bp && pathname.startsWith(bp) ? pathname.slice(bp.length) || '/' : pathname;
+    
+    // Allow login page and home page
+    if (path === '/login' || path === '/') {
+      return NextResponse.next();
+    }
+    
+    // For protected routes in development, check role but redirect to login instead of external portal
+    if (path.startsWith('/admin') || path.startsWith('/manager') || path.startsWith('/client')) {
+      const role = getRoleFromHeaderOrCookie(req);
+      
+      if (!role) {
+        // Redirect to local login page
+        const url = req.nextUrl.clone();
+        url.pathname = '/login';
+        return NextResponse.redirect(url);
+      }
+      
+      // Role-based enforcement
+      if (path.startsWith('/admin') && role !== 'admin') {
+        const url = req.nextUrl.clone();
+        url.pathname = '/login';
+        return NextResponse.redirect(url);
+      }
+      if (path.startsWith('/manager') && role !== 'manager' && role !== 'admin') {
+        const url = req.nextUrl.clone();
+        url.pathname = '/login';
+        return NextResponse.redirect(url);
+      }
+      if (path.startsWith('/client') && role !== 'client' && role !== 'admin' && role !== 'manager') {
+        const url = req.nextUrl.clone();
+        url.pathname = '/login';
+        return NextResponse.redirect(url);
+      }
+    }
+    
     return NextResponse.next();
   }
   const bp = process.env.NEXT_PUBLIC_BASE_PATH || '';

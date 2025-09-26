@@ -19,8 +19,11 @@ function deriveAdminSection(pathname: string): string {
   const map: Record<string, string> = {
     dashboard: 'Dashboard',
     clients: 'Clients',
+    content: 'Content Templates',
     scheduling: 'Scheduling',
+    'client-calendars': 'Client Calendars',
     analytics: 'Analytics',
+    reports: 'Reports',
     integrations: 'Integrations',
     media: 'Media',
     settings: 'Settings',
@@ -51,6 +54,11 @@ export default function AdminHeader({ title, subtitle, onSecurityClick: _onSecur
 
           {/* Centered Title */}
           <div className="text-center order-1 sm:order-2 min-w-0">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-semibold text-white/90 border border-white/30">
+                🔧 ADMIN
+              </span>
+            </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight truncate">{mainTitle}</h1>
             <p className="text-white/90 text-sm sm:text-base mt-0.5 truncate">{section}</p>
             {subtitle && <p className="text-white/80 text-xs sm:text-sm mt-1 truncate">{subtitle}</p>}

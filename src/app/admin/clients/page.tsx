@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import AdminTopNav from '@/components/AdminTopNav';
 import AdminHeader from '@/components/AdminHeader';
 import { withBasePath } from '@/lib/basePath';
@@ -347,12 +348,20 @@ export default function ClientsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <button 
-                          onClick={() => handleViewClient(client)}
-                          className="text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                          View Details
-                        </button>
+                        <div className="flex space-x-3">
+                          <button 
+                            onClick={() => handleViewClient(client)}
+                            className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                          >
+                            Quick View
+                          </button>
+                          <Link 
+                            href={`/admin/clients/${client.id}`}
+                            className="text-green-600 hover:text-green-800 font-medium text-sm"
+                          >
+                            Full Profile
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))}

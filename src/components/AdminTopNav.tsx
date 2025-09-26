@@ -6,8 +6,11 @@ import { usePathname } from 'next/navigation';
 const tabs = [
   { key: 'dashboard', label: 'Dashboard', href: '/admin' },
   { key: 'clients', label: 'Clients', href: '/admin/clients' },
+  { key: 'content', label: 'Content', href: '/admin/content' },
   { key: 'scheduling', label: 'Scheduling', href: '/admin/scheduling' },
+  { key: 'client-calendars', label: 'Client Calendars', href: '/admin/client-calendars' },
   { key: 'analytics', label: 'Analytics', href: '/admin/analytics' },
+  { key: 'reports', label: 'Reports', href: '/admin/reports' },
   { key: 'integrations', label: 'Integrations', href: '/admin/integrations' },
   { key: 'media', label: 'Media', href: '/admin/media' },
   { key: 'settings', label: 'Settings', href: '/admin/settings' },

@@ -28,8 +28,123 @@ export type Client = {
 
 const STORE_KEY = 'clients';
 
+// Mock client data for development
+const mockClients: Client[] = [
+  {
+    id: 'tech-corp-1',
+    name: 'TechCorp Solutions',
+    contactPerson: 'John Smith',
+    email: 'john.smith@techcorp.com',
+    phone: '+1 (555) 123-4567',
+    website: 'https://techcorp.com',
+    industry: 'Technology',
+    companySize: '51-200',
+    services: ['Content Creation', 'Social Media Management', 'Paid Advertising', 'Analytics & Reporting'],
+    socialPlatforms: ['Facebook', 'Instagram', 'Twitter/X', 'LinkedIn'],
+    monthlyBudget: 5000,
+    goals: 'Increase brand awareness, generate leads, and establish thought leadership in the tech industry.',
+    currentFollowers: 12500,
+    targetAudience: 'Tech professionals, startup founders, enterprise decision makers aged 25-55.',
+    contentPreferences: ['Videos', 'Infographics', 'Blog Posts', 'Case Studies'],
+    postingFrequency: '3-4 times per week',
+    timezone: 'EST',
+    billingAddress: '123 Tech Street\nSan Francisco, CA 94105\nUnited States',
+    notes: 'Very responsive client. Prefers video content over static images.',
+    status: 'Active',
+    createdAt: '2024-01-15T08:00:00Z',
+    updatedAt: '2024-03-01T14:30:00Z',
+  },
+  {
+    id: 'fashion-forward-1',
+    name: 'Fashion Forward Boutique',
+    contactPerson: 'Sarah Johnson',
+    email: 'sarah@fashionforward.com',
+    phone: '+1 (555) 987-6543',
+    website: 'https://fashionforward.com',
+    industry: 'Fashion & Beauty',
+    companySize: '11-50',
+    services: ['Content Creation', 'Social Media Management', 'Influencer Marketing'],
+    socialPlatforms: ['Instagram', 'TikTok', 'Pinterest', 'Facebook'],
+    monthlyBudget: 3500,
+    goals: 'Increase online sales, build brand community, and showcase seasonal collections.',
+    currentFollowers: 8900,
+    targetAudience: 'Fashion-conscious women aged 18-35, interested in trendy, affordable clothing.',
+    contentPreferences: ['Photos', 'Videos', 'Stories', 'Reels'],
+    postingFrequency: 'Daily',
+    timezone: 'PST',
+    billingAddress: '456 Fashion Ave\nLos Angeles, CA 90210\nUnited States',
+    notes: 'Seasonal campaigns are very important. Peak seasons: Spring/Summer launch, Holiday shopping.',
+    status: 'Active',
+    createdAt: '2024-02-01T10:00:00Z',
+    updatedAt: '2024-03-01T16:45:00Z',
+  },
+  {
+    id: 'restaurant-1',
+    name: 'Bella Vista Restaurant',
+    contactPerson: 'Mike Rodriguez',
+    email: 'mike@bellavista.com',
+    phone: '+1 (555) 456-7890',
+    website: 'https://bellavista.com',
+    industry: 'Food & Beverage',
+    companySize: '1-10',
+    services: ['Content Creation', 'Social Media Management', 'Community Management'],
+    socialPlatforms: ['Instagram', 'Facebook', 'TikTok'],
+    monthlyBudget: 2000,
+    goals: 'Increase foot traffic, promote authentic Italian cuisine, and build local community engagement.',
+    currentFollowers: 3200,
+    targetAudience: 'Food lovers aged 25-55, families, date night couples, Italian cuisine enthusiasts.',
+    contentPreferences: ['Photos', 'Videos', 'Stories', 'Live Streams'],
+    postingFrequency: '2-3 times per week',
+    timezone: 'CST',
+    billingAddress: '789 Italian Street\nAustin, TX 78701\nUnited States',
+    notes: 'Focus on authentic Italian recipes and fresh ingredients. Very active in local community events.',
+    status: 'Active',
+    createdAt: '2024-01-20T12:00:00Z',
+    updatedAt: '2024-02-28T11:20:00Z',
+  },
+  {
+    id: 'fitness-studio-1',
+    name: 'Peak Performance Fitness',
+    contactPerson: 'Amanda Chen',
+    email: 'amanda@peakperformance.com',
+    phone: '+1 (555) 321-9876',
+    website: 'https://peakperformance.com',
+    industry: 'Health & Fitness',
+    companySize: '11-50',
+    services: ['Content Creation', 'Social Media Management', 'Community Management'],
+    socialPlatforms: ['Instagram', 'TikTok', 'Facebook', 'YouTube'],
+    monthlyBudget: 3000,
+    goals: 'Build fitness community, promote healthy lifestyle, increase membership sign-ups.',
+    currentFollowers: 5800,
+    targetAudience: 'Fitness enthusiasts aged 20-45, health-conscious individuals, local community members.',
+    contentPreferences: ['Workout Videos', 'Transformation Stories', 'Tips & Advice', 'Live Workouts'],
+    postingFrequency: 'Daily',
+    timezone: 'PST',
+    billingAddress: '321 Fitness Blvd\nSeattle, WA 98101\nUnited States',
+    notes: 'High engagement audience. Loves before/after transformation content and workout challenges.',
+    status: 'Active',
+    createdAt: '2024-02-15T09:00:00Z',
+    updatedAt: '2024-03-01T10:15:00Z',
+  }
+];
+
 export async function GET(req: NextRequest) {
-  const clients = await readJson<Client[]>(STORE_KEY, []);
+  const { searchParams } = new URL(req.url);
+  const managerId = searchParams.get('managerId');
+  
+  // Try to get clients from storage first
+  const storedClients = await readJson<Client[]>(STORE_KEY, []);
+  
+  let clients = storedClients.length > 0 ? storedClients : mockClients;
+  
+  // If managerId is specified, filter by manager's assigned clients
+  if (managerId === 'current') {
+    // In a real app, you'd get the manager's assigned clients from the database
+    // For now, we'll assume the current manager has access to specific clients
+    const managerClientIds = ['tech-corp-1', 'restaurant-1', 'fitness-studio-1'];
+    clients = clients.filter(client => managerClientIds.includes(client.id));
+  }
+  
   return NextResponse.json({ clients });
 }
 

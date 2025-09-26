@@ -58,10 +58,18 @@ export default function ManagerInvoicePage() {
     setActiveTab(section);
     if (section === 'dashboard') return; // Stay on dashboard
     if (section === 'invoices') return; // Show invoices section
-  // other tabs handled inline
-    // For now, show coming soon alert for other sections
-    // In production, these would navigate to actual pages
-    // alert('Section coming soon: ' + section);
+    if (section === 'clients') {
+      window.location.href = '/manager/clients';
+      return;
+    }
+    if (section === 'analytics') {
+      window.location.href = '/manager/analytics';
+      return;
+    }
+    if (section === 'settings') {
+      window.location.href = '/manager/settings';
+      return;
+    }
   };
 
   return (

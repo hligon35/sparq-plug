@@ -65,6 +65,15 @@ export default function SettingsPage() {
     confirmPassword: '',
   });
 
+  const [integrations, setIntegrations] = useState([
+    { name: 'Facebook', status: 'connected' as const, icon: '📘', description: '2 pages connected' },
+    { name: 'Instagram', status: 'connected' as const, icon: '📷', description: '1 business account connected' },
+    { name: 'Twitter', status: 'disconnected' as const, icon: '🐦', description: 'Not connected' },
+    { name: 'LinkedIn', status: 'connected' as const, icon: '💼', description: '1 company page connected' },
+    { name: 'TikTok', status: 'disconnected' as const, icon: '🎵', description: 'Not connected' },
+    { name: 'YouTube', status: 'disconnected' as const, icon: '📺', description: 'Not connected' },
+  ]);
+
   // Tabs and options
   const tabs = [
     { id: 'profile', label: 'Profile', icon: '👤' },
@@ -297,14 +306,7 @@ export default function SettingsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">Connected Integrations</h2>
             <div className="space-y-4">
-              {[
-                { name: 'Facebook', status: 'connected', icon: '📘', description: '2 pages connected' },
-                { name: 'Instagram', status: 'connected', icon: '📷', description: '1 business account connected' },
-                { name: 'Twitter', status: 'disconnected', icon: '🐦', description: 'Not connected' },
-                { name: 'LinkedIn', status: 'connected', icon: '💼', description: '1 company page connected' },
-                { name: 'TikTok', status: 'disconnected', icon: '🎵', description: 'Not connected' },
-                { name: 'YouTube', status: 'disconnected', icon: '📺', description: 'Not connected' },
-              ].map((integration) => (
+              {integrations.map((integration) => (
                 <div key={integration.name} className="bg-white border border-gray-200 rounded-xl p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
@@ -323,7 +325,20 @@ export default function SettingsPage() {
                         {integration.status === 'connected' ? 'Connected' : 'Not Connected'}
                       </span>
                       <button
-                        onClick={() => alert(`${integration.status === 'connected' ? 'Disconnecting' : 'Connecting'} ${integration.name}`)}
+                        onClick={() => {
+                          // TODO: Connect to real social media integration APIs
+                          const action = integration.status === 'connected' ? 'disconnected' : 'connected';
+                          // Update the integration status in the local state
+                          setIntegrations(prev => prev.map(int => 
+                            int.name === integration.name 
+                              ? { ...int, status: action }
+                              : int
+                          ));
+                          const message = integration.status === 'connected' 
+                            ? `${integration.name} disconnected successfully` 
+                            : `${integration.name} connected successfully`;
+                          alert(message);
+                        }}
                         className={`px-4 py-2 rounded-lg text-sm font-medium ${
                           integration.status === 'connected'
                             ? 'bg-red-100 hover:bg-red-200 text-red-700'

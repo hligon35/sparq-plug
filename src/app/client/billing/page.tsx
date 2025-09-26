@@ -28,10 +28,10 @@ export default function BillingPage() {
     { id: 'INV-004', date: '2024-05-01', amount: 49, status: 'paid', description: 'Professional Plan - May 2024' }
   ];
 
-  const paymentMethods = [
+  const [paymentMethods, setPaymentMethods] = useState([
     { id: 1, type: 'card', last4: '4242', brand: 'Visa', expiryMonth: 12, expiryYear: 2026, isDefault: true },
     { id: 2, type: 'card', last4: '0005', brand: 'Mastercard', expiryMonth: 8, expiryYear: 2025, isDefault: false }
-  ];
+  ]);
 
   const handleUpgradePlan = () => {
     alert('Plan upgrade functionality would redirect to payment processor.');
@@ -48,7 +48,8 @@ export default function BillingPage() {
 
   const handleRemovePaymentMethod = (methodId: number) => {
     if (confirm('Are you sure you want to remove this payment method?')) {
-      alert('Payment method removed. In production, this would update the billing system.');
+      setPaymentMethods(prev => prev.filter(pm => pm.id !== methodId));
+      alert('Payment method removed successfully.');
     }
   };
 
@@ -153,7 +154,14 @@ export default function BillingPage() {
                     <div className="flex space-x-2">
                       {!method.isDefault && (
                         <button
-                          onClick={() => alert('Set as default payment method')}
+                          onClick={() => {
+                            // Set this payment method as default and update others
+                            setPaymentMethods(prev => prev.map(pm => ({
+                              ...pm,
+                              isDefault: pm.id === method.id
+                            })));
+                            alert(`${method.type} ending in ${method.last4} set as default payment method`);
+                          }}
                           className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm"
                           title="Set as default"
                         >

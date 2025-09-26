@@ -1,0 +1,556 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import AdminTopNav from '@/components/AdminTopNav';
+import AdminHeader from '@/components/AdminHeader';
+import { withBasePath } from '@/lib/basePath';
+
+type Client = {
+  id: string;
+  name: string;
+  contactPerson?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  industry?: string;
+  companySize?: string;
+  services?: string[];
+  socialPlatforms?: string[];
+  monthlyBudget?: number;
+  goals?: string;
+  currentFollowers?: number;
+  targetAudience?: string;
+  contentPreferences?: string[];
+  postingFrequency?: string;
+  timezone?: string;
+  billingAddress?: string;
+  notes?: string;
+  status: 'Active' | 'Inactive';
+  createdAt: string;
+  updatedAt: string;
+};
+
+type SocialAccount = {
+  id: string;
+  platform: string;
+  accountName: string;
+  handle: string;
+  status: 'connected' | 'disconnected' | 'syncing';
+  followers?: number;
+  following?: number;
+  posts?: number;
+  engagement?: number;
+  lastSync?: string;
+  clientId?: string;
+};
+
+type BusinessInfo = {
+  address?: string;
+  businessHours?: string;
+  businessType?: string;
+  founded?: string;
+  employees?: number;
+  revenue?: string;
+  marketingGoals?: string[];
+  competitors?: string[];
+  brandVoice?: string;
+  keyMessages?: string[];
+};
+
+export default function ClientProfilePage() {
+  const params = useParams();
+  const router = useRouter();
+  const clientId = params.id as string;
+
+  const [client, setClient] = useState<Client | null>(null);
+  const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({});
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    if (!clientId) return;
+    
+    const fetchClientData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch client details
+        const clientRes = await fetch(withBasePath(`/api/clients/${clientId}`));
+        if (clientRes.ok) {
+          const clientData = await clientRes.json();
+          setClient(clientData.client);
+        }
+
+        // Fetch social accounts
+        const accountsRes = await fetch(withBasePath(`/api/social-accounts?clientId=${clientId}`));
+        if (accountsRes.ok) {
+          const accountsData = await accountsRes.json();
+          setSocialAccounts(accountsData.accounts || []);
+        }
+
+        // Fetch business info (this would be another API endpoint)
+        const businessRes = await fetch(withBasePath(`/api/clients/${clientId}/business-info`));
+        if (businessRes.ok) {
+          const businessData = await businessRes.json();
+          setBusinessInfo(businessData.businessInfo || {});
+        }
+
+      } catch (error) {
+        console.error('Error fetching client data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClientData();
+  }, [clientId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f5f7fb] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading client profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!client) {
+    return (
+      <div className="min-h-screen bg-[#f5f7fb] flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Client Not Found</h1>
+          <p className="text-gray-600 mb-4">The requested client profile could not be found.</p>
+          <Link href="/admin/clients" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+            Back to Clients
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const totalFollowers = socialAccounts.reduce((sum, account) => sum + (account.followers || 0), 0);
+  const connectedAccounts = socialAccounts.filter(account => account.status === 'connected').length;
+  const avgEngagement = socialAccounts.length > 0 
+    ? (socialAccounts.reduce((sum, account) => sum + (account.engagement || 0), 0) / socialAccounts.length).toFixed(1)
+    : '0';
+
+  return (
+    <div className="min-h-screen bg-[#f5f7fb]">
+      <AdminHeader 
+        title={client.name} 
+        subtitle="Client Profile Management" 
+      />
+
+      <div className="px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto">
+          <AdminTopNav />
+
+          {/* Client Header */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-6">
+                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                    <span className="text-white font-bold text-2xl">
+                      {client.name.substring(0, 2).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="text-white">
+                    <h1 className="text-3xl font-bold mb-2">{client.name}</h1>
+                    <div className="flex items-center space-x-4 text-white/90">
+                      <span>{client.industry}</span>
+                      <span>•</span>
+                      <span>{client.companySize} employees</span>
+                      <span>•</span>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        client.status === 'Active' 
+                          ? 'bg-green-500/20 text-green-100' 
+                          : 'bg-red-500/20 text-red-100'
+                      }`}>
+                        {client.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right text-white/90">
+                  <p className="text-sm">Client since</p>
+                  <p className="text-lg font-semibold">
+                    {new Date(client.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-8 bg-gray-50">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-600 mb-1">{connectedAccounts}</div>
+                <div className="text-gray-600 text-sm">Connected Accounts</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-green-600 mb-1">{totalFollowers.toLocaleString()}</div>
+                <div className="text-gray-600 text-sm">Total Followers</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-600 mb-1">{avgEngagement}%</div>
+                <div className="text-gray-600 text-sm">Avg Engagement</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-orange-600 mb-1">
+                  ${client.monthlyBudget?.toLocaleString() || 0}
+                </div>
+                <div className="text-gray-600 text-sm">Monthly Budget</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8">
+            <div className="border-b border-gray-200">
+              <nav className="flex space-x-8 px-8">
+                {[
+                  { id: 'overview', label: 'Overview', icon: '📊' },
+                  { id: 'contact', label: 'Contact Info', icon: '📞' },
+                  { id: 'social', label: 'Social Accounts', icon: '📱' },
+                  { id: 'services', label: 'Services', icon: '⚙️' },
+                  { id: 'business', label: 'Business Details', icon: '🏢' },
+                  { id: 'billing', label: 'Billing', icon: '💳' }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
+                      activeTab === tab.id
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <span className="mr-2">{tab.icon}</span>
+                    {tab.label}
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            <div className="p-8">
+              {activeTab === 'overview' && (
+                <div className="space-y-8">
+                  {/* Marketing Goals */}
+                  <div className="bg-blue-50 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Marketing Goals</h3>
+                    <p className="text-gray-700">{client.goals || 'No goals specified'}</p>
+                  </div>
+
+                  {/* Target Audience */}
+                  <div className="bg-green-50 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Target Audience</h3>
+                    <p className="text-gray-700">{client.targetAudience || 'No target audience specified'}</p>
+                  </div>
+
+                  {/* Content Preferences */}
+                  <div className="bg-purple-50 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Content Preferences</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {client.contentPreferences?.map((pref, index) => (
+                        <span key={index} className="px-3 py-1 bg-purple-200 text-purple-800 rounded-full text-sm">
+                          {pref}
+                        </span>
+                      )) || <span className="text-gray-500">No preferences specified</span>}
+                    </div>
+                  </div>
+
+                  {/* Posting Schedule */}
+                  <div className="bg-orange-50 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Posting Schedule</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-sm text-gray-600">Frequency:</span>
+                        <p className="font-medium">{client.postingFrequency || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Timezone:</span>
+                        <p className="font-medium">{client.timezone || 'Not specified'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'contact' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Contact Person</label>
+                      <p className="text-lg font-semibold text-gray-900">{client.contactPerson || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Email Address</label>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {client.email ? (
+                          <a href={`mailto:${client.email}`} className="text-blue-600 hover:text-blue-700">
+                            {client.email}
+                          </a>
+                        ) : 'Not specified'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Phone Number</label>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {client.phone ? (
+                          <a href={`tel:${client.phone}`} className="text-blue-600 hover:text-blue-700">
+                            {client.phone}
+                          </a>
+                        ) : 'Not specified'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Website</label>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {client.website ? (
+                          <a href={client.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700">
+                            {client.website}
+                          </a>
+                        ) : 'Not specified'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Business Address</label>
+                      <p className="text-lg text-gray-900">{businessInfo.address || client.billingAddress || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Business Hours</label>
+                      <p className="text-lg text-gray-900">{businessInfo.businessHours || 'Not specified'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'social' && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-semibold text-gray-800">Social Media Accounts</h3>
+                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                      Add Account
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {socialAccounts.map((account) => (
+                      <div key={account.id} className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-blue-600 font-semibold text-sm">
+                                {account.platform.substring(0, 2).toUpperCase()}
+                              </span>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900">{account.accountName}</h4>
+                              <p className="text-sm text-gray-600">@{account.handle}</p>
+                            </div>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            account.status === 'connected' 
+                              ? 'bg-green-100 text-green-800'
+                              : account.status === 'syncing'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {account.status}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-4 text-center">
+                          <div>
+                            <p className="text-lg font-bold text-gray-900">{account.followers?.toLocaleString() || '0'}</p>
+                            <p className="text-xs text-gray-600">Followers</p>
+                          </div>
+                          <div>
+                            <p className="text-lg font-bold text-gray-900">{account.following?.toLocaleString() || '0'}</p>
+                            <p className="text-xs text-gray-600">Following</p>
+                          </div>
+                          <div>
+                            <p className="text-lg font-bold text-gray-900">{account.posts?.toLocaleString() || '0'}</p>
+                            <p className="text-xs text-gray-600">Posts</p>
+                          </div>
+                        </div>
+
+                        {account.lastSync && (
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <p className="text-xs text-gray-500">
+                              Last synced: {new Date(account.lastSync).toLocaleString()}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {socialAccounts.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Social Accounts</h3>
+                      <p className="text-gray-600 mb-4">This client hasn't connected any social media accounts yet.</p>
+                      <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                        Add First Account
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'services' && (
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Services We Provide</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {client.services?.map((service, index) => (
+                        <span key={index} className="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium text-center">
+                          {service}
+                        </span>
+                      )) || <span className="text-gray-500">No services specified</span>}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Social Media Platforms</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {client.socialPlatforms?.map((platform, index) => (
+                        <span key={index} className="px-4 py-2 bg-purple-100 text-purple-800 rounded-lg text-sm font-medium text-center">
+                          {platform}
+                        </span>
+                      )) || <span className="text-gray-500">No platforms specified</span>}
+                    </div>
+                  </div>
+
+                  <div className="bg-yellow-50 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Additional Notes</h3>
+                    <p className="text-gray-700 whitespace-pre-wrap">{client.notes || 'No additional notes'}</p>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'business' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Business Type</label>
+                      <p className="text-lg font-semibold text-gray-900">{businessInfo.businessType || client.industry || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Founded</label>
+                      <p className="text-lg font-semibold text-gray-900">{businessInfo.founded || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Number of Employees</label>
+                      <p className="text-lg font-semibold text-gray-900">{businessInfo.employees || client.companySize || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Annual Revenue</label>
+                      <p className="text-lg font-semibold text-gray-900">{businessInfo.revenue || 'Not specified'}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Brand Voice</label>
+                      <p className="text-lg text-gray-900">{businessInfo.brandVoice || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Key Messages</label>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {businessInfo.keyMessages?.map((message, index) => (
+                          <span key={index} className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                            {message}
+                          </span>
+                        )) || <span className="text-gray-500">No key messages specified</span>}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Main Competitors</label>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {businessInfo.competitors?.map((competitor, index) => (
+                          <span key={index} className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                            {competitor}
+                          </span>
+                        )) || <span className="text-gray-500">No competitors specified</span>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'billing' && (
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Billing Information</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Monthly Budget</label>
+                          <p className="text-2xl font-bold text-green-600">
+                            ${client.monthlyBudget?.toLocaleString() || '0'}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Billing Address</label>
+                          <p className="text-gray-900 whitespace-pre-line">{client.billingAddress || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Client Since</label>
+                          <p className="text-gray-900">{new Date(client.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Payment History</h3>
+                      <div className="bg-gray-50 rounded-xl p-6">
+                        <div className="text-center py-8">
+                          <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
+                            </svg>
+                          </div>
+                          <p className="text-gray-500">Payment history will be displayed here</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-between items-center bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <Link 
+              href="/admin/clients" 
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors"
+            >
+              ← Back to Clients
+            </Link>
+            <div className="flex space-x-4">
+              <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                Edit Client
+              </button>
+              <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                Generate Report
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

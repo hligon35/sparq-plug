@@ -78,21 +78,28 @@ export default function InvoiceModule() {
         <div className="flex flex-col md:flex-row gap-4">
           {/* Show PayPal and Stripe buttons for the first pending invoice as a demo */}
           {invoices.filter(inv => inv.status === 'Pending').length > 0 ? (
-            <>
-            <div className="relative z-0">
-              <PayPalButton
-                amount={invoices.find(inv => inv.status === 'Pending')?.amount.replace(/[^\d.]/g, '') || '0.00'}
-                onSuccess={(details) => alert('Payment successful! Transaction ID: ' + details.id)}
-                onError={(err) => alert('Payment error: ' + err)}
-              />
-              <div className="flex items-center gap-2 mt-2">
-                <img src="https://www.paypalobjects.com/webstatic/icon/pp258.png" alt="PayPal" className="w-6 h-6" />
-                <span className="text-gray-700 text-sm">Pay with PayPal</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+              {/* PayPal Payment Option */}
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <div className="flex items-center gap-2 mb-3">
+                  <img src="https://www.paypalobjects.com/webstatic/icon/pp258.png" alt="PayPal" className="w-6 h-6" />
+                  <span className="text-gray-700 font-medium">PayPal</span>
+                </div>
+                <PayPalButton
+                  amount={invoices.find(inv => inv.status === 'Pending')?.amount.replace(/[^\d.]/g, '') || '0.00'}
+                  onSuccess={(details) => alert('Payment successful! Transaction ID: ' + details.id)}
+                  onError={(err) => alert('Payment error: ' + err)}
+                />
               </div>
-            </div>
-              <div>
+
+              {/* Stripe Payment Option */}
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <div className="flex items-center gap-2 mb-3">
+                  <img src="https://cdn.worldvectorlogo.com/logos/stripe-3.svg" alt="Stripe" className="w-6 h-6 bg-white rounded" />
+                  <span className="text-gray-700 font-medium">Credit Card</span>
+                </div>
                 <button
-                  className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium shadow"
+                  className="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium shadow transition-colors"
                   onClick={async () => {
                     const pending = invoices.find(inv => inv.status === 'Pending');
                     if (!pending) return;
@@ -109,17 +116,19 @@ export default function InvoiceModule() {
                     }
                   }}
                 >
-                  <svg className="w-6 h-6" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="#635BFF"/><path d="M23.5 17.5C23.5 15.57 22.13 14.97 20.13 14.5L19.5 14.36C18.5 14.13 18 13.93 18 13.5C18 13.13 18.38 12.88 19.13 12.88C20.02 12.88 20.5 13.13 20.5 13.13L20.75 11.5C20.75 11.5 20.13 11 18.88 11C16.88 11 15.5 12.13 15.5 13.5C15.5 15.36 17.13 15.77 18.88 16.13L19.5 16.25C20.5 16.45 21 16.67 21 17.13C21 17.63 20.38 17.88 19.63 17.88C18.63 17.88 18 17.5 18 17.5L17.75 19.13C17.75 19.13 18.38 19.5 19.63 19.5C21.63 19.5 23.5 18.63 23.5 17.5Z" fill="#fff"/></svg>
-                  Pay with Stripe
+                  Pay with Credit Card
                 </button>
-                <div className="flex items-center gap-2 mt-2">
-                  <img src="https://cdn.worldvectorlogo.com/logos/stripe-3.svg" alt="Stripe" className="w-6 h-6 bg-white rounded" />
-                  <span className="text-gray-700 text-sm">Pay with Stripe</span>
-                </div>
               </div>
-            </>
+            </div>
           ) : (
-            <span className="text-gray-500">No pending invoices to pay.</span>
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
+                </svg>
+              </div>
+              <span className="text-gray-500">No pending invoices to pay.</span>
+            </div>
           )}
         </div>
         <p className="text-xs text-gray-500 mt-2">* PayPal (sandbox) and Stripe (test) integrations are live. Replace keys for production.</p>

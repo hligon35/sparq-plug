@@ -67,11 +67,27 @@ function deriveSectionTitle(pathname: string): string {
   return 'Dashboard';
 }
 
+// Determine the path type and create badge
+function getPathType(pathname: string): { type: string; emoji: string; color: string } | null {
+  if (pathname.includes('/client')) {
+    return { type: 'CLIENT', emoji: '👤', color: 'bg-green-500/20 border-green-300/50 text-green-100' };
+  }
+  if (pathname.includes('/manager')) {
+    return { type: 'MANAGER', emoji: '👔', color: 'bg-blue-500/20 border-blue-300/50 text-blue-100' };
+  }
+  if (pathname.includes('/admin')) {
+    return { type: 'ADMIN', emoji: '🔧', color: 'bg-red-500/20 border-red-300/50 text-red-100' };
+  }
+  return null;
+}
+
 // Header with uniform main title and dynamic subheader from nav
 export default function Header({ title, subtitle }: Props) {
   const pathname = usePathname() || '/';
   const section = deriveSectionTitle(pathname);
+  const pathType = getPathType(pathname);
   const mainTitle = 'SparQ Plug';
+  
   return (
     <header className="w-full bg-[#1d74d0] text-white shadow">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 grid grid-cols-1 sm:grid-cols-3 items-center gap-2 sm:gap-4 min-w-0">
@@ -85,6 +101,13 @@ export default function Header({ title, subtitle }: Props) {
           </Link>
         </div>
         <div className="text-center order-1 sm:order-2 min-w-0">
+          {pathType && (
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${pathType.color}`}>
+                {pathType.emoji} {pathType.type}
+              </span>
+            </div>
+          )}
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight truncate">{mainTitle}</h1>
           <p className="text-white/90 text-sm sm:text-base mt-0.5 truncate">{section}</p>
           {subtitle && <p className="text-white/80 text-xs sm:text-sm mt-1 truncate">{subtitle}</p>}

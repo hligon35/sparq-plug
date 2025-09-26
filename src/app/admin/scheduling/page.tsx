@@ -7,7 +7,7 @@ import CalendarGrid, { type CalendarEvent } from '@/components/CalendarGrid';
 import { withBasePath } from '@/lib/basePath';
 
 export default function PostScheduling() {
-  type Post = { id: string; content: string; platforms: string[]; client: string; scheduledAt: string; status: 'Scheduled' | 'Draft' | 'Published' | 'Failed' };
+  type Post = { id: string; content: string; platforms: string[]; clientId?: string; clientName?: string; client?: string; scheduledAt: string; status: 'Scheduled' | 'Draft' | 'Published' | 'Failed' };
   const [scheduledPosts, setScheduledPosts] = useState<Post[]>([]);
 
   const refresh = async () => {
@@ -15,7 +15,7 @@ export default function PostScheduling() {
       const res = await fetch(withBasePath('/api/scheduled-posts'));
       if (!res.ok) return;
       const data = await res.json();
-      setScheduledPosts(data.items || []);
+      setScheduledPosts(data.posts || data.items || []);
     } catch {}
   };
 
@@ -39,7 +39,8 @@ export default function PostScheduling() {
     const payload = {
       content: 'Sample scheduled post',
       platforms: ['Facebook', 'Instagram'],
-      client: 'DemoClient',
+      clientId: 'tech-corp-1',
+      clientName: 'TechCorp Solutions',
       scheduledAt: now.toISOString(),
       status: 'Scheduled',
     };
@@ -96,10 +97,18 @@ export default function PostScheduling() {
 
           {/* Content Calendar */}
           <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm mb-8">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-6 h-6 bg-purple-500 rounded-full"></div>
-              <h3 className="text-2xl font-bold text-gray-800">Content Calendar</h3>
-              <div className="ml-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-6 h-6 bg-purple-500 rounded-full"></div>
+                <h3 className="text-2xl font-bold text-gray-800">Content Calendar</h3>
+              </div>
+              <div className="flex items-center space-x-3">
+                <a 
+                  href="/admin/client-calendars" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                >
+                  Client Calendars
+                </a>
                 <button onClick={handleCreatePost} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Quick Create</button>
               </div>
             </div>
@@ -161,7 +170,7 @@ export default function PostScheduling() {
                             {pf}
                           </span>
                         ))}
-                        <span className="text-sm text-gray-500">{post.client}</span>
+                        <span className="text-sm text-gray-500">{post.clientName || post.client}</span>
                         <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
                           post.status === 'Scheduled' 
                             ? 'bg-green-100 text-green-800' 

@@ -25,6 +25,12 @@ export default function PayPalButton({ amount, onSuccess, onError }: PayPalButto
     const renderButtonSafe = () => {
       try {
         if (!window.paypal || !paypalRef.current) return;
+        
+        // Clear any existing PayPal buttons in this container to prevent duplicates
+        if (paypalRef.current) {
+          paypalRef.current.innerHTML = '';
+        }
+        
         // Wrap PayPal render in try/catch to prevent unhandled exceptions
         window.paypal
           .Buttons({

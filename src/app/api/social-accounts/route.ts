@@ -16,11 +16,71 @@ export type SocialAccount = {
 
 const STORE_KEY = 'social-accounts';
 
+// Mock data for development
+const mockAccounts: SocialAccount[] = [
+  {
+    id: 'facebook-1',
+    platform: 'Facebook',
+    accountName: 'TechCorp Solutions',
+    handle: 'techcorpsolutions',
+    followers: 5420,
+    status: 'connected',
+    lastSync: '2024-03-01T10:30:00Z',
+    posts: 87,
+    engagement: 4.2,
+    clientId: '1'
+  },
+  {
+    id: 'instagram-1',
+    platform: 'Instagram',
+    accountName: 'TechCorp Solutions',
+    handle: 'techcorp_solutions',
+    followers: 3280,
+    status: 'connected',
+    lastSync: '2024-03-01T10:25:00Z',
+    posts: 124,
+    engagement: 6.8,
+    clientId: '1'
+  },
+  {
+    id: 'twitter-1',
+    platform: 'Twitter/X',
+    accountName: 'TechCorp Solutions',
+    handle: 'TechCorpSol',
+    followers: 2890,
+    status: 'connected',
+    lastSync: '2024-03-01T10:20:00Z',
+    posts: 156,
+    engagement: 3.4,
+    clientId: '1'
+  },
+  {
+    id: 'linkedin-1',
+    platform: 'LinkedIn',
+    accountName: 'TechCorp Solutions',
+    handle: 'techcorp-solutions',
+    followers: 1840,
+    status: 'connected',
+    lastSync: '2024-03-01T10:15:00Z',
+    posts: 42,
+    engagement: 8.1,
+    clientId: '1'
+  }
+];
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const clientId = searchParams.get('clientId') || undefined;
-  const accounts = await readJson<SocialAccount[]>(STORE_KEY, []);
-  const filtered = clientId ? accounts.filter(a => a.clientId === clientId) : accounts;
+  
+  // Try to get accounts from storage first
+  const storedAccounts = await readJson<SocialAccount[]>(STORE_KEY, []);
+  
+  // If no stored accounts and requesting for client '1', return mock data
+  if (storedAccounts.length === 0 && clientId === '1') {
+    return NextResponse.json({ accounts: mockAccounts });
+  }
+  
+  const filtered = clientId ? storedAccounts.filter(a => a.clientId === clientId) : storedAccounts;
   return NextResponse.json({ accounts: filtered });
 }
 
