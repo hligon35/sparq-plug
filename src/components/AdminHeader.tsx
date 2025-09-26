@@ -5,6 +5,7 @@ import SignedInLogout from './SignedInLogout';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { isEmailSetupEnabled } from '@/features/email_setup/feature';
+import { hasBotFactoryAccessClient } from '@/features/bot_factory/access';
 
 type Props = {
   title: string;
@@ -42,6 +43,7 @@ export default function AdminHeader({ title, subtitle, onSecurityClick: _onSecur
   const [localCap, setLocalCap] = useState<boolean | undefined>(undefined);
   const [roleAllowed, setRoleAllowed] = useState(false); // setup (admin/manager)
   const [clientEmailAllowed, setClientEmailAllowed] = useState(false); // inbox view
+  const [botAllowed, setBotAllowed] = useState(false);
 
   useEffect(()=>{
     try {
@@ -53,7 +55,8 @@ export default function AdminHeader({ title, subtitle, onSecurityClick: _onSecur
   const allowed: boolean = (role === 'admin' || role === 'manager') || pathFallback;
   setRoleAllowed(allowed);
   setClientEmailAllowed(role === 'client' || role === 'admin' || role === 'manager');
-      if(!allowed && emailEnabled){
+  setBotAllowed(hasBotFactoryAccessClient());
+  if(!allowed && emailEnabled){
         // eslint-disable-next-line no-console
         console.debug('[EmailSetup] AdminHeader button hidden: missing role cookie. Set role=admin or role=manager cookie for testing.');
       }
@@ -97,8 +100,17 @@ export default function AdminHeader({ title, subtitle, onSecurityClick: _onSecur
 
           {/* Right: Uniform Signed In/Logout with timestamp */}
           <div className="flex items-center justify-center sm:justify-end gap-2 flex-wrap order-3 sm:order-3 min-w-0">
-            {emailEnabled && roleAllowed && (
+            {(emailEnabled && roleAllowed) && (
               <div className="inline-flex items-center gap-2 flex-wrap">
+                {botAllowed && (
+                  <Link
+                    id="btn-produce-bot-global"
+                    href="/bots/new"
+                    className="inline-flex items-center gap-2 rounded-md bg-indigo-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1d74d0]"
+                  >
+                    Produce Bot
+                  </Link>
+                )}
                 <Link
                   id="btn-email-setup"
                   href="/email-setup"

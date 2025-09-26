@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { isBotFactoryEnabled } from '@/features/bot_factory/feature';
+import { hasBotFactoryAccessClient } from '@/features/bot_factory/access';
 import AdminTopNav from '@/components/AdminTopNav';
 import AdminHeader from '@/components/AdminHeader';
 import CalendarGrid, { type CalendarEvent } from '@/components/CalendarGrid';
@@ -54,15 +54,7 @@ export default function PostScheduling() {
   };
 
   // Bot Factory button gating (duplicate logic with ContentCalendar for now; refactor later)
-  const allowProduceBot = (() => {
-    if (!isBotFactoryEnabled()) return false;
-    try {
-      const cookieStr = document.cookie || '';
-      const cookies: Record<string,string> = Object.fromEntries(cookieStr.split(';').map(c=>c.trim()).filter(Boolean).map(p=>{ const i=p.indexOf('='); const k=i===-1?p:p.slice(0,i); const v=i===-1?'':decodeURIComponent(p.slice(i+1)); return [k,v]; }));
-      const role = cookies['role'];
-      return role === 'admin' || role === 'manager';
-    } catch { return false; }
-  })();
+  const allowProduceBot = hasBotFactoryAccessClient();
 
   // Top nav handles routing; sidebar removed
 

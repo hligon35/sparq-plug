@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { hasBotFactoryAccessClient } from '@/features/bot_factory/access';
 
 const tabs = [
   { key: 'dashboard', label: 'Dashboard', href: '/admin' },
@@ -28,6 +29,7 @@ export default function AdminTopNav() {
     return seg ?? 'dashboard';
   })();
 
+  const botAllowed = hasBotFactoryAccessClient();
   return (
     <div className="mb-8 overflow-x-auto">
       <nav className="flex items-center gap-3 p-2 min-w-max">
@@ -49,6 +51,15 @@ export default function AdminTopNav() {
             </Link>
           );
         })}
+        {botAllowed && (
+          <Link
+            id="btn-produce-bot-nav"
+            href="/bots/new"
+            className="ml-2 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 shadow-sm"
+          >
+            Produce Bot
+          </Link>
+        )}
       </nav>
     </div>
   );
