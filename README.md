@@ -14,6 +14,7 @@ Environment variables
 - APP_BASE_PATH: "/app" (default). Set to empty string "" to serve at root.
 - NODE_ENV: "production" in production.
 - PUBLIC_URL: Your public site URL (e.g., <https://example.com>). Used in Stripe redirects.
+- NEXT_PUBLIC_FEATURE_EMAIL_SETUP / FEATURE_EMAIL_SETUP: Set to "true" to show the Email Setup UI (use NEXT_PUBLIC_ variant for client render).
 - STRIPE_SECRET_KEY: Live or test secret key (optional for mocked flow).
 
 Local development

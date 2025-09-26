@@ -7,7 +7,8 @@ import { DNSVerificationService } from '@/features/email_setup/services/dnsVerif
 import { createLocalMailbox } from '@/features/email_setup/services/localMailbox';
 
 export async function POST(request: NextRequest) {
-  const g = apiGuard(request, { path: '/api/email-setup:POST', capability: 'full_access', rate: { windowMs: 60_000, max: 20 }, csrf: true });
+  // Require the narrower 'email_setup' capability so both admin and manager roles can access
+  const g = apiGuard(request, { path: '/api/email-setup:POST', capability: 'email_setup', rate: { windowMs: 60_000, max: 20 }, csrf: true });
   if (g instanceof Response) return g;
 
   const correlationId = newCorrelationId();

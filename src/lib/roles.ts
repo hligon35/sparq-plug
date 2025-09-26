@@ -5,6 +5,10 @@ export const ROLE_CAPABILITIES: Record<string, string[]> = {
     'configure_integrations',
     'manage_team',
     'billing',
+    // Access to business email setup wizard & related API
+    'email_setup',
+    // View inboxes / email module
+    'view_email',
     'full_access',
   ],
   manager: [
@@ -12,11 +16,16 @@ export const ROLE_CAPABILITIES: Record<string, string[]> = {
     'view_analytics',
     'manage_team',
     'limited_billing',
+    // Manager is also allowed to configure business email (no full_access needed)
+    'email_setup',
+    'view_email',
   ],
   client: [
     'view_reports',
     'manage_content',
     'media_library_access',
+    // Allow client to view their own inbox via email module (read-only)
+    'view_email',
   ],
 };
 

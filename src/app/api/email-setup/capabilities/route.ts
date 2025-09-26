@@ -4,7 +4,8 @@ import { ok } from '@/lib/apiResponse';
 import fs from 'node:fs';
 
 export async function GET(request: NextRequest) {
-  const g = apiGuard(request, { path: '/api/email-setup/capabilities:GET', capability: 'full_access', rate: { windowMs: 60_000, max: 60 }, csrf: false });
+  // Both admin and manager should see capability status
+  const g = apiGuard(request, { path: '/api/email-setup/capabilities:GET', capability: 'email_setup', rate: { windowMs: 60_000, max: 60 }, csrf: false });
   if (g instanceof Response) return g;
 
   const enabled = process.env.LOCAL_MAILBOX_ENABLED === 'true';

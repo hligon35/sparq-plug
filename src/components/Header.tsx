@@ -91,6 +91,28 @@ export default function Header({ title, subtitle }: Props) {
   const mainTitle = 'SparQ Plug';
   const emailEnabled = isEmailSetupEnabled();
   const [localCap, setLocalCap] = useState<boolean | undefined>(undefined);
+  const [roleAllowed, setRoleAllowed] = useState(false); // admin/manager for setup
+  const [clientEmailAllowed, setClientEmailAllowed] = useState(false); // anyone with view_email capability
+
+  // Determine role from cookie (client-side) and allow only admin or manager to view button
+  useEffect(()=>{
+    try {
+      const cookieStr = document.cookie || '';
+      const cookies: Record<string,string> = Object.fromEntries(cookieStr.split(';').map(c=>c.trim()).filter(Boolean).map(pair=>{ const i=pair.indexOf('='); const k=i===-1?pair:pair.slice(0,i); const v=i===-1?'':decodeURIComponent(pair.slice(i+1)); return [k,v]; }));
+      const role = cookies['role'];
+      // Fallback: if we're clearly inside an admin or manager route (pathType), allow it even if cookie missing (common in dev when cookie never set)
+  const pathFallback = !!(pathType && (pathType.type === 'ADMIN' || pathType.type === 'MANAGER'));
+  const allowed: boolean = (role === 'admin' || role === 'manager') || pathFallback;
+      setRoleAllowed(allowed);
+      // Determine if client inbox button should show (role present & email feature flag on)
+      const inboxAllowed = role === 'client' || role === 'admin' || role === 'manager';
+      setClientEmailAllowed(inboxAllowed);
+      if (!allowed && emailEnabled) {
+        // eslint-disable-next-line no-console
+        console.debug('[EmailSetup] Button hidden: missing role cookie and not on admin/manager path. Set cookie "role=admin" or enable SSO gateway header x-portal-role.');
+      }
+    } catch { setRoleAllowed(false); }
+  },[pathname, pathType, emailEnabled]);
 
   useEffect(() => {
     if (!emailEnabled) return;
@@ -135,11 +157,12 @@ export default function Header({ title, subtitle }: Props) {
           {subtitle && <p className="text-white/80 text-xs sm:text-sm mt-1 truncate">{subtitle}</p>}
         </div>
         <div className="flex items-center justify-center sm:justify-end flex-wrap gap-2 order-3 sm:order-3 min-w-0">
-          {emailEnabled && (
+          {emailEnabled && roleAllowed && (
             <div className="inline-flex items-center gap-2">
               <Link
                 id="btn-email-setup"
                 href="/email-setup"
+                target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1d74d0]"
               >
                 Email Setup
@@ -150,6 +173,18 @@ export default function Header({ title, subtitle }: Props) {
                   Local {localCap ? 'On' : 'Off'}
                 </span>
               )}
+            </div>
+          )}
+          {emailEnabled && !roleAllowed && clientEmailAllowed && (
+            <div className="inline-flex items-center gap-2">
+              <Link
+                id="btn-email-inbox"
+                href="/client/email"
+                target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-md bg-blue-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1d74d0]"
+              >
+                Email
+              </Link>
             </div>
           )}
           <SignedInLogout />
