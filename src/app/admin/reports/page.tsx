@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Header from '@/components/Header';
-import Sidebar from '@/components/Sidebar';
+import AdminTopNav from '@/components/AdminTopNav';
+import AdminHeader from '@/components/AdminHeader';
 
 interface ReportData {
   id: string;
@@ -121,14 +121,14 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Reports" subtitle="Generate and manage business reports and analytics" />
-        
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">
-          {/* Header Actions */}
+    <div className="min-h-screen bg-[#f5f7fb]">
+      <AdminHeader title="Admin Reports" subtitle="Generate and manage business reports and analytics" />
+
+      <div className="px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto">
+          <AdminTopNav />
+
+          {/* Page Header Actions */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
@@ -295,85 +295,85 @@ export default function ReportsPage() {
               <p className="text-gray-500">Try adjusting your filters or generate a new report.</p>
             </div>
           )}
-        </main>
-      </div>
 
-      {/* Create Report Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Generate New Report</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Report Name</label>
-                <input
-                  type="text"
-                  value={newReport.name}
-                  onChange={(e) => setNewReport({ ...newReport, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Enter report name"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
-                <select
-                  value={newReport.type}
-                  onChange={(e) => setNewReport({ ...newReport, type: e.target.value as ReportData['type'] })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  title="Select report type"
-                >
-                  <option value="Analytics">Analytics</option>
-                  <option value="Client">Client</option>
-                  <option value="Revenue">Revenue</option>
-                  <option value="Performance">Performance</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Format</label>
-                <select
-                  value={newReport.format}
-                  onChange={(e) => setNewReport({ ...newReport, format: e.target.value as ReportData['format'] })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  title="Select report format"
-                >
-                  <option value="PDF">PDF</option>
-                  <option value="Excel">Excel</option>
-                  <option value="CSV">CSV</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                <textarea
-                  value={newReport.description}
-                  onChange={(e) => setNewReport({ ...newReport, description: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  rows={3}
-                  placeholder="Describe this report"
-                />
+          {/* Create Report Modal */}
+          {showCreateModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl p-8 max-w-md w-full">
+                <h3 className="text-xl font-bold text-gray-900 mb-6">Generate New Report</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Report Name</label>
+                    <input
+                      type="text"
+                      value={newReport.name}
+                      onChange={(e) => setNewReport({ ...newReport, name: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Enter report name"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
+                    <select
+                      value={newReport.type}
+                      onChange={(e) => setNewReport({ ...newReport, type: e.target.value as ReportData['type'] })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      title="Select report type"
+                    >
+                      <option value="Analytics">Analytics</option>
+                      <option value="Client">Client</option>
+                      <option value="Revenue">Revenue</option>
+                      <option value="Performance">Performance</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Format</label>
+                    <select
+                      value={newReport.format}
+                      onChange={(e) => setNewReport({ ...newReport, format: e.target.value as ReportData['format'] })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      title="Select report format"
+                    >
+                      <option value="PDF">PDF</option>
+                      <option value="Excel">Excel</option>
+                      <option value="CSV">CSV</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea
+                      value={newReport.description}
+                      onChange={(e) => setNewReport({ ...newReport, description: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      rows={3}
+                      placeholder="Describe this report"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => setShowCreateModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleGenerateReport}
+                    className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+                  >
+                    Generate
+                  </button>
+                </div>
               </div>
             </div>
-            
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleGenerateReport}
-                className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
-              >
-                Generate
-              </button>
-            </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

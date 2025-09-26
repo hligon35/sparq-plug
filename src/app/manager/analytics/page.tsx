@@ -158,10 +158,12 @@ export default function ManagerAnalyticsPage() {
                 {mockAnalytics.revenueByMonth.map((data, index) => (
                   <div key={data.month} className="flex items-center gap-4">
                     <span className="text-sm font-medium text-gray-600 w-12">{data.month}</span>
-                    <div className="flex-1 bg-gray-200 rounded-full h-3">
-                      <div 
-                        className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-300"
-                        style={{ width: `${(data.revenue / 50000) * 100}%` }}
+                    <div className="flex-1">
+                      <meter
+                        min={0}
+                        max={50000}
+                        value={data.revenue}
+                        className="w-full h-3"
                       />
                     </div>
                     <span className="text-sm font-semibold text-gray-900 w-20">${data.revenue.toLocaleString()}</span>

@@ -41,22 +41,30 @@ body {
 /* Touch-friendly swipe scrolling utilities */
 .swipe-x {
 	overflow-x: auto;
-	-webkit-overflow-scrolling: touch;
 	overscroll-behavior-x: contain;
 	touch-action: pan-x;
 }
 
 .swipe-y {
 	overflow-y: auto;
-	-webkit-overflow-scrolling: touch;
 	overscroll-behavior-y: contain;
 	touch-action: pan-y;
 }
 
 /* Improve momentum scrolling on touch devices */
 @media (hover: none) and (pointer: coarse) {
-	.swipe-x,
-	.swipe-y {
-		-webkit-overflow-scrolling: touch;
-	}
+  /* Touch devices: reserved for future tweaks (momentum scrolling vendor rules removed) */
+}
+
+/* Site-wide: make all buttons naturally fit to their content */
+button:not(.btn-block):not([data-width="block"]),
+[role="button"]:not(.btn-block):not([data-width="block"]) {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	/* Prefer fit-content, fall back to max-content for broader support */
+	width: -moz-fit-content; /* Firefox */
+	width: fit-content;
+	width: max-content;
+	white-space: nowrap;
 }

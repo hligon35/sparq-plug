@@ -145,41 +145,67 @@ export default function InvoiceModule() {
           <div className="bg-white rounded-2xl p-8 w-full max-w-md border border-gray-200 shadow-lg">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Create Invoice</h3>
             <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Invoice #"
-                value={newInvoice.id || ''}
-                onChange={e => setNewInvoice({ ...newInvoice, id: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg"
-              />
-              <input
-                type="text"
-                placeholder="Client"
-                value={newInvoice.client || ''}
-                onChange={e => setNewInvoice({ ...newInvoice, client: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg"
-              />
-              <input
-                type="text"
-                placeholder="Amount"
-                value={newInvoice.amount || ''}
-                onChange={e => setNewInvoice({ ...newInvoice, amount: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg"
-              />
-              <select
-                value={newInvoice.status || 'Pending'}
-                onChange={e => setNewInvoice({ ...newInvoice, status: e.target.value as 'Paid' | 'Pending' })}
-                className="w-full px-4 py-2 border rounded-lg"
-              >
-                <option value="Paid">Paid</option>
-                <option value="Pending">Pending</option>
-              </select>
-              <input
-                type="date"
-                value={newInvoice.date || ''}
-                onChange={e => setNewInvoice({ ...newInvoice, date: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg"
-              />
+              <div>
+                <label htmlFor="invoice-id" className="sr-only">Invoice Number</label>
+                <input
+                  id="invoice-id"
+                  type="text"
+                  placeholder="Invoice #"
+                  aria-label="Invoice Number"
+                  value={newInvoice.id || ''}
+                  onChange={e => setNewInvoice({ ...newInvoice, id: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label htmlFor="invoice-client" className="sr-only">Client</label>
+                <input
+                  id="invoice-client"
+                  type="text"
+                  placeholder="Client"
+                  aria-label="Client"
+                  value={newInvoice.client || ''}
+                  onChange={e => setNewInvoice({ ...newInvoice, client: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label htmlFor="invoice-amount" className="sr-only">Amount</label>
+                <input
+                  id="invoice-amount"
+                  type="text"
+                  placeholder="Amount"
+                  aria-label="Amount"
+                  value={newInvoice.amount || ''}
+                  onChange={e => setNewInvoice({ ...newInvoice, amount: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label htmlFor="invoice-status" className="sr-only">Status</label>
+                <select
+                  id="invoice-status"
+                  title="Invoice Status"
+                  aria-label="Status"
+                  value={newInvoice.status || 'Pending'}
+                  onChange={e => setNewInvoice({ ...newInvoice, status: e.target.value as 'Paid' | 'Pending' })}
+                  className="w-full px-4 py-2 border rounded-lg"
+                >
+                  <option value="Paid">Paid</option>
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="invoice-date" className="sr-only">Date</label>
+                <input
+                  id="invoice-date"
+                  type="date"
+                  aria-label="Invoice Date"
+                  value={newInvoice.date || ''}
+                  onChange={e => setNewInvoice({ ...newInvoice, date: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+              </div>
             </div>
             <div className="flex justify-end gap-2 mt-6">
               <button

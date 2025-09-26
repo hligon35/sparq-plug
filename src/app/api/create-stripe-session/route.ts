@@ -9,11 +9,11 @@ export async function POST(req: Request) {
 		const invoiceId = String(body.invoiceId || 'unknown');
 
 		// If a real Stripe key exists, we would create a Checkout Session here.
-		if (process.env.STRIPE_SECRET_KEY) {
+	if (process.env.STRIPE_SECRET_KEY) {
 			// Lazy import to avoid bundling Stripe in edge runtimes unintentionally
 			const Stripe = (await import('stripe')).default;
 			const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
-			const session = await stripe.checkout.sessions.create({
+						const session = await stripe.checkout.sessions.create({
 				mode: 'payment',
 				success_url: `${process.env.PUBLIC_URL || ''}${process.env.APP_BASE_PATH || ''}/client/billing?status=success&invoiceId=${encodeURIComponent(invoiceId)}`,
 				cancel_url: `${process.env.PUBLIC_URL || ''}${process.env.APP_BASE_PATH || ''}/client/billing?status=cancelled&invoiceId=${encodeURIComponent(invoiceId)}`,
@@ -27,6 +27,10 @@ export async function POST(req: Request) {
 						quantity: 1,
 					},
 				],
+							metadata: {
+								invoiceId,
+								source: 'sparq-plug',
+							},
 			});
 			return NextResponse.json({ url: session.url }, { status: 200 });
 		}

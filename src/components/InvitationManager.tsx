@@ -360,16 +360,16 @@ export default function InvitationManager({ currentUserEmail, currentUserRole }:
 
                   <div className="flex flex-col space-y-2">
                     {invitation.status === 'pending' && (
-                      <div className="flex items-center justify-center gap-2.75">
+                      <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => resendInvitation(invitation)}
-                          className="w-1/4 px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                          className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                         >
                           Resend
                         </button>
                         <button
                           onClick={() => cancelInvitation(invitation.token)}
-                          className="w-1/4 px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                          className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                         >
                           Cancel
                         </button>
