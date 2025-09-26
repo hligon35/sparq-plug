@@ -44,7 +44,7 @@ Prereqs: A Render account with GitHub repo connected.
    - NODE_ENV=production
    - APP_BASE_PATH=/app (or set to empty for root)
    - PUBLIC_URL=<https://your-render-domain>
-   - STRIPE_SECRET_KEY=sk_live_xxx (optional until ready)
+   - STRIPE_SECRET_KEY=&lt;your-key&gt; (set via a `.env` file; optional until ready)
 1. Health check path: /app/api/healthz (or /api/healthz if APP_BASE_PATH is empty).
 
 Self-host (Docker)
@@ -66,7 +66,7 @@ docker run -p 3000:3000 \
    -e NODE_ENV=production \
    -e APP_BASE_PATH="/app" \
    -e PUBLIC_URL="https://your-domain" \
-   -e STRIPE_SECRET_KEY="sk_live_xxx" \
+   -e STRIPE_SECRET_KEY="<your-key>" \
    --name sparq-plug sparq-plug
 ```
 
@@ -84,6 +84,33 @@ Common adjustments
 
 - To use root URLs, set APP_BASE_PATH="" in both build/runtime environments and update Render healthCheckPath accordingly.
 - For error pages, add app/error.tsx and app/not-found.tsx if desired.
+
+Local mailbox provisioning (optional)
+
+This app can provision email mailboxes on the same server via a script you provide. It is wired to the Email Setup wizard when the provider "local" is selected.
+
+1. Enable and configure via env:
+
+   - LOCAL_MAILBOX_ENABLED=true
+   - LOCAL_MAILBOX_SCRIPT: absolute path to your provisioning script
+
+   See .env.local.example for guidance.
+
+2. Script contract:
+
+   Your script must accept:
+
+   `--user <username> --domain <domain> --password <password> [--display-name <name>] [--aliases a,b,c]`
+
+   The repo includes sample scripts:
+
+   - server/bin/local-mailbox.sh (bash)
+   - server/bin/local-mailbox.ps1 (PowerShell)
+
+3. Use it:
+
+   - Visit /email-setup → select provider "local" → enter mailbox and password → Apply.
+   - The server calls the script and shows the result in the Summary step.
 
 License
 Proprietary/All rights reserved (update as needed).

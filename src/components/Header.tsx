@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import SignedInLogout from './SignedInLogout';
 import { isEmailSetupEnabled } from '@/features/email_setup/feature';
 import { usePathname } from 'next/navigation';
@@ -89,6 +90,25 @@ export default function Header({ title, subtitle }: Props) {
   const pathType = getPathType(pathname);
   const mainTitle = 'SparQ Plug';
   const emailEnabled = isEmailSetupEnabled();
+  const [localCap, setLocalCap] = useState<boolean | undefined>(undefined);
+
+  useEffect(() => {
+    if (!emailEnabled) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/email-setup/capabilities');
+        const data = await res.json().catch(() => ({}));
+        if (!cancelled) {
+          const allow = Boolean(data?.local?.enabled && data?.local?.scriptConfigured && data?.local?.scriptExists);
+          setLocalCap(allow);
+        }
+      } catch {
+        if (!cancelled) setLocalCap(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [emailEnabled]);
   
   return (
     <header className="w-full bg-[#1d74d0] text-white shadow">
@@ -116,13 +136,21 @@ export default function Header({ title, subtitle }: Props) {
         </div>
         <div className="flex items-center justify-center sm:justify-end flex-wrap gap-2 order-3 sm:order-3 min-w-0">
           {emailEnabled && (
-            <Link
-              id="btn-email-setup"
-              href="/email-setup"
-              className="inline-flex items-center gap-2 rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1d74d0]"
-            >
-              Email Setup
-            </Link>
+            <div className="inline-flex items-center gap-2">
+              <Link
+                id="btn-email-setup"
+                href="/email-setup"
+                className="inline-flex items-center gap-2 rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1d74d0]"
+              >
+                Email Setup
+              </Link>
+              {localCap !== undefined && (
+                <span title={localCap ? 'Local provisioning: available' : 'Local provisioning: unavailable'} className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] ${localCap ? 'border-emerald-300/60 bg-emerald-400/20 text-emerald-50' : 'border-white/30 bg-white/10 text-white/80'}`}>
+                  <span className={`h-2 w-2 inline-block rounded-full ${localCap ? 'bg-emerald-300' : 'bg-white/50'}`} />
+                  Local {localCap ? 'On' : 'Off'}
+                </span>
+              )}
+            </div>
           )}
           <SignedInLogout />
         </div>

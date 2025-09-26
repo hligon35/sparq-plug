@@ -59,10 +59,10 @@ function DomainStep({ value, onNext }: { value?: string; onNext: (domain: string
   );
 }
 
-function ProviderStep({ value, onNext }: { value?: WizardState['provider']; onNext: (p: NonNullable<WizardState['provider']>) => void }) {
+function ProviderStep({ value, onNext, allowLocal }: { value?: WizardState['provider']; onNext: (p: NonNullable<WizardState['provider']>) => void; allowLocal?: boolean }) {
   const [provider, setProvider] = useState<WizardState['provider']>(value ?? undefined);
   const [error, setError] = useState('');
-  const options: NonNullable<WizardState['provider']>[] = ['google', 'microsoft', 'zoho', 'local'];
+  const options: NonNullable<WizardState['provider']>[] = allowLocal ? ['google', 'microsoft', 'zoho', 'local'] : ['google', 'microsoft', 'zoho'];
   return (
     <form onSubmit={(e) => { e.preventDefault(); if (!provider) { setError('Choose a provider'); return; } onNext(provider); }} className="space-y-3" aria-label="Provider selection">
       <fieldset>
@@ -75,6 +75,9 @@ function ProviderStep({ value, onNext }: { value?: WizardState['provider']; onNe
             </label>
           ))}
         </div>
+        {allowLocal === false && (
+          <p className="mt-2 text-xs text-gray-500">Local provisioning is not available on this server. Ask an admin to enable LOCAL_MAILBOX_ENABLED and configure LOCAL_MAILBOX_SCRIPT.</p>
+        )}
         {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
       </fieldset>
       <button className="bg-blue-600 text-white px-4 py-2 rounded">Next</button>
@@ -98,7 +101,15 @@ function MailboxStep({ value, onNext, provider, localPassword, onLocalPasswordCh
   const [aliases, setAliases] = useState<string>(value?.aliases?.join(', ') ?? '');
   const [error, setError] = useState('');
   return (
-    <form aria-label="Mailbox creation" onSubmit={(e)=>{ e.preventDefault(); if(!primaryEmail || !displayName){ setError('Email and display name required'); return; } onNext({ primaryEmail, displayName, aliases: aliases.split(',').map(a=>a.trim()).filter(Boolean) }); }} className="space-y-3">
+    <form aria-label="Mailbox creation" onSubmit={(e)=>{
+      e.preventDefault();
+      if(!primaryEmail || !displayName){ setError('Email and display name required'); return; }
+      if(provider === 'local'){
+        const pwd = localPassword || '';
+        if(pwd.length < 8){ setError('Password required for local mailbox (min 8 characters)'); return; }
+      }
+      onNext({ primaryEmail, displayName, aliases: aliases.split(',').map(a=>a.trim()).filter(Boolean) });
+    }} className="space-y-3">
       <div>
         <label htmlFor="primaryEmail" className="block text-sm font-medium">Primary Email</label>
         <input id="primaryEmail" value={primaryEmail} onChange={(e)=>setPrimaryEmail(e.target.value)} className="mt-1 w-full border rounded px-3 py-2" placeholder="name@example.com" required />
@@ -222,12 +233,31 @@ export default function EmailSetupPage() {
   const [state, setState] = useState<WizardState>({});
   const [submitting, setSubmitting] = useState(false);
   const [localPassword, setLocalPassword] = useState('');
+  const [allowLocalProvider, setAllowLocalProvider] = useState<boolean | undefined>(undefined);
 
   // save-and-resume using localStorage for now (per-tenant would be better on server)
   useEffect(()=>{
     try{ const saved = localStorage.getItem('email-setup-state'); if(saved) setState(JSON.parse(saved)); }catch{ /* noop */ }
   },[]);
   useEffect(()=>{ try{ localStorage.setItem('email-setup-state', JSON.stringify(state)); }catch{/* noop */} },[state]);
+
+  // Fetch server-side capabilities (whether local mailbox is enabled and script is present)
+  useEffect(()=>{
+    let cancelled = false;
+    (async ()=>{
+      try {
+        const res = await fetch('/api/email-setup/capabilities', { method: 'GET' });
+        const data = await res.json().catch(()=>({}));
+        if(!cancelled){
+          const allow = Boolean(data?.local?.enabled && data?.local?.scriptConfigured && data?.local?.scriptExists);
+          setAllowLocalProvider(allow);
+        }
+      } catch {
+        if(!cancelled){ setAllowLocalProvider(false); }
+      }
+    })();
+    return ()=>{ cancelled = true; };
+  },[]);
 
   const getCsrfFromCookie = () => {
     try {
@@ -304,7 +334,7 @@ export default function EmailSetupPage() {
           <DomainStep value={state.domain} onNext={(domain)=>{ setState((s)=>({ ...s, domain })); setCurrent('provider'); }} />
         )}
         {current==='provider' && (
-          <ProviderStep value={state.provider} onNext={(provider)=>{ setState((s)=>({ ...s, provider })); setCurrent('dns'); }} />)
+          <ProviderStep value={state.provider} allowLocal={allowLocalProvider} onNext={(provider)=>{ setState((s)=>({ ...s, provider })); setCurrent('dns'); }} />)
         }
         {current==='dns' && (<DNSStep onNext={()=> setCurrent('mailbox')} />)}
         {current==='mailbox' && (

@@ -35,18 +35,40 @@ export async function createLocalMailbox(input: LocalMailboxInput, correlationId
     return { created: false, message: 'Invalid username or domain' };
   }
 
-  const args = [
+  // Base args (GNU-style). We'll map to platform-specific flags as needed.
+  const baseArgs = [
     '--user', safeUser,
     '--domain', safeDomain,
     '--password', input.password,
   ];
-  if (input.displayName) args.push('--display-name', input.displayName);
-  if (input.aliases && input.aliases.length) args.push('--aliases', input.aliases.join(','));
+  if (input.displayName) baseArgs.push('--display-name', input.displayName);
+  if (input.aliases && input.aliases.length) baseArgs.push('--aliases', input.aliases.join(','));
+
+  // Prepare command and args cross-platform
+  let command = script;
+  let args = [...baseArgs];
+  const isWin = process.platform === 'win32';
+  if (isWin && /\.ps1$/i.test(script)) {
+    // PowerShell requires -Param style and invocation via powershell.exe
+    command = 'powershell';
+    // Map --flag to -flag for PowerShell script parameters
+    const psArgs: string[] = [];
+    for (let i = 0; i < baseArgs.length; i += 2) {
+      const key = String(baseArgs[i]).replace(/^--/, '-');
+      const val = String(baseArgs[i + 1] ?? '');
+      psArgs.push(key, val);
+    }
+    args = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', script, ...psArgs];
+  } else if (!isWin && /\.sh$/i.test(script)) {
+    // Invoke via bash for portability in case executable bit isn't set
+    command = 'bash';
+    args = [script, ...baseArgs];
+  }
 
   try {
     // eslint-disable-next-line no-console
-    console.info(`[email-setup][local-mailbox][${correlationId}] exec`, { script, args: args.filter(a => a !== input.password) });
-  const { stdout, stderr }: { stdout: string; stderr: string } = await execFileAsync(script, args, { timeout: 20_000 }) as unknown as { stdout: string; stderr: string };
+  console.info(`[email-setup][local-mailbox][${correlationId}] exec`, { command, script, args: args.filter(a => a !== input.password) });
+  const { stdout, stderr }: { stdout: string; stderr: string } = await execFileAsync(command, args, { timeout: 20_000 }) as unknown as { stdout: string; stderr: string };
     if (stderr && stderr.trim().length > 0) {
       // Some scripts log to stderr for warnings; do not treat as fatal automatically.
       // eslint-disable-next-line no-console
