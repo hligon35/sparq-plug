@@ -35,6 +35,7 @@ export default function ClientTopNav() {
   const dragState = React.useRef<{ startX: number; startScroll: number } | null>(null);
   const rafRef = React.useRef<number | null>(null);
   const velocityRef = React.useRef(0);
+  const hoveringLinkRef = React.useRef(false);
 
   // Touch / pointer swipe (only for touch pointer types)
   React.useEffect(() => {
@@ -78,8 +79,8 @@ export default function ClientTopNav() {
     const el = containerRef.current;
     if (!el) return;
 
-    const EDGE_PX = 64; // activation zone at both ends
-    const MAX_VELOCITY = 20; // px per frame
+  const EDGE_PX = 96; // widened activation zone for earlier engagement
+  const MAX_VELOCITY = 22; // px per frame (slightly higher for snappier feel)
 
     function step() {
       const v = velocityRef.current;
@@ -110,13 +111,30 @@ export default function ClientTopNav() {
   const rect = el.getBoundingClientRect();
       const x = e.clientX - rect.left;
       let vel = 0;
-      if (x < EDGE_PX) {
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      const atStart = el.scrollLeft <= 0;
+      const atEnd = el.scrollLeft >= maxScroll - 2; // tolerance
+
+      // Compute raw velocity (linear scaling) regardless of hover; we'll dampen later if needed
+      if (x < EDGE_PX && !atStart) {
         const f = 1 - Math.max(0, x) / EDGE_PX; // 0..1
         vel = -Math.round(f * MAX_VELOCITY);
-      } else if (x > rect.width - EDGE_PX) {
+      } else if (x > rect.width - EDGE_PX && !atEnd) {
         const f = 1 - (rect.width - x) / EDGE_PX; // 0..1
         vel = Math.round(f * MAX_VELOCITY);
       }
+
+      // Minimum base velocity when inside activation & scroll still possible
+      if (vel !== 0) {
+        const min = 2; // px/frame baseline
+        if (Math.abs(vel) < min) vel = vel < 0 ? -min : min;
+      }
+
+      // If hovering a link and NOT inside edge activation zone, pause
+      const inEdge = x < EDGE_PX || x > rect.width - EDGE_PX;
+      if (hoveringLinkRef.current && !inEdge) vel = 0;
+      // Prevent re-trigger at extremes
+      if ((atEnd && vel > 0) || (atStart && vel < 0)) vel = 0;
       velocityRef.current = vel;
       ensureLoop();
     }
@@ -159,6 +177,8 @@ export default function ClientTopNav() {
                     : 'bg-white text-gray-700 border-gray-200 hover:shadow-md hover:-translate-y-[1px]'
                 } ${dragging ? 'pointer-events-none' : ''}`}
                 aria-current={isActive ? 'page' : undefined}
+                onMouseEnter={() => { hoveringLinkRef.current = true; velocityRef.current = 0; }}
+                onMouseLeave={() => { hoveringLinkRef.current = false; }}
               >
                 <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-blue-600' : 'bg-gray-300'}`} />
                 {t.label}
