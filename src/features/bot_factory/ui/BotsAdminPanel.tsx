@@ -83,7 +83,7 @@ export default function BotsAdminPanel(){
           <tbody>
             {bots.map(b=> (
               <tr key={b.id} className="border-t last:border-b">
-                <td className="px-3 py-1.5 font-medium">{b.name}</td>
+                <td className="px-3 py-1.5 font-medium"><a href={`/admin/bots/${b.id}`} className="text-indigo-600 hover:underline">{b.name}</a></td>
                 <td className="px-3 py-1.5">{b.channels.join(', ')}</td>
                 <td className="px-3 py-1.5">{b.intents}</td>
                 <td className="px-3 py-1.5">{b.replies}</td>

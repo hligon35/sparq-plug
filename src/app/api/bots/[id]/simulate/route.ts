@@ -4,6 +4,7 @@ import { badRequest, ok } from '@/lib/apiResponse';
 import { getBot, recordTrace } from '@/features/bot_factory/services/botStorage';
 import { detectIntentAndSentiment } from '@/features/bot_factory/services/nlpIntentService';
 import { applySafetyFilters, evaluateEscalation } from '@/features/bot_factory/services/safety';
+import { checkRateLimit, recordDecision, updateUncertain, getUncertainCount } from '@/features/bot_factory/services/runtimeState';
 import { BotDecisionTrace, BotReplyTemplate } from '@/features/bot_factory/services/botTypes';
 
 // POST /api/bots/[id]/simulate
@@ -38,10 +39,24 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   return ok({ action: 'blocked', reasons: safety.reasons, sanitized: safety.sanitized });
     }
 
+    // Rate limit check
+    const rl = checkRateLimit(bot);
+    if (!rl.allowed) {
+      const trace: Omit<BotDecisionTrace,'at'> = {
+        channel: channel as any,
+        input: safety.sanitized,
+        confidence: 0,
+        sentiment: 0,
+        action: 'rate_limited',
+        reason: rl.reason,
+      };
+      await recordTrace(bot.id, trace);
+      return ok({ botId: bot.id, action: 'rate_limited', reason: rl.reason, traceRecorded: true });
+    }
+
     // Intent + sentiment
     const det = detectIntentAndSentiment(bot, safety.sanitized);
-    // Simple uncertain counter placeholder (persisting not implemented yet)
-    const uncertainCount = det.confidence < 0.3 ? 1 : 0;
+    const uncertainCount = updateUncertain(bot.id, det.confidence < 0.3);
     const esc = evaluateEscalation(bot, det.sentiment, det.confidence, uncertainCount, det.intent?.id);
 
     let action: BotDecisionTrace['action'];
@@ -75,7 +90,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       reason,
       replyTemplateId: replyTemplate?.id,
     };
-    await recordTrace(bot.id, trace);
+  await recordTrace(bot.id, trace);
+  recordDecision(bot.id, action);
 
     const ch = channel as any; // runtime validated earlier
     return ok({
@@ -89,7 +105,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         id: replyTemplate.id,
         body: (replyTemplate.channelOverrides && (replyTemplate.channelOverrides as any)[ch]) || replyTemplate.body,
       } : null,
-      traceRecorded: true,
+  traceRecorded: true,
+  uncertainCount: getUncertainCount(bot.id),
     });
   } catch (e: unknown) {
     return badRequest((e as Error).message);
