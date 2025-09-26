@@ -42,6 +42,8 @@ export default function BotWizard(){
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewMessages, setPreviewMessages] = useState<{role:'user'|'bot'; text:string}[]>([]);
+  const [createdBotId, setCreatedBotId] = useState<string | null>(null);
+  const [activating, setActivating] = useState(false);
 
   if(!enabled){
     return <div className="max-w-4xl mx-auto p-8"><p className="text-sm text-gray-500">Bot Factory is disabled (feature flag).</p></div>;
@@ -92,9 +94,20 @@ export default function BotWizard(){
       const data = await res.json();
       if(!res.ok) throw new Error(data.error || 'Failed to create');
       setStep(steps.length-1);
-      alert('Bot created. Activate via future control panel (activation toggle to be implemented).');
+      setCreatedBotId(data.bot.id);
     } catch(e:any){ setError(e.message); }
     finally { setCreating(false); }
+  }
+
+  async function activateNow(){
+    if(!createdBotId) return;
+    setActivating(true); setError(null);
+    try {
+      const res = await fetch(`/api/bots/${createdBotId}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ active:true })});
+      const data = await res.json(); if(!res.ok) throw new Error(data.error || 'activation failed');
+      alert('Bot activated.');
+    } catch(e:any){ setError(e.message); }
+    finally { setActivating(false); }
   }
 
   function next(){ if(step < steps.length-1) setStep(s=>s+1); }
@@ -217,9 +230,22 @@ export default function BotWizard(){
                   <span>Sandbox Mode</span>
                 </label>
               </div>
-              <button disabled={creating || !draft.name || draft.channels.length===0} onClick={createBot} className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-50 hover:bg-blue-700">
-                {creating ? 'Creating…' : 'Create Bot'}
-              </button>
+              {!createdBotId && (
+                <button disabled={creating || !draft.name || draft.channels.length===0} onClick={createBot} className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-50 hover:bg-blue-700">
+                  {creating ? 'Creating…' : 'Create Bot'}
+                </button>
+              )}
+              {createdBotId && (
+                <div className="flex flex-col gap-3">
+                  <div className="text-xs text-green-700 font-medium">Bot created (ID: {createdBotId})</div>
+                  <div className="flex gap-2">
+                    <button disabled={activating} onClick={activateNow} className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-50 hover:bg-emerald-700">
+                      {activating ? 'Activating…' : 'Activate Now'}
+                    </button>
+                    <a href="/admin/bots" className="inline-flex items-center gap-2 rounded-md bg-gray-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-700">Manage Bots</a>
+                  </div>
+                </div>
+              )}
             </section>
           )}
           <div className="flex justify-between pt-2">
