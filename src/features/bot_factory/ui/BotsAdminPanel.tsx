@@ -63,7 +63,7 @@ export default function BotsAdminPanel(){
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Bots</h1>
-  <a href="/bots/new" target="_blank" rel="noopener noreferrer" className="text-xs inline-flex items-center gap-1 rounded bg-blue-600 text-white px-3 py-1.5 hover:bg-blue-700">Produce Bot</a>
+        {/* Produce Bot creation link removed per request */}
       </div>
       {error && <div className="p-3 rounded bg-red-50 border border-red-200 text-sm text-red-700">{error}</div>}
       <div className="overflow-x-auto border rounded bg-white">
