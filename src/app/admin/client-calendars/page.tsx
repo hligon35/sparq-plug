@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+export const dynamic = 'force-dynamic';
+
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import AdminTopNav from '@/components/AdminTopNav';
@@ -30,7 +32,7 @@ type CalendarPost = {
   };
 };
 
-export default function ClientCalendarsPage() {
+function ClientCalendarsPageInner() {
   const searchParams = useSearchParams();
   const selectedClientId = searchParams.get('client');
   
@@ -494,5 +496,22 @@ export default function ClientCalendarsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ClientCalendarsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#f5f7fb] flex items-center justify-center p-8">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading client calendars...</p>
+          </div>
+        </div>
+      }
+    >
+      <ClientCalendarsPageInner />
+    </Suspense>
   );
 }

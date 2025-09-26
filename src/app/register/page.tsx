@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+export const dynamic = 'force-dynamic';
+
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -25,7 +27,7 @@ interface RegistrationForm {
   acceptTerms: boolean;
 }
 
-export default function RegisterPage() {
+function RegisterPageInner() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   
@@ -405,5 +407,22 @@ export default function RegisterPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-center mt-4 text-gray-600">Loading registration...</p>
+          </div>
+        </div>
+      }
+    >
+      <RegisterPageInner />
+    </Suspense>
   );
 }

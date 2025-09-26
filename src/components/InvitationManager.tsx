@@ -6,13 +6,14 @@ interface Invitation {
   id: string;
   email: string;
   role: 'admin' | 'manager' | 'client';
-  status: 'pending' | 'accepted' | 'expired';
+  status: 'pending' | 'accepted' | 'expired' | 'revoked';
   invitedBy: string;
   invitedAt: string;
   expiresAt: string;
   token: string;
   companyName?: string;
   message?: string;
+  resendCount?: number;
 }
 
 interface InviteFormData {
@@ -53,7 +54,7 @@ export default function InvitationManager({ currentUserEmail, currentUserRole }:
       } else {
         setError('Failed to fetch invitations');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to fetch invitations');
     } finally {
       setLoading(false);
@@ -108,7 +109,7 @@ export default function InvitationManager({ currentUserEmail, currentUserRole }:
       } else {
         setError(result.error || 'Failed to send invitation');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to send invitation');
     }
   };
@@ -122,22 +123,10 @@ export default function InvitationManager({ currentUserEmail, currentUserRole }:
 
   const resendInvitation = async (invitation: Invitation) => {
     try {
-      // Delete old invitation
-      await fetch(`/api/invitations?token=${invitation.token}`, {
-        method: 'DELETE'
-      });
-
-      // Create new invitation
       const response = await fetch('/api/invitations', {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: invitation.email,
-          role: invitation.role,
-          companyName: invitation.companyName,
-          message: invitation.message,
-          invitedBy: currentUserEmail
-        })
+        body: JSON.stringify({ action: 'resend', email: invitation.email, roleHint: invitation.role })
       });
 
       if (response.ok) {
@@ -146,7 +135,7 @@ export default function InvitationManager({ currentUserEmail, currentUserRole }:
       } else {
         setError('Failed to resend invitation');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to resend invitation');
     }
   };
@@ -163,7 +152,7 @@ export default function InvitationManager({ currentUserEmail, currentUserRole }:
       } else {
         setError('Failed to cancel invitation');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to cancel invitation');
     }
   };

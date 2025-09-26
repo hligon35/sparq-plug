@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import SignedInLogout from './SignedInLogout';
+import { isEmailSetupEnabled } from '@/features/email_setup/feature';
 import { usePathname } from 'next/navigation';
 
 type Props = { title?: string; subtitle?: string };
@@ -87,6 +88,7 @@ export default function Header({ title, subtitle }: Props) {
   const section = deriveSectionTitle(pathname);
   const pathType = getPathType(pathname);
   const mainTitle = 'SparQ Plug';
+  const emailEnabled = isEmailSetupEnabled();
   
   return (
     <header className="w-full bg-[#1d74d0] text-white shadow">
@@ -113,6 +115,15 @@ export default function Header({ title, subtitle }: Props) {
           {subtitle && <p className="text-white/80 text-xs sm:text-sm mt-1 truncate">{subtitle}</p>}
         </div>
         <div className="flex items-center justify-center sm:justify-end flex-wrap gap-2 order-3 sm:order-3 min-w-0">
+          {emailEnabled && (
+            <Link
+              id="btn-email-setup"
+              href="/email-setup"
+              className="inline-flex items-center gap-2 rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1d74d0]"
+            >
+              Email Setup
+            </Link>
+          )}
           <SignedInLogout />
         </div>
       </div>

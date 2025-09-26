@@ -1,14 +1,15 @@
 "use client";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState('');
   const router = useRouter();
 
+  const [isBrowser, setIsBrowser] = useState(false);
+  useEffect(() => { setIsBrowser(true); }, []);
   const isDev = process.env.NODE_ENV === 'development' || 
-                typeof window !== 'undefined' && 
-                (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+                (isBrowser && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
 
   const handleDevLogin = (role: string) => {
     // Set role cookie for development
@@ -31,12 +32,13 @@ export default function LoginPage() {
   };
 
   const handleProductionRedirect = () => {
+    if (!isBrowser) return;
     const rt = encodeURIComponent(window.location.href.replace('/login', ''));
     const target = `https://portal.getsparqd.com/login?sso=1&returnTo=${rt}`;
     window.location.replace(target);
   };
 
-  if (!isDev) {
+  if (isBrowser && !isDev) {
     // Production behavior - redirect to external portal
     handleProductionRedirect();
     return (

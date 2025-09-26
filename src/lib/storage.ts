@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'fs/promises';
+import { mkdir, readFile, writeFile, rename } from 'fs/promises';
 import path from 'path';
 
 const dataRoot = path.resolve(process.env.DATA_DIR || path.join(process.cwd(), 'data'));
@@ -24,5 +24,7 @@ export async function readJson<T>(name: string, fallback: T): Promise<T> {
 
 export async function writeJson<T>(name: string, data: T): Promise<void> {
   const fp = await filePath(name);
-  await writeFile(fp, JSON.stringify(data, null, 2), 'utf-8');
+  const tmp = `${fp}.tmp`;
+  await writeFile(tmp, JSON.stringify(data, null, 2), 'utf-8');
+  await rename(tmp, fp);
 }
