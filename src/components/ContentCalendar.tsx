@@ -11,7 +11,7 @@ export default function ContentCalendar() {
       <div className="flex items-start justify-between gap-4 mb-2">
         <h3 className="text-lg font-semibold">Content Calendar</h3>
         {allow && (
-          <Link id="btn-produce-bot" href="/bots/new" className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none">
+          <Link id="btn-produce-bot" href="/bots/new" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none">
             Produce Bot
           </Link>
         )}

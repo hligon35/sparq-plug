@@ -106,6 +106,7 @@ export default function AdminHeader({ title, subtitle, onSecurityClick: _onSecur
                   <Link
                     id="btn-produce-bot-global"
                     href="/bots/new"
+                    target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-md bg-indigo-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1d74d0]"
                   >
                     Produce Bot
