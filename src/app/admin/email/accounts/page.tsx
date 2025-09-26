@@ -1,9 +1,7 @@
-import dynamic from 'next/dynamic';
 import React from 'react';
+import AccountsManager from './ui/AccountsManager';
 
 export const metadata = { title: 'Email Accounts' };
-
-const AccountsManager = dynamic(()=>import('./ui/AccountsManager'), { ssr: false });
 
 export default function EmailAccountsPage(){
   return (
