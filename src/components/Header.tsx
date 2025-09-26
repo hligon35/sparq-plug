@@ -135,15 +135,7 @@ export default function Header({ title, subtitle }: Props) {
   return (
     <header className="w-full bg-[#1d74d0] text-white shadow">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 grid grid-cols-1 sm:grid-cols-3 items-center gap-2 sm:gap-4 min-w-0">
-        <div className="flex items-center order-2 sm:order-1 min-w-0">
-          <Link
-            href={'https://portal.getsparqd.com/'}
-            className="hidden sm:inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1d74d0]"
-          >
-            <span aria-hidden>←</span>
-            <span>Back to Portal</span>
-          </Link>
-        </div>
+        <div className="flex items-center order-2 sm:order-1 min-w-0" />
         <div className="text-center order-1 sm:order-2 min-w-0">
           {pathType && (
             <div className="flex items-center justify-center gap-2 mb-1">
