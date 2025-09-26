@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { hasBotFactoryAccessClient } from '@/features/bot_factory/access';
 import AdminTopNav from '@/components/AdminTopNav';
 import AdminHeader from '@/components/AdminHeader';
 import CalendarGrid, { type CalendarEvent } from '@/components/CalendarGrid';
@@ -52,7 +53,10 @@ export default function PostScheduling() {
     alert(`Edit post ${postId} would open here`);
   };
 
-  // Bot Factory button gating (duplicate logic with ContentCalendar for now; refactor later)
+  // Bot Factory button gating
+
+  const [allowProduceBot, setAllowProduceBot] = useState(false);
+  useEffect(()=>{ setAllowProduceBot(hasBotFactoryAccessClient()); },[]);
 
   // Top nav handles routing; sidebar removed
 
@@ -105,7 +109,22 @@ export default function PostScheduling() {
                 <h3 className="text-2xl font-bold text-gray-800">Content Calendar</h3>
               </div>
               <div className="flex items-center space-x-3">
-                {/* Buttons intentionally removed per request */}
+                {allowProduceBot && (
+                  <a
+                    id="btn-produce-bot"
+                    href="/bots/new"
+                    target="_blank" rel="noopener noreferrer"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                  >
+                    Produce Bot
+                  </a>
+                )}
+                <a
+                  href="/admin/client-calendars"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                >
+                  Client Calendars
+                </a>
                 <button onClick={handleCreatePost} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Quick Create</button>
               </div>
             </div>
