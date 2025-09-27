@@ -36,7 +36,7 @@ export async function middleware(req: NextRequest) {
   }
 
   if (!(path.startsWith('/admin') || path.startsWith('/manager') || path.startsWith('/client'))) {
-    return NextResponse.next();
+    return withSecurityHeaders(NextResponse.next());
   }
 
   const session = await verifySession(req.cookies.get('session')?.value);
@@ -53,7 +53,7 @@ export async function middleware(req: NextRequest) {
   if (path.startsWith('/admin') && role !== 'admin') return redirect(req, isDev);
   if (path.startsWith('/manager') && role !== 'manager' && role !== 'admin') return redirect(req, isDev);
   if (path.startsWith('/client') && role !== 'client' && role !== 'admin' && role !== 'manager') return redirect(req, isDev);
-  return NextResponse.next();
+  return withSecurityHeaders(NextResponse.next());
 }
 
 function redirect(req: NextRequest, isDev: boolean) {
@@ -71,3 +71,23 @@ function redirect(req: NextRequest, isDev: boolean) {
 export const config = {
   matcher: ['/:path*'],
 };
+
+function withSecurityHeaders(res: NextResponse) {
+  // Lightweight security headers (CSP intentionally relaxed placeholder)
+  res.headers.set('X-Frame-Options', 'DENY');
+  res.headers.set('X-Content-Type-Options', 'nosniff');
+  res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  // Basic CSP (adjust for analytics & external resources as needed)
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline'", // 'unsafe-inline' kept until inline scripts removed
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:",
+    "connect-src 'self'",
+    "frame-ancestors 'none'"
+  ].join('; ');
+  res.headers.set('Content-Security-Policy', csp);
+  return res;
+}

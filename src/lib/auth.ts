@@ -9,7 +9,13 @@ function getSecret() {
   return new TextEncoder().encode(requireSecret());
 }
 
-export interface SessionPayload { sub: string; role: 'admin' | 'manager' | 'client' }
+export type RoleValue = 'admin' | 'manager' | 'client';
+export interface SessionPayload { sub: string; role: RoleValue }
+
+export function coerceRole(val: string): RoleValue {
+  if (val === 'admin' || val === 'manager' || val === 'client') return val;
+  return 'client';
+}
 
 export async function signSession(payload: SessionPayload, expiresIn = '7d') {
   return await new SignJWT(payload as any)

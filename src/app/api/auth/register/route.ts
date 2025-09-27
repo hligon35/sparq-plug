@@ -2,15 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { evaluatePassword } from '@/lib/passwordPolicy';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { rateLimitCheck, rateLimitKeyFromRequest } from '@/lib/rateLimit';
+import { rateLimitCheck, rateLimitKeyFromRequest, rateLimitHeaders } from '@/lib/rateLimit';
 import { audit } from '@/lib/audit';
+import { scheduleMaintenance } from '@/lib/maintenance';
 
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local';
     const key = rateLimitKeyFromRequest({ ip, path: '/api/auth/register' });
     const limit = rateLimitCheck(key, { windowMs: 10 * 60_000, max: 8 });
-    if (!limit.allowed) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+    if (!limit.allowed) {
+      const res = NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const hdrs = rateLimitHeaders(limit.remaining, { windowMs: 10 * 60_000, max: 8 });
+      Object.entries(hdrs).forEach(([k,v]) => res.headers.set(k, v));
+      return res;
+    }
     const body = await req.json();
     const { email, password, name, role, company } = body || {};
     if (!email || !password || !role) {
@@ -35,7 +41,13 @@ export async function POST(req: NextRequest) {
     const passwordHash = await bcrypt.hash(password, 10);
     const created = await prisma.registrationRequest.create({ data: { email, name, company, roleRequested: role, passwordHash } });
     await audit({ actor: email, tenantId: 'system', action: 'auth.register.request', target: `registration:${created.id}`, metadata: { role } });
-    return NextResponse.json({ ok: true, message: 'Registration submitted for approval' });
+  const res = NextResponse.json({ ok: true, message: 'Registration submitted for approval' });
+  const hdrs = rateLimitHeaders(limit.remaining, { windowMs: 10 * 60_000, max: 8 });
+  Object.entries(hdrs).forEach(([k,v]) => res.headers.set(k, v));
+  // periodic cleanup
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  scheduleMaintenance();
+  return res;
   } catch (e: any) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }

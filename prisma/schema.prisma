@@ -2,7 +2,8 @@
 // Using SQLite for quick local dev; swap provider to postgresql or mysql in production.
 
 datasource db {
-  provider = env("DATABASE_PROVIDER") // e.g. "sqlite" | "postgresql"
+  // Local default. For production you can switch to: postgresql / mysql / sqlserver / mongodb (adjust URL & run migrations)
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -10,27 +11,22 @@ generator client {
   provider = "prisma-client-js"
 }
 
-enum Role {
-  admin
-  manager
-  client
-}
-
-enum RegistrationStatus {
-  pending
-  approved
-  denied
-}
+// NOTE: SQLite in this configuration doesn't support native enums in current adapter.
+// We model role & registration status as constrained strings at the application layer.
+// Accepted Role values: 'admin' | 'manager' | 'client'
+// Accepted RegistrationStatus values: 'pending' | 'approved' | 'denied'
 
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
   name         String?
   company      String?
-  role         Role
+  role         String // Role enum simulated: admin | manager | client
   passwordHash String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  // Relations
+  passwordResetTokens PasswordResetToken[]
 }
 
 model RegistrationRequest {
@@ -38,9 +34,9 @@ model RegistrationRequest {
   email          String
   name           String?
   company        String?
-  roleRequested  Role
+  roleRequested  String // Requested role: admin | manager | client
   passwordHash   String
-  status         RegistrationStatus @default(pending)
+  status         String @default("pending") // pending | approved | denied
   decisionReason String?
   decidedAt      DateTime?
   createdAt      DateTime           @default(now())
@@ -75,4 +71,20 @@ model EmailLog {
 
   @@index([template])
   @@index([createdAt])
+}
+
+// Persistent audit events (replaces file-based JSON log)
+model AuditEvent {
+  id        String   @id @default(cuid())
+  at        DateTime @default(now())
+  actor     String
+  tenantId  String
+  action    String
+  target    String?
+  // SQLite lacks native JSON type; store serialized JSON string
+  metadata  String?
+
+  @@index([actor])
+  @@index([action])
+  @@index([at])
 }

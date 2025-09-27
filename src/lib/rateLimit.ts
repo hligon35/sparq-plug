@@ -34,6 +34,14 @@ export function rateLimitCheck(key: string, opts: RateLimitOptions): { allowed: 
   return { allowed: true, remaining: Math.max(0, opts.max - b.stamps.length) };
 }
 
+export function rateLimitHeaders(remaining: number, opts: RateLimitOptions) {
+  return {
+    'X-RateLimit-Limit': String(opts.max),
+    'X-RateLimit-Remaining': String(remaining),
+    'X-RateLimit-Window': String(opts.windowMs)
+  };
+}
+
 export function rateLimitKeyFromRequest(input: { ip?: string; tenantId?: string; path?: string }) {
   return [input.tenantId || 'default', input.ip || 'unknown', input.path || 'unknown'].join('::');
 }

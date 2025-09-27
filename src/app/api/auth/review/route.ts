@@ -3,20 +3,26 @@ import { prisma } from '@/lib/prisma';
 import { verifySession } from '@/lib/auth';
 import { sendEmail } from '@/lib/email';
 import { audit } from '@/lib/audit';
+import { rateLimitCheck, rateLimitKeyFromRequest, rateLimitHeaders } from '@/lib/rateLimit';
 
 interface DecisionBody { id: string; approve: boolean; reason?: string }
 
 export async function POST(req: NextRequest) {
   try {
+  const limiterOpts = { windowMs: 10 * 60_000, max: 100 }; // admin decision ops
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const limit = rateLimitCheck(rateLimitKeyFromRequest({ ip, path: '/auth/review' }), limiterOpts);
+    const baseHeaders = rateLimitHeaders(limit.remaining, limiterOpts);
+  if (!limit.allowed) return new NextResponse(JSON.stringify({ error: 'Too Many Requests' }), { status: 429, headers: baseHeaders });
     const session = await verifySession(req.cookies.get('session')?.value);
-    if (!session || session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!session || session.role !== 'admin') return new NextResponse(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: baseHeaders });
     const body: DecisionBody = await req.json();
     if (!body || !body.id || typeof body.approve !== 'boolean') {
-      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+      return new NextResponse(JSON.stringify({ error: 'Invalid payload' }), { status: 400, headers: baseHeaders });
     }
     const registration = await prisma.registrationRequest.findUnique({ where: { id: body.id } });
-    if (!registration) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    if (registration.status !== 'pending') return NextResponse.json({ error: 'Already decided' }, { status: 409 });
+    if (!registration) return new NextResponse(JSON.stringify({ error: 'Not found' }), { status: 404, headers: baseHeaders });
+    if (registration.status !== 'pending') return new NextResponse(JSON.stringify({ error: 'Already decided' }), { status: 409, headers: baseHeaders });
 
     if (body.approve) {
       await prisma.$transaction([
@@ -38,11 +44,11 @@ export async function POST(req: NextRequest) {
       await sendEmail({ to: registration.email, subject, html, template: body.approve ? 'registration-approved' : 'registration-denied' });
     } catch (e) {
       // email failure should not block decision; surface warning
-      return NextResponse.json({ ok: true, warning: 'Decision saved but email failed' });
+      return new NextResponse(JSON.stringify({ ok: true, warning: 'Decision saved but email failed' }), { headers: baseHeaders });
     }
-    return NextResponse.json({ ok: true });
+    return new NextResponse(JSON.stringify({ ok: true }), { headers: baseHeaders });
   } catch (e: any) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    return new NextResponse(JSON.stringify({ error: 'Server error' }), { status: 500 });
   }
 }
 

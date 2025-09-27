@@ -51,6 +51,60 @@ Prereqs: A Render account with GitHub repo connected.
 
 Self-host (Docker)
 
+## Database & Prisma
+
+The app uses Prisma for persistence. By default it points to a local SQLite file for zero-config development.
+
+Default local `.env` entries (see `.env` / `.env.local`):
+
+```env
+DATABASE_URL="file:./dev.db"
+```
+
+Key commands:
+
+```bash
+npx prisma generate              # Rebuild client after schema changes
+npx prisma migrate dev --name <migration_name>   # Create & apply a dev migration
+npx prisma studio                # Open browser UI to inspect data
+```
+
+Recent models of note:
+
+- AuditEvent: persistent security & activity audit log (replaces prior file-based JSON). A pruning job retains ~90 days (see `src/lib/audit.ts`).
+
+If you pulled new changes containing `AuditEvent`, run:
+
+```bash
+npx prisma migrate dev --name add_audit_event
+```
+
+### Switching to Postgres (recommended for production)
+
+1. Provision a Postgres instance.
+2. Update `.env.local` (and deployment env) with:
+   `DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DBNAME?schema=public`
+3. Edit `prisma/schema.prisma` datasource:
+   `provider = "postgresql"`
+4. Run migrations locally:
+   `npx prisma migrate dev --name init_postgres` (first time) or subsequent names.
+5. In CI/production deploy step run:
+   `npx prisma migrate deploy`
+
+### Operational Notes
+
+- Health endpoint: `/api/system/health` checks DB connectivity & env validity.
+- Metrics endpoint: `/api/system/metrics` (admin only) returns user counts, pending registrations, and last 24h audit volume.
+- Add monitoring/alerts on failed health checks and migration errors.
+- For horizontal scaling & rate limiting, replace the in-memory limiter with Redis (future enhancement).
+
+### Backups & Retention
+
+- SQLite: back up the `dev.db` file (not ideal for production).
+- Postgres: use provider-native automated backups + point-in-time restore.
+- Audit pruning interval & retention days (`RETAIN_DAYS`) configurable in `src/lib/audit.ts`—adjust to compliance needs.
+
+
 Build image and run the container.
 
 1. Build image:

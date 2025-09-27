@@ -13,12 +13,13 @@
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:watch": "vitest",
-  "env:check": "node scripts/check-env.mjs",
+    "env:check": "node scripts/check-env.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
+    "@prisma/client": "^5.22.0",
     "@types/axios": "^0.9.36",
     "@types/react-dom": "^19.1.7",
     "autoprefixer": "^10.4.21",
