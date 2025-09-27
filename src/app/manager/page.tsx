@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 import InvoiceModule from '@/components/InvoiceModule';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ManagerHeader from '@/components/ManagerHeader';
 import ManagerTopNav from '@/components/ManagerTopNav';
@@ -11,7 +11,7 @@ import ManagerSectionBanner from '@/components/ManagerSectionBanner';
 
 type TabKey = 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks';
 
-export default function ManagerInvoicePage() {
+function ManagerInvoicePageInner() {
 
 
   // Security modal state
@@ -318,5 +318,22 @@ export default function ManagerInvoicePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ManagerInvoicePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#f5f7fb] flex items-center justify-center p-8">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
+            <p className="mt-4 text-gray-600">Loading manager dashboard...</p>
+          </div>
+        </div>
+      }
+    >
+      <ManagerInvoicePageInner />
+    </Suspense>
   );
 }
