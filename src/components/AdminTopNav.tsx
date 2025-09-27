@@ -8,6 +8,7 @@ const tabs = [
   { key: 'clients', label: 'Clients', href: '/admin/clients' },
   { key: 'content', label: 'Content', href: '/admin/content' },
   { key: 'scheduling', label: 'Scheduling', href: '/admin/scheduling' },
+  { key: 'tasks', label: 'Tasks', href: '/admin/tasks' },
   { key: 'analytics', label: 'Analytics', href: '/admin/analytics' },
   { key: 'reports', label: 'Reports', href: '/admin/reports' },
   { key: 'integrations', label: 'Integrations', href: '/admin/integrations' },

@@ -1,7 +1,7 @@
 'use client';
 
 type Tab = {
-  key: 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings';
+  key: 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks';
   label: string;
 };
 
@@ -10,6 +10,7 @@ const tabs: Tab[] = [
   { key: 'invoices', label: 'Invoices' },
   { key: 'clients', label: 'Clients' },
   { key: 'analytics', label: 'Analytics' },
+  { key: 'tasks', label: 'Tasks' },
   { key: 'settings', label: 'Settings' },
 ];
 
