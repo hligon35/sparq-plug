@@ -4,6 +4,8 @@ import InvoiceModule from '@/components/InvoiceModule';
 import { useState } from 'react';
 import Header from '@/components/Header';
 import ManagerTopNav from '@/components/ManagerTopNav';
+import TaskList from '@/components/TaskList';
+import TaskCreate from '@/components/TaskCreate';
 
 type TabKey = 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings';
 
@@ -136,7 +138,7 @@ export default function ManagerInvoicePage() {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+              <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm col-span-1 md:col-span-2">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <button
@@ -175,6 +177,13 @@ export default function ManagerInvoicePage() {
                       <span className="text-sm font-medium text-gray-700">Settings</span>
                     </div>
                   </button>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">My Tasks</h3>
+                <TaskList scope="mine" />
+                <div className="mt-6">
+                  <TaskCreate />
                 </div>
               </div>
             </div>

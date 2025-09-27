@@ -7,6 +7,8 @@ import AdminTopNav from '@/components/AdminTopNav';
 import AdminHeader from '@/components/AdminHeader';
 import PlatformHealth from '@/components/PlatformHealth';
 import Notifications from '@/components/Notifications';
+import TaskCreate from '@/components/TaskCreate';
+import TaskList from '@/components/TaskList';
 
 export default function AdminDashboard() {
   const [showSecurityModal, setShowSecurityModal] = useState(false);
@@ -168,12 +170,17 @@ export default function AdminDashboard() {
           </div>
 
           {/* Live Platform Health + Notifications */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+            <div className="xl:col-span-2 flex flex-col gap-6">
               <PlatformHealth />
+              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                <h3 className="text-xl font-bold text-gray-800 mb-4">My Tasks</h3>
+                <TaskList scope="mine" />
+              </div>
             </div>
-            <div>
+            <div className="flex flex-col gap-6">
               <Notifications />
+              <TaskCreate onCreated={() => { /* could trigger refresh via events; simple page reload for now */ }} />
             </div>
           </div>
 
