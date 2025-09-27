@@ -1,5 +1,6 @@
 import { readJson, writeJson } from '@/lib/storage';
 import { ScheduledPostModel, ListPostsParams } from '@/domain/scheduling';
+import { emitAudit } from '@/core/audit';
 
 // TODO: Replace mock composition with persistent store / database
 import { randomUUID } from 'crypto';
@@ -56,6 +57,7 @@ export async function createPost(input: Omit<ScheduledPostModel,'id'>): Promise<
   const item: ScheduledPostModel = { ...input, id: randomUUID() };
   items.push(item);
   await writeJson('scheduled-posts', items);
+  emitAudit({ type: 'scheduled_post.created', target: { type: 'scheduled_post', id: item.id }, meta: { clientId: item.clientId } });
   return item;
 }
 
