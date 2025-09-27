@@ -34,7 +34,7 @@
 
 - **Admin**: Full system access, user management, platform settings
 - **Manager**: Multi-client management, team oversight
-- **Client**: Individual account management, content scheduling
+- **Client**: Individual account management, content planning
 
 ### Environment Configuration
 
@@ -69,7 +69,7 @@ src/lib/           # Utilities and integrations
 ### Key Features to Develop
 
 - [ ] Social media platform integrations
-- [ ] Content scheduling system
+- [ ] Content planner system
 - [ ] Analytics and reporting
 - [ ] Media library management
 - [ ] Team collaboration tools

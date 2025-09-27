@@ -605,9 +605,12 @@ export default function EmailSetupPage() {
     );
   }
 
+  // Detect embedded usage (combined admin Emails module) to suppress full-screen gradient styling
+  const embedded = typeof window !== 'undefined' && window.location.pathname.includes('/admin/emails');
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1d74d0] via-sky-600 to-indigo-700 p-4">
-      <div className="w-full max-w-3xl bg-white/95 backdrop-blur rounded-xl shadow-2xl border border-white/40 p-6 space-y-6">
+    <div className={embedded ? 'w-full' : 'min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1d74d0] via-sky-600 to-indigo-700 p-4'}>
+      <div className={embedded ? 'w-full bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6' : 'w-full max-w-3xl bg-white/95 backdrop-blur rounded-xl shadow-2xl border border-white/40 p-6 space-y-6'}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h2 className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-indigo-600 bg-clip-text text-transparent">Business Email Setup</h2>

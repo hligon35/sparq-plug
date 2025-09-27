@@ -7,7 +7,7 @@ import ManagerTopNav from '@/components/ManagerTopNav';
 import TaskList from '@/components/TaskList';
 import TaskCreate from '@/components/TaskCreate';
 
-type TabKey = 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings';
+type TabKey = 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks';
 
 export default function ManagerInvoicePage() {
 
@@ -72,6 +72,7 @@ export default function ManagerInvoicePage() {
       window.location.href = '/manager/settings';
       return;
     }
+    // tasks currently no navigation (placeholder)
   };
 
   return (

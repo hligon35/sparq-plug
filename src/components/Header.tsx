@@ -26,7 +26,7 @@ function deriveSectionTitle(pathname: string): string {
     const map: Record<string, string> = {
       dashboard: 'Dashboard',
       clients: 'Clients',
-      scheduling: 'Scheduling',
+  scheduling: 'Circuit',
       analytics: 'Analytics',
       integrations: 'Integrations',
       media: 'Media',

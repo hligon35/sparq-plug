@@ -2,17 +2,20 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import dynamic from 'next/dynamic';
+const TasksCountBadge = dynamic(() => import('./TasksCountBadge'), { ssr: false });
 
 const tabs = [
   { key: 'dashboard', label: 'Dashboard', href: '/admin' },
   { key: 'clients', label: 'Clients', href: '/admin/clients' },
   { key: 'content', label: 'Content', href: '/admin/content' },
-  { key: 'scheduling', label: 'Scheduling', href: '/admin/scheduling' },
+  { key: 'scheduling', label: 'Circuit', href: '/admin/scheduling' },
   { key: 'tasks', label: 'Tasks', href: '/admin/tasks' },
   { key: 'analytics', label: 'Analytics', href: '/admin/analytics' },
   { key: 'reports', label: 'Reports', href: '/admin/reports' },
   { key: 'integrations', label: 'Integrations', href: '/admin/integrations' },
   { key: 'media', label: 'Media', href: '/admin/media' },
+  { key: 'emails', label: 'Emails', href: '/admin/emails' },
   { key: 'settings', label: 'Settings', href: '/admin/settings' },
 ];
 
@@ -46,6 +49,7 @@ export default function AdminTopNav() {
             >
               <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-blue-600' : 'bg-gray-300'}`}></span>
               {t.label}
+              {t.key === 'tasks' && <TasksCountBadge />}
             </Link>
           );
         })}

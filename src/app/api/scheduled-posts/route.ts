@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readJson, writeJson } from '@/lib/storage';
+import { createApiHandler } from '@/core/apiHandler';
+import { isFlagEnabled } from '@/core/featureFlags';
+import { ScheduledPostSchema, validate } from '@/core/validation';
+import { ValidationError } from '@/core/errors';
+import { counter } from '@/core/metrics';
+import { listPosts, createPost, aggregateByDay } from '@/services/schedulingService';
+import { ScheduledPostModel } from '@/domain/scheduling';
 
-type ScheduledPost = {
+export type ScheduledPost = {
   id: string;
   content: string;
   platforms: string[];
@@ -198,48 +205,90 @@ const mockPosts: ScheduledPost[] = [
   }
 ];
 
-export async function GET(request: NextRequest) {
+export const GET = createApiHandler(async (request: NextRequest, { logger }) => {
   const { searchParams } = new URL(request.url);
   const clientId = searchParams.get('clientId');
   const managerId = searchParams.get('managerId');
-  
-  let posts = mockPosts;
-  
-  // Filter by client if specified
-  if (clientId) {
-    posts = posts.filter(post => post.clientId === clientId);
-  }
-  
-  // If managerId is specified, filter by manager's assigned clients
-  if (managerId === 'current') {
-    // In a real app, you'd get the manager's assigned clients from the database
-    // For now, we'll assume the current manager has access to tech-corp-1 and restaurant-1
-    const managerClientIds = ['tech-corp-1', 'restaurant-1'];
-    posts = posts.filter(post => managerClientIds.includes(post.clientId));
-  }
-  
-  return NextResponse.json({ posts });
-}
+  const status = searchParams.get('status'); // comma separated
+  const platform = searchParams.get('platform'); // single or comma separated
+  const from = searchParams.get('from'); // ISO date (inclusive)
+  const to = searchParams.get('to'); // ISO date (inclusive)
+  const aggregate = searchParams.get('aggregate'); // when '1' enable grouping meta
 
-export async function POST(req: NextRequest) {
-  const body = await req.json();
-  if (!body?.content || !Array.isArray(body?.platforms) || !body?.scheduledAt) {
-    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+  let posts: ScheduledPostModel[] = await listPosts({ clientId, managerId, status, platform, from, to });
+
+  if (clientId) {
+    posts = posts.filter(p => p.clientId === clientId);
   }
-  const items = await readJson<ScheduledPost[]>('scheduled-posts', []);
-  const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const item: ScheduledPost = {
-    id,
-    content: body.content,
-    platforms: body.platforms,
-    clientId: body.clientId || 'default',
-    clientName: body.clientName || 'Default Client',
-    scheduledAt: body.scheduledAt,
-    status: body.status || 'Scheduled',
-    mediaType: body.mediaType || 'text',
-    engagement: body.engagement || undefined,
-  };
-  items.push(item);
-  await writeJson('scheduled-posts', items);
+
+  if (managerId === 'current') {
+    const managerClientIds = ['tech-corp-1', 'restaurant-1'];
+    posts = posts.filter(p => managerClientIds.includes(p.clientId));
+  }
+
+  if (status) {
+    const allowed = status.split(',').map(s => s.trim().toLowerCase());
+    posts = posts.filter(p => allowed.includes(p.status.toLowerCase()));
+  }
+
+  if (platform) {
+    const platforms = platform.split(',').map(p => p.trim().toLowerCase());
+    posts = posts.filter(p => p.platforms.some(pl => platforms.includes(pl.toLowerCase())));
+  }
+
+  if (from) {
+    const fromDate = new Date(from);
+    if (!isNaN(fromDate.getTime())) {
+      posts = posts.filter(p => new Date(p.scheduledAt) >= fromDate);
+    }
+  }
+  if (to) {
+    const toDate = new Date(to);
+    if (!isNaN(toDate.getTime())) {
+      posts = posts.filter(p => new Date(p.scheduledAt) <= toDate);
+    }
+  }
+
+  // Basic sort by scheduledAt asc for deterministic consumption
+  posts = posts.slice().sort((a,b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+
+  if (aggregate === '1') {
+    const days = aggregateByDay(posts);
+    logger.debug('scheduledPosts.aggregate', { totalDays: days.length, totalPosts: posts.length });
+    return NextResponse.json({ aggregate: true, days, totalPosts: posts.length });
+  }
+
+  logger.debug('scheduledPosts.list', { count: posts.length });
+  return NextResponse.json({ posts });
+});
+
+const postCounter = counter('scheduled_posts_created');
+
+export const POST = createApiHandler(async (req: NextRequest, { logger }) => {
+  const raw = await req.json();
+  if (isFlagEnabled('advanced_validation')) {
+    const result = validate(ScheduledPostSchema, raw);
+    if (!result.ok) {
+      logger.warn('scheduledPosts.validation_failed', { issues: result.issues });
+      throw new ValidationError(result.issues);
+    }
+  } else {
+    if (!raw?.content || !Array.isArray(raw?.platforms) || !raw?.scheduledFor) {
+      throw new ValidationError([{ path: 'root', message: 'Invalid payload' }]);
+    }
+  }
+
+  const item = await createPost({
+    content: raw.content,
+    platforms: raw.platforms,
+    clientId: raw.clientId || 'default',
+    clientName: raw.clientName || 'Default Client',
+    scheduledAt: raw.scheduledFor || raw.scheduledAt,
+    status: (raw.status as any) || 'Scheduled',
+    mediaType: raw.mediaType || 'text',
+    engagement: raw.engagement || undefined,
+  });
+  postCounter.inc();
+  logger.info('scheduledPosts.created', { id: item.id, clientId: item.clientId });
   return NextResponse.json({ item }, { status: 201 });
-}
+});

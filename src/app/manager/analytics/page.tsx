@@ -47,7 +47,7 @@ const mockAnalytics: AnalyticsData = {
 };
 
 export default function ManagerAnalyticsPage() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings'>('analytics');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks'>('analytics');
   const [timeRange, setTimeRange] = useState('6m');
 
   return (

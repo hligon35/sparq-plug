@@ -6,11 +6,11 @@ import ManagerTopNav from '@/components/ManagerTopNav';
 import InvitationManager from '@/components/InvitationManager';
 
 export default function ManagerSettingsPage() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings'>('settings');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks'>('settings');
   const [showSecurityModal, setShowSecurityModal] = useState(false);
 
   // Navigation handler
-  const handleNav = (section: 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings') => {
+  const handleNav = (section: 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks') => {
     setActiveTab(section);
     if (section === 'settings') return; // Stay on settings
     if (section === 'dashboard') {
@@ -29,6 +29,7 @@ export default function ManagerSettingsPage() {
       window.location.href = '/manager/analytics';
       return;
     }
+    // tasks placeholder
   };
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

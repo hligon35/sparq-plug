@@ -1,4 +1,5 @@
 import { readJson, writeJson } from '@/lib/storage';
+import { emit } from '@/lib/events';
 
 export type TaskStatus = 'open' | 'in_progress' | 'done';
 
@@ -27,7 +28,20 @@ async function save(file: TaskStoreFile) { await writeJson(STORE, file); }
 
 function genId() { return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2); }
 
-export async function listTasks(tenantId: string, opts?: { assignee?: string; createdBy?: string; mineFor?: string; scope?: 'mine' | 'all'; status?: TaskStatus[]; q?: string }) {
+export interface ListTaskOptions {
+  assignee?: string;
+  createdBy?: string;
+  mineFor?: string;
+  scope?: 'mine' | 'all';
+  status?: TaskStatus[];
+  q?: string;
+  page?: number; // 1-based
+  pageSize?: number; // default 20
+  sort?: 'createdAt' | 'updatedAt' | 'status';
+  order?: 'asc' | 'desc';
+}
+
+export async function listTasks(tenantId: string, opts?: ListTaskOptions) {
   const file = await load();
   let items = file.tasks.filter(t => t.tenantId === tenantId);
   if (opts?.scope !== 'all') {
@@ -40,8 +54,31 @@ export async function listTasks(tenantId: string, opts?: { assignee?: string; cr
     const needle = opts.q.toLowerCase();
     items = items.filter(t => t.title.toLowerCase().includes(needle) || (t.description || '').toLowerCase().includes(needle));
   }
-  // Newest first
-  return items.sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+
+  // Sorting
+  const sort = opts?.sort || 'createdAt';
+  const order = opts?.order || 'desc';
+  items = items.sort((a,b) => {
+    let av: string = (a as any)[sort];
+    let bv: string = (b as any)[sort];
+    if (sort === 'status') {
+      // simple lexical for status
+      if (av < bv) return order === 'asc' ? -1 : 1;
+      if (av > bv) return order === 'asc' ? 1 : -1;
+      return 0;
+    }
+    // dates (ISO) - lexical works
+    if (av < bv) return order === 'asc' ? -1 : 1;
+    if (av > bv) return order === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const total = items.length;
+  const pageSize = Math.min(Math.max(opts?.pageSize || 20, 1), 100);
+  const page = Math.max(opts?.page || 1, 1);
+  const start = (page - 1) * pageSize;
+  const paged = items.slice(start, start + pageSize);
+  return { tasks: paged, total, page, pageSize, totalPages: Math.max(Math.ceil(total / pageSize), 1) };
 }
 
 export async function getTask(tenantId: string, id: string) {
@@ -67,6 +104,7 @@ export async function createTask(tenantId: string, data: { title: string; descri
   };
   file.tasks.push(rec);
   await save(file);
+  emit({ type: 'task_created', taskId: rec.id, tenantId, data: rec });
   return rec;
 }
 
@@ -81,5 +119,6 @@ export async function updateTaskStatus(tenantId: string, id: string, status: Tas
   rec.updatedAt = now;
   if (status === 'done' && !rec.completedAt) rec.completedAt = now;
   await save(file);
+  emit({ type: 'task_updated', taskId: rec.id, tenantId, data: rec });
   return rec;
 }

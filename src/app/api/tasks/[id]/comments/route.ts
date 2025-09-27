@@ -3,6 +3,7 @@ import { apiGuard } from '@/lib/apiGuard';
 import { ok, badRequest, notFound, serverError, forbidden } from '@/lib/apiResponse';
 import { getTask } from '@/lib/tasks';
 import { listComments, addComment } from '@/lib/taskComments';
+import { emit } from '@/lib/events';
 import { addNotification } from '@/lib/notificationsStore';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
@@ -25,7 +26,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const task = await getTask(g.tenantId, params.id);
     if (!task) return notFound('Task not found');
     if (task.assignee !== g.actor && task.createdBy !== g.actor) return forbidden('Not allowed');
-    const comment = await addComment(g.tenantId, task.id, g.actor, text);
+  const comment = await addComment(g.tenantId, task.id, g.actor, text);
+  emit({ type: 'task_comment', taskId: task.id, tenantId: g.tenantId, data: comment });
     // Notifications: notify other party/parties except author.
     const targets = new Set<string>();
     if (task.assignee !== g.actor) targets.add(task.assignee);

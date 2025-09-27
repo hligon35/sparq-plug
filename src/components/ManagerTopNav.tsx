@@ -1,9 +1,12 @@
-'use client';
+"use client";
 
 type Tab = {
   key: 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks';
   label: string;
 };
+
+import dynamic from 'next/dynamic';
+const TasksCountBadge = dynamic(() => import('./TasksCountBadge'), { ssr: false });
 
 const tabs: Tab[] = [
   { key: 'dashboard', label: 'Dashboard' },
@@ -34,6 +37,7 @@ export default function ManagerTopNav({ active, onChange }: { active: Tab['key']
             >
               <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-blue-600' : 'bg-gray-300'}`}></span>
               {t.label}
+              {t.key === 'tasks' && <TasksCountBadge />}
             </button>
           );
         })}

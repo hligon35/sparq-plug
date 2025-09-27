@@ -20,5 +20,31 @@
     "client": "DemoClient",
     "scheduledAt": "2025-08-27T01:33:45.913Z",
     "status": "Scheduled"
+  },
+  {
+    "id": "1758937264519-u0rjby",
+    "content": "Sample scheduled post",
+    "platforms": [
+      "Facebook",
+      "Instagram"
+    ],
+    "clientId": "tech-corp-1",
+    "clientName": "TechCorp Solutions",
+    "scheduledAt": "2025-09-27T02:11:04.290Z",
+    "status": "Scheduled",
+    "mediaType": "text"
+  },
+  {
+    "id": "1758937266313-kcyu17",
+    "content": "Sample scheduled post",
+    "platforms": [
+      "Facebook",
+      "Instagram"
+    ],
+    "clientId": "tech-corp-1",
+    "clientName": "TechCorp Solutions",
+    "scheduledAt": "2025-09-27T02:11:06.029Z",
+    "status": "Scheduled",
+    "mediaType": "text"
   }
 ]
