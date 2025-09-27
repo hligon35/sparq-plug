@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from 'react';
+import KpiCard from '@/components/KpiCard';
 import AdminHeader from '@/components/AdminHeader';
 import AdminTopNav from '@/components/AdminTopNav';
 import AnalyticsSubNav from '@/components/AnalyticsSubNav';
@@ -53,11 +54,11 @@ export default function SitesAnalyticsPage() {
 					<AdminTopNav />
 					<AnalyticsSubNav />
 					{/* Aggregate Metrics */}
-					<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-						<SiteMetricCard label="Total Page Views" value={aggregate.totalViews.toLocaleString()} color="blue" />
-						<SiteMetricCard label="Unique Visitors" value={aggregate.totalVisitors.toLocaleString()} color="green" />
-						<SiteMetricCard label="Avg Conversion Rate" value={aggregate.avgConv.toFixed(2) + '%'} color="purple" />
-						<SiteMetricCard label="Avg Load Time" value={aggregate.avgLoad.toFixed(2) + 's'} color="orange" />
+					<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+						<KpiCard gradient="blue" label="Total Page Views" value={aggregate.totalViews.toLocaleString()} size="sm" />
+						<KpiCard gradient="green" label="Unique Visitors" value={aggregate.totalVisitors.toLocaleString()} size="sm" />
+						<KpiCard gradient="purple" label="Avg Conversion Rate" value={aggregate.avgConv.toFixed(2) + '%'} size="sm" />
+						<KpiCard gradient="orange" label="Avg Load Time" value={aggregate.avgLoad.toFixed(2) + 's'} size="sm" />
 					</div>
 
 					{/* Controls */}
@@ -78,7 +79,8 @@ export default function SitesAnalyticsPage() {
 							<h3 className="text-2xl font-bold text-gray-800">Site Performance</h3>
 						</div>
 						<div className="overflow-x-auto">
-							<table className="w-full text-sm">
+							<table className="w-full text-sm" aria-describedby="site-performance-caption">
+							<caption id="site-performance-caption" className="sr-only">Sortable table of website performance metrics including views, visitors, conversion rate and load time.</caption>
 								<thead className="bg-gray-50">
 									<tr>
 										<SortableTh onClick={() => toggleSort('site')} active={sortKey==='site'} dir={sortDir}>Site</SortableTh>

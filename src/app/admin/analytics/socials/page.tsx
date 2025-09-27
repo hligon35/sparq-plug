@@ -6,6 +6,7 @@ import AdminTopNav from '@/components/AdminTopNav';
 import AnalyticsSubNav from '@/components/AnalyticsSubNav';
 import AudienceInsights from '@/components/AudienceInsights';
 import CustomReports from '@/components/CustomReports';
+import KpiCard from '@/components/KpiCard';
 
 export default function SocialsAnalyticsPage() {
 	const [timeframe, setTimeframe] = useState('7d');
@@ -33,10 +34,10 @@ export default function SocialsAnalyticsPage() {
 					<div>
 						{/* Key Metrics */}
 						<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-							<MetricCard gradient="from-blue-500 to-blue-600" label="Total Reach" value={analyticsData.totalReach} delta="+12.5%" />
-							<MetricCard gradient="from-green-500 to-green-600" label="Avg Engagement" value={analyticsData.engagement} delta="+2.3%" />
-							<MetricCard gradient="from-purple-500 to-purple-600" label="New Followers" value={analyticsData.newFollowers} delta="+18.7%" />
-							<MetricCard gradient="from-orange-500 to-orange-600" label="Total Clicks" value={analyticsData.clicks} delta="+8.1%" />
+							<KpiCard gradient="blue" label="Total Reach" value={analyticsData.totalReach} delta="+12.5%" />
+							<KpiCard gradient="green" label="Avg Engagement" value={analyticsData.engagement} delta="+2.3%" />
+							<KpiCard gradient="purple" label="New Followers" value={analyticsData.newFollowers} delta="+18.7%" />
+							<KpiCard gradient="orange" label="Total Clicks" value={analyticsData.clicks} delta="+8.1%" />
 						</div>
 
 						{/* Charts Section */}
@@ -53,6 +54,7 @@ export default function SocialsAnalyticsPage() {
 							</div>
 							<div className="overflow-x-auto">
 								<table className="w-full">
+									<caption className="sr-only">Top performing social posts with engagement and reach metrics</caption>
 									<thead className="bg-gray-50">
 										<tr>
 											<Th>Content</Th><Th>Platform</Th><Th>Engagement</Th><Th>Reach</Th><Th>Actions</Th>
@@ -71,7 +73,7 @@ export default function SocialsAnalyticsPage() {
 												</Td>
 												<Td>{post.engagement}</Td>
 												<Td>{post.reach}</Td>
-												<Td><button className="text-blue-600 hover:text-blue-900">View Details</button></Td>
+												<Td><button aria-label={`View details for post ${post.id}`} className="text-blue-600 hover:text-blue-900">View Details</button></Td>
 											</tr>
 										))}
 									</tbody>

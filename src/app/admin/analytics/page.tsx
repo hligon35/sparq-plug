@@ -4,8 +4,13 @@ import AdminHeader from '@/components/AdminHeader';
 import AdminTopNav from '@/components/AdminTopNav';
 import AnalyticsSubNav from '@/components/AnalyticsSubNav';
 import Link from 'next/link';
+import KpiCard from '@/components/KpiCard';
+import { useEffect, useState } from 'react';
 
 export default function AnalyticsOverviewPage() {
+  const [loading, setLoading] = useState(true);
+  // Simulated load for skeleton demonstration
+  useEffect(() => { const t = setTimeout(()=> setLoading(false), 600); return ()=> clearTimeout(t); }, []);
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
       <AdminHeader title="Analytics & Reports" subtitle="Unified performance overview" />
@@ -13,6 +18,21 @@ export default function AnalyticsOverviewPage() {
         <div className="max-w-7xl mx-auto">
           <AdminTopNav />
           <AnalyticsSubNav />
+          <section aria-labelledby="overview-kpis" className="mt-6 mb-10">
+            <h2 id="overview-kpis" className="sr-only">Overview KPIs</h2>
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4" aria-hidden>
+                {Array.from({ length: 4 }).map((_,i)=>(<div key={i} className="animate-pulse rounded-2xl h-32 bg-gradient-to-br from-gray-200 to-gray-300" />))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <KpiCard gradient="blue" label="Global Reach" value="2.4M" delta="+12%" size="sm" />
+                <KpiCard gradient="green" label="Avg Engagement" value="15.2%" delta="+1.8%" size="sm" />
+                <KpiCard gradient="purple" label="Total Views" value="659K" delta="+5.1%" size="sm" />
+                <KpiCard gradient="orange" label="MTD Gross" value="$42.3K" delta="+9.4%" size="sm" />
+              </div>
+            )}
+          </section>
           <div className="grid md:grid-cols-2 gap-8 mt-2">
             <AnalyticsCard
               title="Social Analytics"
@@ -35,9 +55,9 @@ export default function AnalyticsOverviewPage() {
               accent="purple"
               stats={[{ label: 'MTD Gross', value: '$42.3K' }, { label: 'QTD', value: '$128K' }]}
             />
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col justify-between">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col justify-between" aria-labelledby="combined-insights-heading">
               <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-2">Combined Insights <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Preview</span></h3>
+                <h3 id="combined-insights-heading" className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-2">Combined Insights <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Preview</span></h3>
                 <p className="text-sm text-gray-600 mb-4">Future unified dashboard blending social, website & revenue KPIs into a single snapshot.</p>
                 <ul className="text-xs text-gray-600 space-y-1 list-disc pl-4">
                   <li>Cross-channel engagement vs on-site conversions</li>

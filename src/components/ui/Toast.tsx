@@ -15,7 +15,7 @@ interface ToastContainerProps {
 
 export function ToastContainer({ messages, onRemove }: ToastContainerProps) {
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-3 min-w-[240px]">
+    <div className="fixed top-4 right-4 z-50 space-y-3 min-w-[240px]" aria-live="polite" aria-relevant="additions removals">
       {messages.map(m => <Toast key={m.id} {...m} onRemove={onRemove} />)}
     </div>
   );

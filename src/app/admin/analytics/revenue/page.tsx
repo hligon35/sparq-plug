@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import AdminTopNav from '@/components/AdminTopNav';
 import AdminHeader from '@/components/AdminHeader';
 import AnalyticsSubNav from '@/components/AnalyticsSubNav';
+import RequireCapability from '@/components/RequireCapability';
 
 export default function RevenueAnalyticsPage() {
   const [buckets, setBuckets] = useState<{ period: string; grossCents: number; currency: string }[]>([]);
@@ -37,34 +38,42 @@ export default function RevenueAnalyticsPage() {
           <AdminTopNav />
           <AnalyticsSubNav />
 
-          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mt-2">
-            {loading ? (
-              <div className="text-gray-600">Loading revenue...</div>
-            ) : error ? (
-              <div className="text-red-600">{error}</div>
-            ) : (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">Summary</h2>
-                  <div className="text-2xl font-bold text-gray-900">${(total / 100).toFixed(2)} USD</div>
+          <RequireCapability capability="view_analytics" fallback={<div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mt-2 text-sm text-red-600">You do not have permission to view revenue analytics.</div>}>
+            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mt-2">
+              {loading ? (
+                <div className="space-y-6 animate-pulse" aria-hidden>
+                  <div className="h-6 bg-gray-200 rounded w-48" />
+                  <div className="grid grid-cols-3 gap-4">
+                    {Array.from({length:3}).map((_,i)=>(<div key={i} className="h-24 bg-gray-200 rounded" />))}
+                  </div>
+                  <div className="h-5 bg-gray-200 rounded w-40" />
                 </div>
-                <div>
-                  <h3 className="text-lg font-medium text-gray-800 mb-2">Monthly Gross</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {buckets.map(b => (
-                      <div key={b.period} className="border border-gray-200 rounded-lg p-4">
-                        <div className="text-sm text-gray-500">{b.period}</div>
-                        <div className="text-lg font-semibold">${(b.grossCents / 100).toFixed(2)} {b.currency.toUpperCase()}</div>
-                      </div>
-                    ))}
-                    {buckets.length === 0 && (
-                      <div className="text-gray-600">No data yet.</div>
-                    )}
+              ) : error ? (
+                <div className="text-red-600">{error}</div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-gray-900">Summary</h2>
+                    <div className="text-2xl font-bold text-gray-900">${(total / 100).toFixed(2)} USD</div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-800 mb-2">Monthly Gross</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {buckets.map(b => (
+                        <div key={b.period} className="border border-gray-200 rounded-lg p-4">
+                          <div className="text-sm text-gray-500">{b.period}</div>
+                          <div className="text-lg font-semibold">${(b.grossCents / 100).toFixed(2)} {b.currency.toUpperCase()}</div>
+                        </div>
+                      ))}
+                      {buckets.length === 0 && (
+                        <div className="text-gray-600">No data yet.</div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          </RequireCapability>
         </div>
       </div>
     </div>
