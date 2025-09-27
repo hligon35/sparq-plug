@@ -25,6 +25,24 @@ const mockReports: ReportData[] = [
     format: 'PDF'
   },
   {
+    id: '1b',
+    name: 'Social Channel Performance',
+    type: 'Analytics',
+    description: 'Engagement, reach, top posts across all connected social platforms',
+    lastGenerated: '2025-09-24',
+    size: '1.1 MB',
+    format: 'PDF'
+  },
+  {
+    id: '1c',
+    name: 'Website Traffic & Conversions',
+    type: 'Analytics',
+    description: 'Aggregated website views, visitors, conversion rate & load performance',
+    lastGenerated: '2025-09-24',
+    size: '1.6 MB',
+    format: 'Excel'
+  },
+  {
     id: '2',
     name: 'Client Performance Summary',
     type: 'Client',

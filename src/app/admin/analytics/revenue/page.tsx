@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import AdminTopNav from '@/components/AdminTopNav';
 import AdminHeader from '@/components/AdminHeader';
+import AnalyticsSubNav from '@/components/AnalyticsSubNav';
 
 export default function RevenueAnalyticsPage() {
   const [buckets, setBuckets] = useState<{ period: string; grossCents: number; currency: string }[]>([]);
@@ -30,12 +31,13 @@ export default function RevenueAnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <AdminHeader title="Revenue Analytics" subtitle="Track revenue captured from Stripe and other providers" />
+      <AdminHeader title="Analytics & Reports" subtitle="Revenue performance" />
       <div className="px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-7xl mx-auto">
           <AdminTopNav />
+          <AnalyticsSubNav />
 
-          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mt-6">
+          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mt-2">
             {loading ? (
               <div className="text-gray-600">Loading revenue...</div>
             ) : error ? (

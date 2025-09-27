@@ -6,6 +6,9 @@ import AdminTopNav from '@/components/AdminTopNav';
 import AdminHeader from '@/components/AdminHeader';
 // Legacy single calendar removed per redesign (Unified only)
 import dynamic from 'next/dynamic';
+import Tabs from '@/components/ui/Tabs';
+import Button from '@/components/ui/Button';
+import { ToastContainer, useToasts } from '@/components/ui/Toast';
 
 // Lazy load unified planner only when needed
 const MultiClientPlanner = dynamic(() => import('@/components/MultiClientPlanner'), { ssr: false });
@@ -14,8 +17,7 @@ import { withBasePath } from '@/lib/basePath';
 export default function CircuitPlanner() {
   const [activeTab, setActiveTab] = useState<'unified' | 'create' | 'bot'>('unified');
   const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [createSuccess, setCreateSuccess] = useState<string | null>(null);
+  const { messages, push, remove } = useToasts();
   const [clients, setClients] = useState<{id:string; name:string}[]>([]);
   const [form, setForm] = useState({
     content: '',
@@ -38,11 +40,11 @@ export default function CircuitPlanner() {
   // Single calendar event mapping removed
 
   const handleCreatePost = async () => {
-    setCreateError(null); setCreateSuccess(null);
+  // Clear inline states
     // Build ISO from date & time
-    if (!form.content.trim()) { setCreateError('Content is required'); return; }
-    if (!form.date || !form.time) { setCreateError('Date & Time required'); return; }
-    if (form.platforms.length === 0) { setCreateError('Select at least one platform'); return; }
+  if (!form.content.trim()) { push({ type:'error', text:'Content is required' }); return; }
+  if (!form.date || !form.time) { push({ type:'error', text:'Date & Time required' }); return; }
+  if (form.platforms.length === 0) { push({ type:'error', text:'Select at least one platform' }); return; }
     const client = clients.find(c => c.id === form.clientId) || { id: 'default', name: 'Default Client' };
     const iso = new Date(`${form.date}T${form.time}:00`).toISOString();
     setCreating(true);
@@ -57,11 +59,11 @@ export default function CircuitPlanner() {
       };
       const res = await fetch(withBasePath('/api/scheduled-posts'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
       if (!res.ok) throw new Error('Failed to create post');
-      setCreateSuccess('Post scheduled');
+      push({ type:'success', text:'Post scheduled' });
       setForm({ content: '', date: '', time: '', platforms: [], clientId: '' });
   setActiveTab('unified');
     } catch (e:any) {
-      setCreateError(e.message || 'Error creating post');
+      push({ type:'error', text: e.message || 'Error creating post' });
     } finally {
       setCreating(false);
     }
@@ -78,11 +80,11 @@ export default function CircuitPlanner() {
 
   // Top nav handles routing; sidebar removed
 
-  const tabs: { key: typeof activeTab; label: string; hidden?: boolean }[] = [
+  const tabs = [
     { key: 'unified', label: 'Post Planner' },
     { key: 'create', label: 'Create' },
     { key: 'bot', label: 'Produce Bot', hidden: !allowProduceBot }
-  ].filter(t => !t.hidden) as any;
+  ];
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
@@ -92,23 +94,7 @@ export default function CircuitPlanner() {
       <div className="px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-7xl mx-auto">
           <AdminTopNav />
-          {/* Tabs Navigation */}
-          <div className="flex flex-wrap justify-center gap-3 mb-8">
-            {tabs.map(t => {
-              const active = activeTab === t.key;
-              return (
-                <button
-                  key={t.key}
-                  onClick={() => setActiveTab(t.key)}
-                  className={`inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all border shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/40 ${active ? 'bg-white text-blue-700 border-blue-200 shadow-md ring-1 ring-blue-200' : 'bg-white text-gray-700 border-gray-200 hover:shadow-md hover:-translate-y-[1px]'} `}
-                  aria-current={active ? 'page' : undefined}
-                >
-                  <span className={`w-2 h-2 rounded-full ${active ? 'bg-blue-600' : 'bg-gray-300'}`}></span>
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
+          <Tabs items={tabs} active={activeTab} onChange={(k)=>setActiveTab(k as typeof activeTab)} aria-label="Circuit tabs" className="justify-center mb-8" />
 
           <div className="">
           {activeTab === 'unified' && (
@@ -126,8 +112,7 @@ export default function CircuitPlanner() {
               <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm w-full max-w-2xl">
               <h3 className="text-2xl font-bold text-gray-800 mb-6">Create Post</h3>
               <div className="space-y-6">
-                {createError && <div className="p-3 rounded bg-red-50 text-red-700 text-sm">{createError}</div>}
-                {createSuccess && <div className="p-3 rounded bg-green-50 text-green-700 text-sm">{createSuccess}</div>}
+                {/* Toasts now handle feedback; keeping space for future inline validation */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
                   <textarea
@@ -175,11 +160,8 @@ export default function CircuitPlanner() {
                   </select>
                 </div>
                 <div className="flex items-center gap-3 justify-center">
-                  <button onClick={handleCreatePost} disabled={creating} className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-                    {creating && <span className="w-3 h-3 rounded-full border-2 border-white border-t-transparent animate-spin"></span>}
-                    Schedule Post
-                  </button>
-                  <button onClick={()=>{ setForm({ content:'', date:'', time:'', platforms:[], clientId:''}); setCreateError(null); setCreateSuccess(null); }} className="text-sm text-gray-600 hover:text-gray-800">Reset</button>
+                  <Button onClick={handleCreatePost} loading={creating} variant="primary">Schedule Post</Button>
+                  <Button type="button" variant="ghost" onClick={()=>{ setForm({ content:'', date:'', time:'', platforms:[], clientId:''}); }}>Reset</Button>
                 </div>
               </div>
               </div>
@@ -198,6 +180,7 @@ export default function CircuitPlanner() {
           </div>
         </div>
       </div>
+    <ToastContainer messages={messages} onRemove={remove} />
     </div>
   );
 }

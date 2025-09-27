@@ -1,6 +1,8 @@
 'use client';
 
 import SignedInLogout from './SignedInLogout';
+import dynamic from 'next/dynamic';
+const DebugPanel = dynamic(() => import('./DebugPanel'), { ssr: false });
 import { usePathname } from 'next/navigation';
 
 type Props = {
@@ -59,8 +61,9 @@ export default function AdminHeader({ title, subtitle, onSecurityClick: _onSecur
           </div>
         </div>
 
-        {/* Right: Auth controls */}
-        <div className="flex items-center gap-3 flex-wrap">
+        {/* Right: Debug + Auth controls */}
+        <div className="flex items-start gap-3 flex-wrap">
+          <DebugPanel />
           <SignedInLogout />
         </div>
       </div>
