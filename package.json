@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:watch": "vitest",
+  "env:check": "node scripts/check-env.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:studio": "prisma studio"
@@ -22,11 +23,11 @@
     "@types/react-dom": "^19.1.7",
     "autoprefixer": "^10.4.21",
     "axios": "^1.11.0",
+    "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "jose": "^5.9.3",
-    "bcryptjs": "^2.4.3",
     "next": "15.4.5",
-    "nodemailer": "^6.9.14",
+    "nodemailer": "6.9.14",
     "postcss": "^8.5.6",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -37,18 +38,20 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4.1.11",
+    "@testing-library/jest-dom": "^6.4.0",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
+    "@types/nodemailer": "^7.0.1",
     "@types/react": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.4.5",
+    "jsdom": "^24.0.0",
+    "prisma": "^5.19.0",
     "tailwindcss": "^4.1.11",
     "typescript": "^5.9.2",
-    "vitest": "^2.0.5",
-    "@testing-library/react": "^16.0.0",
-    "@testing-library/jest-dom": "^6.4.0",
-    "@testing-library/user-event": "^14.5.2",
-    "jsdom": "^24.0.0",
-    "prisma": "^5.19.0"
+    "vitest": "^2.0.5"
   },
   "engines": {
     "node": ">=18.18.0"

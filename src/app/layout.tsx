@@ -3,6 +3,7 @@
 import './globals.css';
 import { ReactNode } from 'react';
 import ClientAppFrame from '@/components/ClientAppFrame';
+import { UserSessionProvider } from '@/components/UserSessionProvider';
 import Script from 'next/script';
 import { publicBasePath, withBasePath } from '@/lib/basePath';
 import RootErrorBoundary from '@/components/RootErrorBoundary';
@@ -16,9 +17,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <RootErrorBoundary>
           <GlobalToastProvider>
             <main id="main" className="app-viewport flex-1 min-h-0 min-w-0 swipe-y outline-none">
-              <ClientAppFrame>
-                {children}
-              </ClientAppFrame>
+              <UserSessionProvider>
+                <ClientAppFrame>
+                  {children}
+                </ClientAppFrame>
+              </UserSessionProvider>
             </main>
           </GlobalToastProvider>
         </RootErrorBoundary>

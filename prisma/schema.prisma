@@ -49,3 +49,30 @@ model RegistrationRequest {
   @@index([status])
   @@index([email])
 }
+
+// One-time password reset tokens (hashed)
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// Basic email delivery log
+model EmailLog {
+  id        String   @id @default(cuid())
+  to        String
+  template  String
+  status    String   // sent | failed
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@index([template])
+  @@index([createdAt])
+}

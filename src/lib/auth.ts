@@ -1,13 +1,12 @@
 import { SignJWT, jwtVerify } from 'jose';
+import { requireSecret } from './env';
 
 const ALG = 'HS256';
 const ISS = 'sparq-plug';
 const AUD = 'sparq-plug-users';
 
 function getSecret() {
-  const secret = process.env.AUTH_JWT_SECRET || process.env.JWT_SECRET;
-  if (!secret) throw new Error('Missing AUTH_JWT_SECRET');
-  return new TextEncoder().encode(secret);
+  return new TextEncoder().encode(requireSecret());
 }
 
 export interface SessionPayload { sub: string; role: 'admin' | 'manager' | 'client' }

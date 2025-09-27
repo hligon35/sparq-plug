@@ -16,6 +16,7 @@ const tabs = [
   { key: 'integrations', label: 'Integrations', href: '/admin/integrations' },
   { key: 'media', label: 'Media', href: '/admin/media' },
   { key: 'emails', label: 'Emails', href: '/admin/emails' },
+  { key: 'audit', label: 'Audit', href: '/admin/audit' },
   { key: 'settings', label: 'Settings', href: '/admin/settings' },
 ];
 
