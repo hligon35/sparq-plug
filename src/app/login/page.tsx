@@ -19,13 +19,10 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      // Mock check: accept any non-empty email/password
-      if (!email || !password) {
-        throw new Error('Email and password are required');
-      }
-      // Simplistic role inference just for demo: admin if email starts with admin@
-      const role = email.startsWith('admin') ? 'admin' : email.startsWith('client') ? 'client' : 'manager';
-      document.cookie = `role=${role}; path=/; max-age=86400`; // NOT secure – placeholder only
+      const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+      const role = data.role;
       router.push(role === 'admin' ? '/admin' : role === 'client' ? '/client' : '/manager');
     } catch (err: any) {
       setError(err.message || 'Login failed');
@@ -41,55 +38,84 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-[#f5f7fb] px-4">
-      <div className="bg-white rounded-2xl shadow-xl p-10 w-full max-w-md border border-gray-200">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-[#1d74d0] mb-2">SparQ Plug</h1>
-          <p className="text-gray-600">Sign in to your account</p>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-          <div className="text-left">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 focus:border-[#1d74d0] focus:ring-[#1d74d0] px-4 py-2.5 text-sm outline-none"
-              placeholder="you@example.com"
-              autoComplete="email"
-              required
-            />
+    <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="mx-auto h-14 w-14 rounded-2xl bg-[#1d74d0] flex items-center justify-center shadow-md shadow-blue-200/60">
+            <span className="text-white font-bold text-xl">S</span>
           </div>
-          <div className="text-left">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 focus:border-[#1d74d0] focus:ring-[#1d74d0] px-4 py-2.5 text-sm outline-none"
-              placeholder="••••••••"
-              autoComplete="current-password"
-              required
-            />
-          </div>
-          {error && (
-            <div className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">{error}</div>
-          )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[#1d74d0] hover:bg-[#155ba0] disabled:opacity-60 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors"
-          >
-            {loading ? 'Signing in…' : 'Sign In'}
-          </button>
-        </form>
-        <div className="mt-8 pt-6 border-t border-gray-200 text-center space-y-3">
-          <button onClick={handlePortalRedirect} className="text-sm text-[#1d74d0] hover:text-[#155ba0] font-medium">Use Portal SSO Instead →</button>
-          <p className="text-xs text-gray-500">Need different environment? <a href="/devLogin" className="underline hover:text-[#1d74d0]">Dev Role Switch</a></p>
+          <h1 className="mt-6 text-3xl font-bold tracking-tight text-slate-900">Welcome back</h1>
+          <p className="mt-2 text-sm text-slate-600">Sign in to continue to SparQ Plug</p>
         </div>
-        <p className="mt-6 text-center text-[11px] text-gray-400">Prototype auth — replace with real secure implementation.</p>
+
+        <div className="bg-white/70 backdrop-blur rounded-2xl border border-slate-200 shadow-sm p-8">
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+            <div className="space-y-5">
+              <div>
+                <label htmlFor="email" className="flex items-center justify-between text-sm font-medium text-slate-700 mb-1">
+                  <span>Email address</span>
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 bg-white focus:border-[#1d74d0] focus:ring-[#1d74d0] px-4 py-2.5 text-sm outline-none transition"
+                  placeholder="you@company.com"
+                  autoComplete="email"
+                  required
+                />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="password" className="text-sm font-medium text-slate-700">Password</label>
+                  <a href="/forgot-password" className="text-xs font-medium text-[#1d74d0] hover:text-[#155ba0]">Forgot password?</a>
+                </div>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 bg-white focus:border-[#1d74d0] focus:ring-[#1d74d0] px-4 py-2.5 text-sm outline-none transition"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  required
+                />
+              </div>
+            </div>
+            {error && (
+              <div className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">{error}</div>
+            )}
+            <div className="flex justify-center">
+              <button
+                type="submit"
+                disabled={loading}
+                className="relative inline-flex justify-center items-center rounded-lg bg-[#1d74d0] text-white text-sm font-medium shadow hover:bg-[#155ba0] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#1d74d0] disabled:opacity-60 disabled:cursor-not-allowed transition px-8 h-11"
+              >
+                {loading ? 'Signing in…' : 'Sign In'}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-8 space-y-4 text-center">
+            <p className="text-sm text-slate-600">
+              Need an account? <a href="/request-access" className="font-medium text-[#1d74d0] hover:text-[#155ba0]">Request access</a>
+            </p>
+            <p className="text-xs text-slate-400">Issues signing in? Contact your administrator.</p>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-slate-200 text-center space-y-3">
+            <button onClick={handlePortalRedirect} className="text-xs text-slate-500 hover:text-slate-700 transition">
+              Use Portal SSO instead
+            </button>
+            <p className="text-[10px] text-slate-400">
+              {process.env.NODE_ENV === 'development' && (
+                <a href="/devLogin" className="underline hover:text-[#1d74d0]">Dev role switch</a>
+              )}
+            </p>
+          </div>
+        </div>
+        <p className="mt-6 text-center text-[11px] text-slate-400">Secured session • JWT cookie prototype</p>
       </div>
     </main>
   );
