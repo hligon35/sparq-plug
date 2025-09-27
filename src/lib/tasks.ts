@@ -27,7 +27,7 @@ async function save(file: TaskStoreFile) { await writeJson(STORE, file); }
 
 function genId() { return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2); }
 
-export async function listTasks(tenantId: string, opts?: { assignee?: string; createdBy?: string; mineFor?: string; scope?: 'mine' | 'all'; status?: TaskStatus[] }) {
+export async function listTasks(tenantId: string, opts?: { assignee?: string; createdBy?: string; mineFor?: string; scope?: 'mine' | 'all'; status?: TaskStatus[]; q?: string }) {
   const file = await load();
   let items = file.tasks.filter(t => t.tenantId === tenantId);
   if (opts?.scope !== 'all') {
@@ -36,6 +36,10 @@ export async function listTasks(tenantId: string, opts?: { assignee?: string; cr
   if (opts?.assignee) items = items.filter(t => t.assignee === opts.assignee);
   if (opts?.createdBy) items = items.filter(t => t.createdBy === opts.createdBy);
   if (opts?.status && opts.status.length) items = items.filter(t => opts.status!.includes(t.status));
+  if (opts?.q) {
+    const needle = opts.q.toLowerCase();
+    items = items.filter(t => t.title.toLowerCase().includes(needle) || (t.description || '').toLowerCase().includes(needle));
+  }
   // Newest first
   return items.sort((a,b) => b.createdAt.localeCompare(a.createdAt));
 }

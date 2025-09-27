@@ -12,9 +12,10 @@ export async function GET(request: NextRequest) {
   const scope = (searchParams.get('scope') as 'mine' | 'all' | null) || 'mine';
   const assignee = searchParams.get('assignee') || undefined;
   const statusRaw = searchParams.get('status') || '';
+  const q = searchParams.get('q') || undefined;
   const status = statusRaw.split(',').map(s=>s.trim()).filter(Boolean) as any;
   try {
-    const tasks = await listTasks(g.tenantId, { scope, assignee, mineFor: g.actor, status });
+  const tasks = await listTasks(g.tenantId, { scope, assignee, mineFor: g.actor, status, q });
     return ok({ tasks });
   } catch (e:any) {
     return serverError(e.message || 'Failed to list tasks');

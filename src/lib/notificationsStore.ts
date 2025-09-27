@@ -4,7 +4,7 @@ export interface NotificationRecord {
   id: string;
   tenantId: string;
   user: string; // recipient
-  type: 'task_assigned' | 'task_completed';
+  type: 'task_assigned' | 'task_completed' | 'task_comment';
   taskId?: string;
   message: string;
   createdAt: string;
