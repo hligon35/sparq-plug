@@ -3,6 +3,8 @@ import nextDynamic from 'next/dynamic';
 import Link from 'next/link';
 import ManagerHeader from '@/components/ManagerHeader';
 import ManagerTopNav from '@/components/ManagerTopNav';
+import ManagerSectionBanner from '@/components/ManagerSectionBanner';
+import { managerRouteMap } from '@/lib/managerNav';
 
 const MultiClientPlanner = nextDynamic(() => import('@/components/MultiClientPlanner'), { ssr: false });
 
@@ -13,18 +15,28 @@ export default function ManagerUnifiedPlannerPage() {
     <div className="min-h-screen bg-[#f5f7fb]">
       <ManagerHeader title="SparQ Plug" subtitle="Unified Client Planner" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <ManagerTopNav active={'clients'} onChange={(k)=>{ if (k==='clients') return; const map: Record<string,string> = { dashboard:'/manager', invoices:'/manager?tab=invoices', clients:'/manager/clients', analytics:'/manager/analytics', settings:'/manager/settings', tasks:'/manager/tasks' }; window.location.href = map[k]; }} />
+        <ManagerTopNav
+          active={'clients'}
+          onChange={(k) => {
+            if (k === 'clients') return; // remain on clients section
+            window.location.href = managerRouteMap[k];
+          }}
+        />
         <div className="p-1">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center text-white text-lg">📅</div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Unified Client Planner</h1>
-                <p className="text-gray-600 text-sm">Cross-client visibility for your assigned portfolio</p>
-              </div>
-            </div>
-            <Link href="/manager/client-calendars" className="text-blue-600 hover:text-blue-700 text-sm font-medium">Client Calendars →</Link>
-          </div>
+          <ManagerSectionBanner
+            icon="📅"
+            variant="purple"
+            title="Unified Planner"
+            subtitle="Cross-client visibility across your entire managed portfolio"
+            actions={
+              <Link
+                href="/manager/client-calendars"
+                className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                Client Calendars →
+              </Link>
+            }
+          />
           <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-3">

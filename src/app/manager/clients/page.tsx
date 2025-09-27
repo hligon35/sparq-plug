@@ -6,6 +6,7 @@ import { withBasePath } from '@/lib/basePath';
 import ManagerHeader from '@/components/ManagerHeader';
 import ManagerTopNav from '@/components/ManagerTopNav';
 import ManagerSectionBanner from '@/components/ManagerSectionBanner';
+import { managerRouteMap } from '@/lib/managerNav';
 
 export default function ManagerClientsPage() {
   type Client = {
@@ -73,7 +74,7 @@ export default function ManagerClientsPage() {
     <div className="min-h-screen bg-[#f5f7fb]">
       <ManagerHeader title="SparQ Plug" subtitle="Client Portfolio Management" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <ManagerTopNav active={'clients'} onChange={(k)=>{ if (k==='clients') return; const map: Record<string,string> = { dashboard:'/manager', invoices:'/manager?tab=invoices', clients:'/manager/clients', analytics:'/manager/analytics', settings:'/manager/settings', tasks:'/manager/tasks' }; window.location.href = map[k]; }} />
+  <ManagerTopNav active={'clients'} onChange={(k)=>{ if (k==='clients') return; window.location.href = managerRouteMap[k as keyof typeof managerRouteMap]; }} />
         <div className="p-1">
           <ManagerSectionBanner
             icon="👥"

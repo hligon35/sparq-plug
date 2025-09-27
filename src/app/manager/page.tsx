@@ -8,6 +8,7 @@ import ManagerTopNav from '@/components/ManagerTopNav';
 import TaskList from '@/components/TaskList';
 import TaskCreate from '@/components/TaskCreate';
 import ManagerSectionBanner from '@/components/ManagerSectionBanner';
+import { managerRouteMap } from '@/lib/managerNav';
 
 type TabKey = 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks';
 
@@ -76,17 +77,9 @@ function ManagerInvoicePageInner() {
   function navigateTab(section: TabKey) {
     if (section === 'dashboard' || section === 'invoices') {
       setActiveTab(section);
-      return; // internal view
+      return;
     }
-    const routeMap: Record<TabKey,string> = {
-      dashboard: '/manager',
-      invoices: '/manager?tab=invoices',
-      clients: '/manager/clients',
-      analytics: '/manager/analytics',
-      settings: '/manager/settings',
-      tasks: '/manager/tasks'
-    };
-    window.location.href = routeMap[section];
+    window.location.href = managerRouteMap[section];
   }
 
   return (
@@ -97,17 +90,12 @@ function ManagerInvoicePageInner() {
         <div className="p-1">
       {activeTab === 'invoices' && (
             <>
-        <div className="bg-[#1d74d0] text-white p-6 rounded-2xl shadow mb-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                    <span className="text-white text-2xl">💳</span>
-                  </div>
-                  <div>
-                    <h1 className="text-3xl font-bold text-white">Invoices & Payments</h1>
-                    <p className="text-white/80 text-sm mt-1">Manage and pay your business invoices securely</p>
-                  </div>
-                </div>
-              </div>
+              <ManagerSectionBanner
+                icon="💳"
+                title="Invoices & Payments"
+                subtitle="Manage, track, and settle your business invoices securely"
+                variant="teal"
+              />
               <InvoiceModule />
             </>
           )}

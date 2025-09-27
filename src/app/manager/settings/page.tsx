@@ -5,6 +5,7 @@ import ManagerHeader from '@/components/ManagerHeader';
 import ManagerTopNav from '@/components/ManagerTopNav';
 import InvitationManager from '@/components/InvitationManager';
 import ManagerSectionBanner from '@/components/ManagerSectionBanner';
+import { managerRouteMap } from '@/lib/managerNav';
 
 export default function ManagerSettingsPage() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks'>('settings');
@@ -13,15 +14,7 @@ export default function ManagerSettingsPage() {
   // Navigation handler
   const handleNav = (section: 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks') => {
     if (section === 'settings') return;
-    const map: Record<string,string> = {
-      dashboard: '/manager',
-      invoices: '/manager?tab=invoices',
-      clients: '/manager/clients',
-      analytics: '/manager/analytics',
-      tasks: '/manager/tasks',
-      settings: '/manager/settings'
-    };
-    window.location.href = map[section];
+    window.location.href = managerRouteMap[section];
   };
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

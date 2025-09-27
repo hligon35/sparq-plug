@@ -4,6 +4,7 @@ import ManagerTopNav from '@/components/ManagerTopNav';
 import TaskList from '@/components/TaskList';
 import TaskCreate from '@/components/TaskCreate';
 import ManagerSectionBanner from '@/components/ManagerSectionBanner';
+import { managerRouteMap } from '@/lib/managerNav';
 import { useState } from 'react';
 
 export default function ManagerTasksPage() {
@@ -15,7 +16,7 @@ export default function ManagerTasksPage() {
     <div className="min-h-screen bg-[#f5f7fb]">
   <ManagerHeader title="SparQ Plug" subtitle="Manage and complete assigned work" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-  <ManagerTopNav active={'tasks'} onChange={(k)=>{ if (k==='tasks') return; const map: Record<string,string> = { dashboard:'/manager', invoices:'/manager?tab=invoices', clients:'/manager/clients', analytics:'/manager/analytics', settings:'/manager/settings', tasks:'/manager/tasks' }; window.location.href = map[k]; }} />
+  <ManagerTopNav active={'tasks'} onChange={(k)=>{ if (k==='tasks') return; window.location.href = managerRouteMap[k as keyof typeof managerRouteMap]; }} />
         <ManagerSectionBanner
           icon="✅"
           title="Task Center"

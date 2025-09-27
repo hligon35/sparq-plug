@@ -5,6 +5,7 @@ import ManagerHeader from '@/components/ManagerHeader';
 import ManagerTopNav from '@/components/ManagerTopNav';
 import KpiCard from '@/components/KpiCard';
 import ManagerSectionBanner from '@/components/ManagerSectionBanner';
+import { managerRouteMap } from '@/lib/managerNav';
 
 interface AnalyticsData {
   totalClients: number;
@@ -61,18 +62,7 @@ export default function ManagerAnalyticsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <ManagerTopNav
           active={activeTab}
-          onChange={(k) => {
-            if (k === 'analytics') return;
-            const map: Record<string,string> = {
-              dashboard: '/manager',
-              invoices: '/manager?tab=invoices',
-              clients: '/manager/clients',
-              settings: '/manager/settings',
-              tasks: '/manager/tasks',
-              analytics: '/manager/analytics'
-            };
-            window.location.href = map[k];
-          }}
+          onChange={(k) => { if (k==='analytics') return; window.location.href = managerRouteMap[k as keyof typeof managerRouteMap]; }}
         />
 
         <div className="space-y-8">
