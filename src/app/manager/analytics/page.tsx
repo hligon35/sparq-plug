@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import ManagerHeader from '@/components/ManagerHeader';
 import ManagerTopNav from '@/components/ManagerTopNav';
 import KpiCard from '@/components/KpiCard';
+import ManagerSectionBanner from '@/components/ManagerSectionBanner';
 
 interface AnalyticsData {
   totalClients: number;
@@ -75,24 +76,17 @@ export default function ManagerAnalyticsPage() {
         />
 
         <div className="space-y-8">
-          {/* Page Header */}
-          <div className="bg-gradient-to-br from-purple-600 to-blue-600 text-white p-8 rounded-2xl shadow-lg">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
-                  <span className="text-white text-3xl">📊</span>
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-white">Analytics Dashboard</h1>
-                  <p className="text-white/80 text-lg mt-1">Performance insights and business metrics</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
+          <ManagerSectionBanner
+            icon="📊"
+            title="Analytics Dashboard"
+            subtitle="Performance insights and business metrics"
+            variant="indigo"
+            actions={
+              <>
                 <select
                   value={timeRange}
                   onChange={(e) => setTimeRange(e.target.value)}
-                  className="bg-white/20 backdrop-blur-sm text-white border border-white/30 rounded-lg px-4 py-2 focus:ring-2 focus:ring-white/50"
+                  className="bg-white/20 backdrop-blur-sm text-white border border-white/30 rounded-lg px-3 py-2 focus:ring-2 focus:ring-white/50 text-sm"
                   title="Select time range"
                 >
                   <option value="1m">Last Month</option>
@@ -100,12 +94,12 @@ export default function ManagerAnalyticsPage() {
                   <option value="6m">Last 6 Months</option>
                   <option value="1y">Last Year</option>
                 </select>
-                <button className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg border border-white/30 hover:bg-white/30 transition-colors">
+                <button className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg border border-white/30 hover:bg-white/30 transition-colors text-sm font-medium">
                   Export Report
                 </button>
-              </div>
-            </div>
-          </div>
+              </>
+            }
+          />
 
           {/* Key Metrics (KPI Grid) */}
           <section aria-labelledby="manager-kpis">

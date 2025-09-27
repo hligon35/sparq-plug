@@ -4,6 +4,7 @@ import { useState } from 'react';
 import ManagerHeader from '@/components/ManagerHeader';
 import ManagerTopNav from '@/components/ManagerTopNav';
 import InvitationManager from '@/components/InvitationManager';
+import ManagerSectionBanner from '@/components/ManagerSectionBanner';
 
 export default function ManagerSettingsPage() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks'>('settings');
@@ -68,18 +69,12 @@ export default function ManagerSettingsPage() {
         <ManagerTopNav active={activeTab} onChange={handleNav} />
         
         <div className="space-y-8">
-          {/* Page Header */}
-          <div className="bg-gradient-to-br from-gray-600 to-gray-700 text-white p-8 rounded-2xl shadow-lg">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
-                <span className="text-white text-3xl">⚙️</span>
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-white">Account Settings</h1>
-                <p className="text-white/80 text-lg mt-1">Manage your account security and preferences</p>
-              </div>
-            </div>
-          </div>
+          <ManagerSectionBanner
+            icon="⚙️"
+            title="Account Settings"
+            subtitle="Manage your account security and preferences"
+            variant="teal"
+          />
 
           {/* Settings Sections */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
