@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Notifications from '@/components/Notifications';
-import Header from '@/components/Header';
+import ClientHeader from '@/components/ClientHeader';
 import ClientTopNav from '@/components/ClientTopNav';
 
 export default function ClientDashboard() {
@@ -58,7 +58,7 @@ export default function ClientDashboard() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <Header title="SparQ Client Portal" subtitle="Manage Your Social Media Presence" />
+  <ClientHeader title="SparQ Plug" subtitle="Manage Your Social Media Presence" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <ClientTopNav />
       </div>

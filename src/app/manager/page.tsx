@@ -1,11 +1,13 @@
 'use client';
 
 import InvoiceModule from '@/components/InvoiceModule';
-import { useState } from 'react';
-import Header from '@/components/Header';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import ManagerHeader from '@/components/ManagerHeader';
 import ManagerTopNav from '@/components/ManagerTopNav';
 import TaskList from '@/components/TaskList';
 import TaskCreate from '@/components/TaskCreate';
+import ManagerSectionBanner from '@/components/ManagerSectionBanner';
 
 type TabKey = 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks';
 
@@ -52,34 +54,46 @@ export default function ManagerInvoicePage() {
     }
   };
 
-  // Navigation state
-  const [activeTab, setActiveTab] = useState<TabKey>('dashboard');
+  const searchParams = useSearchParams();
+  const initialTabParam = searchParams?.get('tab');
+  const initial: TabKey = (['dashboard','invoices','clients','analytics','settings','tasks'] as const).includes(initialTabParam as any) ? initialTabParam as TabKey : 'dashboard';
+  const [activeTab, setActiveTab] = useState<TabKey>(initial);
+
+  useEffect(()=>{
+    // keep URL in sync without reloading for dashboard/invoices internal tabs
+    const currentParam = searchParams?.get('tab');
+    if ((activeTab === 'invoices' || activeTab === 'dashboard')) {
+      const desired = activeTab === 'dashboard' ? null : 'invoices';
+      if (desired !== currentParam) {
+        const url = new URL(window.location.href);
+        if (desired) url.searchParams.set('tab', desired); else url.searchParams.delete('tab');
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
+  }, [activeTab, searchParams]);
 
   // Navigation handler
-  const handleNav = (section: TabKey) => {
-    setActiveTab(section);
-    if (section === 'dashboard') return; // Stay on dashboard
-    if (section === 'invoices') return; // Show invoices section
-    if (section === 'clients') {
-      window.location.href = '/manager/clients';
-      return;
+  function navigateTab(section: TabKey) {
+    if (section === 'dashboard' || section === 'invoices') {
+      setActiveTab(section);
+      return; // internal view
     }
-    if (section === 'analytics') {
-      window.location.href = '/manager/analytics';
-      return;
-    }
-    if (section === 'settings') {
-      window.location.href = '/manager/settings';
-      return;
-    }
-    // tasks currently no navigation (placeholder)
-  };
+    const routeMap: Record<TabKey,string> = {
+      dashboard: '/manager',
+      invoices: '/manager?tab=invoices',
+      clients: '/manager/clients',
+      analytics: '/manager/analytics',
+      settings: '/manager/settings',
+      tasks: '/manager/tasks'
+    };
+    window.location.href = routeMap[section];
+  }
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <Header title="Manager Dashboard" subtitle="Account & Business Management Portal" />
+  <ManagerHeader title="SparQ Plug" subtitle="Account & Business Management Portal" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <ManagerTopNav active={activeTab} onChange={handleNav} />
+  <ManagerTopNav active={activeTab} onChange={navigateTab} />
         <div className="p-1">
       {activeTab === 'invoices' && (
             <>
@@ -100,7 +114,12 @@ export default function ManagerInvoicePage() {
 
           {activeTab === 'dashboard' && (
             <div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Manager Overview</h2>
+              <ManagerSectionBanner
+                icon="📊"
+                title="Manager Overview"
+                subtitle="High-level performance, revenue and account status overview"
+                variant="blue"
+              />
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                   <div className="flex items-center justify-between">
@@ -143,7 +162,7 @@ export default function ManagerInvoicePage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <button
-                    onClick={() => handleNav('invoices')}
+                    onClick={() => navigateTab('invoices')}
                     className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="text-center">
@@ -152,7 +171,7 @@ export default function ManagerInvoicePage() {
                     </div>
                   </button>
                   <button
-                    onClick={() => handleNav('clients')}
+                    onClick={() => navigateTab('clients')}
                     className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="text-center">
@@ -161,7 +180,7 @@ export default function ManagerInvoicePage() {
                     </div>
                   </button>
                   <button
-                    onClick={() => handleNav('analytics')}
+                    onClick={() => navigateTab('analytics')}
                     className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="text-center">
@@ -170,7 +189,7 @@ export default function ManagerInvoicePage() {
                     </div>
                   </button>
                   <button
-                    onClick={() => handleNav('settings')}
+                    onClick={() => navigateTab('settings')}
                     className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="text-center">

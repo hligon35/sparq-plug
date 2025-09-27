@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from 'react';
-import Header from '@/components/Header';
+import { useState, useEffect } from 'react';
+import ClientHeader from '@/components/ClientHeader';
 import ClientTopNav from '@/components/ClientTopNav';
+import KpiCard from '@/components/KpiCard';
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('30d');
@@ -101,9 +102,43 @@ export default function AnalyticsPage() {
     return colors[platform] || 'bg-gray-500';
   };
 
+  const [loading, setLoading] = useState(true);
+  useEffect(()=>{ const t = setTimeout(()=> setLoading(false), 600); return ()=> clearTimeout(t); }, []);
+
+  // Map numeric values to Tailwind height classes (approximation buckets) to avoid inline styles
+  const barHeightClass = (value: number, max = 350) => {
+    const pct = value / max; // 0..1
+    const buckets = [0,0.06,0.12,0.18,0.24,0.30,0.36,0.42,0.48,0.54,0.60,0.66,0.72,0.78,0.84,0.90,0.96,1];
+    const classes = ['h-0','h-2','h-3','h-4','h-5','h-6','h-8','h-9','h-10','h-12','h-14','h-16','h-20','h-24','h-28','h-32','h-44','h-52'];
+    for (let i=buckets.length-1;i>=0;i--) {
+      if (pct >= buckets[i]) return classes[i];
+    }
+    return 'h-0';
+  };
+
+  // Approximate width for age group percentage bars using fraction classes
+  const percentWidthClass = (pct: number) => {
+    if (pct >= 90) return 'w-full';
+    if (pct >= 80) return 'w-11/12';
+    if (pct >= 70) return 'w-10/12';
+    if (pct >= 66) return 'w-2/3';
+    if (pct >= 60) return 'w-7/12';
+    if (pct >= 55) return 'w-6/12';
+    if (pct >= 50) return 'w-1/2';
+    if (pct >= 45) return 'w-5/12';
+    if (pct >= 40) return 'w-1/3';
+    if (pct >= 33) return 'w-4/12';
+    if (pct >= 25) return 'w-3/12';
+    if (pct >= 20) return 'w-1/5';
+    if (pct >= 15) return 'w-2/12';
+    if (pct >= 10) return 'w-1/6';
+    if (pct >= 5) return 'w-1/12';
+    return 'w-0';
+  };
+
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <Header title="SparQ Analytics Dashboard" subtitle="Track Performance & Gain Insights" />
+  <ClientHeader title="SparQ Plug" subtitle="Track Performance & Gain Insights" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <ClientTopNav />
       </div>
@@ -120,6 +155,7 @@ export default function AnalyticsPage() {
           </div>
           <div className="flex items-center space-x-4">
             <select 
+              aria-label="Filter by platform"
               value={selectedPlatform}
               onChange={(e) => setSelectedPlatform(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
@@ -131,6 +167,7 @@ export default function AnalyticsPage() {
               <option value="linkedin">LinkedIn</option>
             </select>
             <select 
+              aria-label="Select time range"
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
@@ -147,28 +184,21 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Overview Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
-            <h3 className="text-lg font-medium text-white/90">Total Reach</h3>
-            <p className="text-3xl font-bold mt-2">{overviewStats.totalReach.toLocaleString()}</p>
-            <p className="text-blue-100 text-sm mt-1">+15% from last period</p>
-          </div>
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white">
-            <h3 className="text-lg font-medium text-white/90">Total Engagement</h3>
-            <p className="text-3xl font-bold mt-2">{overviewStats.totalEngagement.toLocaleString()}</p>
-            <p className="text-green-100 text-sm mt-1">+23% from last period</p>
-          </div>
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
-            <h3 className="text-lg font-medium text-white/90">Total Followers</h3>
-            <p className="text-3xl font-bold mt-2">{overviewStats.totalFollowers.toLocaleString()}</p>
-            <p className="text-purple-100 text-sm mt-1">+8% from last period</p>
-          </div>
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white">
-            <h3 className="text-lg font-medium text-white/90">Engagement Rate</h3>
-            <p className="text-3xl font-bold mt-2">{overviewStats.engagementRate}%</p>
-            <p className="text-orange-100 text-sm mt-1">+1.2% from last period</p>
-          </div>
-        </div>
+        <section aria-labelledby="client-overview-kpis" className="mb-8">
+          <h2 id="client-overview-kpis" className="sr-only">Overview key performance indicators</h2>
+          {loading ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4" aria-hidden>
+              {Array.from({length:4}).map((_,i)=>(<div key={i} className="animate-pulse rounded-2xl h-32 bg-gradient-to-br from-gray-200 to-gray-300" />))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <KpiCard gradient="blue" label="Total Reach" value={overviewStats.totalReach.toLocaleString()} delta="+15%" size="sm" />
+              <KpiCard gradient="green" label="Total Engagement" value={overviewStats.totalEngagement.toLocaleString()} delta="+23%" size="sm" />
+              <KpiCard gradient="purple" label="Total Followers" value={overviewStats.totalFollowers.toLocaleString()} delta="+8%" size="sm" />
+              <KpiCard gradient="orange" label="Engagement Rate" value={`${overviewStats.engagementRate}%`} delta="+1.2%" size="sm" />
+            </div>
+          )}
+        </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Engagement Chart */}
@@ -177,19 +207,10 @@ export default function AnalyticsPage() {
             <div className="h-64 flex items-end justify-between space-x-2">
               {engagementData.map((day) => (
                 <div key={day.day} className="flex-1 flex flex-col items-center">
-                  <div className="w-full space-y-1 flex flex-col justify-end" style={{ height: '200px' }}>
-                    <div 
-                      className="bg-blue-500 rounded-t w-full"
-                      style={{ height: `${(day.likes / 350) * 100}%` }}
-                    ></div>
-                    <div 
-                      className="bg-green-500 w-full"
-                      style={{ height: `${(day.comments / 350) * 100}%` }}
-                    ></div>
-                    <div 
-                      className="bg-orange-500 rounded-b w-full"
-                      style={{ height: `${(day.shares / 350) * 100}%` }}
-                    ></div>
+                  <div className="w-full space-y-1 flex flex-col justify-end h-52" aria-label={`Engagement breakdown for ${day.day}`}>
+                    <div className={`bg-blue-500 rounded-t w-full ${barHeightClass(day.likes)}`} aria-label={`Likes ${day.likes}`} />
+                    <div className={`bg-green-500 w-full ${barHeightClass(day.comments)}`} aria-label={`Comments ${day.comments}`} />
+                    <div className={`bg-orange-500 rounded-b w-full ${barHeightClass(day.shares)}`} aria-label={`Shares ${day.shares}`} />
                   </div>
                   <span className="text-xs text-gray-600 mt-2">{day.day}</span>
                 </div>
@@ -272,9 +293,9 @@ export default function AnalyticsPage() {
                     <div className="flex items-center space-x-2">
                       <div className="w-20 bg-gray-200 rounded-full h-2">
                         <div 
-                          className="bg-pink-500 h-2 rounded-full"
-                          style={{ width: `${group.percentage}%` }}
-                        ></div>
+                          className={`bg-pink-500 h-2 rounded-full ${percentWidthClass(group.percentage)}`}
+                          aria-label={`${group.percentage}% in age range ${group.range}`}
+                        />
                       </div>
                       <span className="text-sm text-gray-600 w-8">{group.percentage}%</span>
                     </div>

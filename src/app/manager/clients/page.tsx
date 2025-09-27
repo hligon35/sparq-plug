@@ -1,8 +1,11 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { withBasePath } from '@/lib/basePath';
+import ManagerHeader from '@/components/ManagerHeader';
+import ManagerTopNav from '@/components/ManagerTopNav';
+import ManagerSectionBanner from '@/components/ManagerSectionBanner';
 
 export default function ManagerClientsPage() {
   type Client = {
@@ -68,19 +71,16 @@ export default function ManagerClientsPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">My Clients</h1>
-              <p className="text-gray-600">Manage and monitor your assigned clients</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-7xl mx-auto">
+      <ManagerHeader title="SparQ Plug" subtitle="Client Portfolio Management" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <ManagerTopNav active={'clients'} onChange={(k)=>{ if (k==='clients') return; const map: Record<string,string> = { dashboard:'/manager', invoices:'/manager?tab=invoices', clients:'/manager/clients', analytics:'/manager/analytics', settings:'/manager/settings', tasks:'/manager/tasks' }; window.location.href = map[k]; }} />
+        <div className="p-1">
+          <ManagerSectionBanner
+            icon="👥"
+            title="My Clients"
+            subtitle="Manage and monitor your assigned client portfolio"
+            variant="purple"
+          />
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">

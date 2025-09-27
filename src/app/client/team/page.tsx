@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import Header from '@/components/Header';
+import ClientHeader from '@/components/ClientHeader';
 import ClientTopNav from '@/components/ClientTopNav';
 import TeamCollaboration from '@/components/TeamCollaboration';
 
@@ -83,7 +83,7 @@ export default function TeamPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <Header title="Team Management" subtitle="Manage your team members and permissions" />
+  <ClientHeader title="Team Management" subtitle="Manage your team members and permissions" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <ClientTopNav />
       </div>

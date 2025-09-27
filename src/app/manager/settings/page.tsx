@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Header from '@/components/Header';
+import ManagerHeader from '@/components/ManagerHeader';
 import ManagerTopNav from '@/components/ManagerTopNav';
 import InvitationManager from '@/components/InvitationManager';
 
@@ -11,25 +11,16 @@ export default function ManagerSettingsPage() {
 
   // Navigation handler
   const handleNav = (section: 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks') => {
-    setActiveTab(section);
-    if (section === 'settings') return; // Stay on settings
-    if (section === 'dashboard') {
-      window.location.href = '/manager';
-      return;
-    }
-    if (section === 'invoices') {
-      window.location.href = '/manager';
-      return;
-    }
-    if (section === 'clients') {
-      window.location.href = '/manager/clients';
-      return;
-    }
-    if (section === 'analytics') {
-      window.location.href = '/manager/analytics';
-      return;
-    }
-    // tasks placeholder
+    if (section === 'settings') return;
+    const map: Record<string,string> = {
+      dashboard: '/manager',
+      invoices: '/manager?tab=invoices',
+      clients: '/manager/clients',
+      analytics: '/manager/analytics',
+      tasks: '/manager/tasks',
+      settings: '/manager/settings'
+    };
+    window.location.href = map[section];
   };
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -71,7 +62,7 @@ export default function ManagerSettingsPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <Header title="Manager Settings" subtitle="Account & Security Management" />
+      <ManagerHeader title="SparQ Plug" subtitle="Account & Security Management" />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <ManagerTopNav active={activeTab} onChange={handleNav} />

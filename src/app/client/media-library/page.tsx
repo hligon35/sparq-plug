@@ -1,7 +1,7 @@
 "use client";
 
 import { DragEvent, useRef, useState } from 'react';
-import Header from '@/components/Header';
+import ClientHeader from '@/components/ClientHeader';
 import ClientTopNav from '@/components/ClientTopNav';
 import { withBasePath } from '@/lib/basePath';
 
@@ -111,7 +111,7 @@ export default function MediaLibraryPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <Header title="Media Library" subtitle="Manage your visual content and assets" />
+  <ClientHeader title="SparQ Plug" subtitle="Manage your visual content and assets" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <ClientTopNav />
       </div>

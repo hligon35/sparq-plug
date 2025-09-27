@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Header from '@/components/Header';
+import ClientHeader from '@/components/ClientHeader';
 import ClientTopNav from '@/components/ClientTopNav';
 
 export default function CalendarPage() {
@@ -164,7 +164,7 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <Header title="SparQ Content Calendar" subtitle="Plan & Schedule Your Social Media Content" />
+  <ClientHeader title="SparQ Content Calendar" subtitle="Plan & Schedule Your Social Media Content" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ClientTopNav />
         <div className="pb-8">

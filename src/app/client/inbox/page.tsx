@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Header from '@/components/Header';
+import ClientHeader from '@/components/ClientHeader';
 import ClientTopNav from '@/components/ClientTopNav';
 
 export default function ClientInboxPage() {
@@ -82,7 +82,7 @@ export default function ClientInboxPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <Header title="Social Inbox" subtitle="Manage messages across all platforms" />
+  <ClientHeader title="Social Inbox" subtitle="Manage messages across all platforms" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ClientTopNav />
         <div className="pb-8">

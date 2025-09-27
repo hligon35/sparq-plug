@@ -6,6 +6,8 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { withBasePath } from '@/lib/basePath';
+import ManagerHeader from '@/components/ManagerHeader';
+import ManagerTopNav from '@/components/ManagerTopNav';
 
 type Client = {
   id: string;
@@ -150,20 +152,19 @@ function ManagerClientCalendarsPageInner() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Client Content Calendars</h1>
-              <p className="text-gray-600">Manage content schedules for your assigned clients</p>
+      <ManagerHeader title="SparQ Plug" subtitle="Client Calendars" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <ManagerTopNav active={'clients'} onChange={(k)=>{ if (k==='clients') return; const map: Record<string,string> = { dashboard:'/manager', invoices:'/manager?tab=invoices', clients:'/manager/clients', analytics:'/manager/analytics', settings:'/manager/settings', tasks:'/manager/tasks' }; window.location.href = map[k]; }} />
+        <div className="p-1">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white text-lg">🗓️</div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Client Content Calendars</h1>
+                <p className="text-gray-600 text-sm">Manage content schedules for your assigned clients</p>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-7xl mx-auto">
           {/* Client Selection */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8 p-6">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">

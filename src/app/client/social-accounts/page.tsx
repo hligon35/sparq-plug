@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { withBasePath } from '@/lib/basePath';
-import Header from '@/components/Header';
+import ClientHeader from '@/components/ClientHeader';
 import ClientTopNav from '@/components/ClientTopNav';
 import type { SocialAccount } from '@/app/api/social-accounts/route';
 
@@ -163,7 +163,7 @@ export default function SocialAccountsPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <Header title="SparQ Social Accounts" subtitle="Manage Your Connected Social Media Platforms" />
+  <ClientHeader title="SparQ Social Accounts" subtitle="Manage Your Connected Social Media Platforms" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <ClientTopNav />
       </div>

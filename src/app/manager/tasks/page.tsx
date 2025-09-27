@@ -1,8 +1,9 @@
 'use client';
-import Header from '@/components/Header';
+import ManagerHeader from '@/components/ManagerHeader';
 import ManagerTopNav from '@/components/ManagerTopNav';
 import TaskList from '@/components/TaskList';
 import TaskCreate from '@/components/TaskCreate';
+import ManagerSectionBanner from '@/components/ManagerSectionBanner';
 import { useState } from 'react';
 
 export default function ManagerTasksPage() {
@@ -12,9 +13,15 @@ export default function ManagerTasksPage() {
   function toggleStatus(s: string) { setStatusFilters(prev => prev.includes(s) ? prev.filter(x=>x!==s) : [...prev, s]); }
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <Header title="Tasks" subtitle="Manage and complete assigned work" />
+  <ManagerHeader title="SparQ Plug" subtitle="Manage and complete assigned work" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <ManagerTopNav active={'tasks'} onChange={(k)=>{ if (k==='tasks') return; if (k==='dashboard') window.location.href='/manager'; else window.location.href=`/manager/${k}`; }} />
+  <ManagerTopNav active={'tasks'} onChange={(k)=>{ if (k==='tasks') return; const map: Record<string,string> = { dashboard:'/manager', invoices:'/manager?tab=invoices', clients:'/manager/clients', analytics:'/manager/analytics', settings:'/manager/settings', tasks:'/manager/tasks' }; window.location.href = map[k]; }} />
+        <ManagerSectionBanner
+          icon="✅"
+          title="Task Center"
+          subtitle="Track, prioritize and complete work across clients and internal operations"
+          variant="indigo"
+        />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">

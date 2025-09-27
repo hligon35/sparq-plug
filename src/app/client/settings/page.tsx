@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import Header from '@/components/Header';
+import ClientHeader from '@/components/ClientHeader';
 import ClientTopNav from '@/components/ClientTopNav';
 
 // Types for settings structures
@@ -130,7 +130,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <Header title="Settings" subtitle="Manage your account preferences and security" />
+  <ClientHeader title="Settings" subtitle="Manage your account preferences and security" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <ClientTopNav />
       </div>

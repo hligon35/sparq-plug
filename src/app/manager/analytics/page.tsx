@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import Header from '@/components/Header';
+import { useState, useEffect } from 'react';
+import ManagerHeader from '@/components/ManagerHeader';
 import ManagerTopNav from '@/components/ManagerTopNav';
+import KpiCard from '@/components/KpiCard';
 
 interface AnalyticsData {
   totalClients: number;
@@ -47,20 +48,36 @@ const mockAnalytics: AnalyticsData = {
 };
 
 export default function ManagerAnalyticsPage() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks'>('analytics');
+  const [activeTab] = useState<'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks'>('analytics');
   const [timeRange, setTimeRange] = useState('6m');
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(()=> setLoading(false), 600); return ()=> clearTimeout(t); }, []);
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <Header title="Manager Analytics" subtitle="Business Performance & Insights Dashboard" />
-      
+      <ManagerHeader title="SparQ Plug" subtitle="Business Performance & Insights Dashboard" />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <ManagerTopNav active={activeTab} onChange={setActiveTab} />
-        
+        <ManagerTopNav
+          active={activeTab}
+          onChange={(k) => {
+            if (k === 'analytics') return;
+            const map: Record<string,string> = {
+              dashboard: '/manager',
+              invoices: '/manager?tab=invoices',
+              clients: '/manager/clients',
+              settings: '/manager/settings',
+              tasks: '/manager/tasks',
+              analytics: '/manager/analytics'
+            };
+            window.location.href = map[k];
+          }}
+        />
+
         <div className="space-y-8">
           {/* Page Header */}
           <div className="bg-gradient-to-br from-purple-600 to-blue-600 text-white p-8 rounded-2xl shadow-lg">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
                   <span className="text-white text-3xl">📊</span>
@@ -70,7 +87,7 @@ export default function ManagerAnalyticsPage() {
                   <p className="text-white/80 text-lg mt-1">Performance insights and business metrics</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <select
                   value={timeRange}
@@ -90,60 +107,22 @@ export default function ManagerAnalyticsPage() {
             </div>
           </div>
 
-          {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm font-medium">Total Clients</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{mockAnalytics.totalClients}</p>
-                  <p className="text-green-600 text-sm mt-1">+12% from last month</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <span className="text-blue-600 text-2xl">👥</span>
-                </div>
+          {/* Key Metrics (KPI Grid) */}
+          <section aria-labelledby="manager-kpis">
+            <h2 id="manager-kpis" className="sr-only">Key performance indicators</h2>
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4" aria-hidden>
+                {Array.from({ length: 4 }).map((_,i)=>(<div key={i} className="animate-pulse rounded-2xl h-32 bg-gradient-to-br from-gray-200 to-gray-300" />))}
               </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm font-medium">Active Projects</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{mockAnalytics.activeProjects}</p>
-                  <p className="text-green-600 text-sm mt-1">+8% from last month</p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <span className="text-green-600 text-2xl">📈</span>
-                </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <KpiCard gradient="blue" label="Total Clients" value={mockAnalytics.totalClients} delta="+12%" size="sm" />
+                <KpiCard gradient="green" label="Active Projects" value={mockAnalytics.activeProjects} delta="+8%" size="sm" />
+                <KpiCard gradient="purple" label="Monthly Revenue" value={`$${mockAnalytics.monthlyRevenue.toLocaleString()}`} delta="+15%" size="sm" />
+                <KpiCard gradient="orange" label="Client Satisfaction" value={`${mockAnalytics.clientSatisfaction}/5.0`} delta="+0.2" size="sm" />
               </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm font-medium">Monthly Revenue</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">${mockAnalytics.monthlyRevenue.toLocaleString()}</p>
-                  <p className="text-green-600 text-sm mt-1">+15% from last month</p>
-                </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                  <span className="text-purple-600 text-2xl">💰</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm font-medium">Client Satisfaction</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{mockAnalytics.clientSatisfaction}/5.0</p>
-                  <p className="text-green-600 text-sm mt-1">+0.2 from last month</p>
-                </div>
-                <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                  <span className="text-yellow-600 text-2xl">⭐</span>
-                </div>
-              </div>
-            </div>
-          </div>
+            )}
+          </section>
 
           {/* Charts Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -207,40 +186,43 @@ export default function ManagerAnalyticsPage() {
           </div>
 
           {/* Additional Insights */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <span className="text-blue-600 text-lg">📊</span>
+          <section aria-labelledby="manager-secondary-kpis">
+            <h2 id="manager-secondary-kpis" className="sr-only">Additional performance insights</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <span className="text-blue-600 text-lg">📊</span>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-800">Client Retention</h4>
                 </div>
-                <h4 className="text-lg font-semibold text-gray-800">Client Retention</h4>
+                <p className="text-3xl font-bold text-gray-900 mb-2">94.2%</p>
+                <p className="text-green-600 text-sm">+2.1% from last quarter</p>
               </div>
-              <p className="text-3xl font-bold text-gray-900 mb-2">94.2%</p>
-              <p className="text-green-600 text-sm">+2.1% from last quarter</p>
-            </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                  <span className="text-green-600 text-lg">⚡</span>
+              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <span className="text-green-600 text-lg">⚡</span>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-800">Avg Response Time</h4>
                 </div>
-                <h4 className="text-lg font-semibold text-gray-800">Avg Response Time</h4>
+                <p className="text-3xl font-bold text-gray-900 mb-2">2.3h</p>
+                <p className="text-green-600 text-sm">-0.5h improvement</p>
               </div>
-              <p className="text-3xl font-bold text-gray-900 mb-2">2.3h</p>
-              <p className="text-green-600 text-sm">-0.5h improvement</p>
-            </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <span className="text-purple-600 text-lg">📈</span>
+              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <span className="text-purple-600 text-lg">📈</span>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-800">Growth Rate</h4>
                 </div>
-                <h4 className="text-lg font-semibold text-gray-800">Growth Rate</h4>
+                <p className="text-3xl font-bold text-gray-900 mb-2">23.7%</p>
+                <p className="text-green-600 text-sm">+5.2% from last quarter</p>
               </div>
-              <p className="text-3xl font-bold text-gray-900 mb-2">23.7%</p>
-              <p className="text-green-600 text-sm">+5.2% from last quarter</p>
             </div>
-          </div>
+          </section>
         </div>
       </div>
     </div>

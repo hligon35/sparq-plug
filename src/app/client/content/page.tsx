@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import Header from '@/components/Header';
+import ClientHeader from '@/components/ClientHeader';
 import ClientTopNav from '@/components/ClientTopNav';
 import TrendingTopics from '@/components/TrendingTopics';
 import ABTesting from '@/components/ABTesting';
@@ -106,7 +106,7 @@ export default function ContentPostsPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <Header title="SparQ Content Management" subtitle="Create, Edit & Manage Your Social Media Content" />
+  <ClientHeader title="SparQ Content Management" subtitle="Create, Edit & Manage Your Social Media Content" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <ClientTopNav />
       </div>

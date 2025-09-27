@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { withBasePath } from '@/lib/basePath';
+import ManagerHeader from '@/components/ManagerHeader';
+import ManagerTopNav from '@/components/ManagerTopNav';
 
 type Client = {
   id: string;
@@ -140,38 +142,10 @@ export default function ManagerClientProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link 
-                href="/manager/clients"
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{client.name}</h1>
-                <p className="text-gray-600">Client Profile Management</p>
-              </div>
-            </div>
-            <div className="flex space-x-3">
-              <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                Schedule Post
-              </button>
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                Generate Report
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-7xl mx-auto">
+      <ManagerHeader title="SparQ Plug" subtitle="Client Profile" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <ManagerTopNav active={'clients'} onChange={(k)=>{ if (k==='clients') return; const map: Record<string,string> = { dashboard:'/manager', invoices:'/manager?tab=invoices', clients:'/manager/clients', analytics:'/manager/analytics', settings:'/manager/settings', tasks:'/manager/tasks' }; window.location.href = map[k]; }} />
+        <div className="p-1">
           {/* Client Header Card */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8 overflow-hidden">
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8">
