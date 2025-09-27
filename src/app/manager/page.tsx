@@ -3,57 +3,21 @@
 import InvoiceModule from '@/components/InvoiceModule';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import ManagerHeader from '@/components/ManagerHeader';
-import ManagerTopNav from '@/components/ManagerTopNav';
+import ManagerLayout from '@/components/ManagerLayout';
 import TaskList from '@/components/TaskList';
 import TaskCreate from '@/components/TaskCreate';
 import ManagerSectionBanner from '@/components/ManagerSectionBanner';
-import { managerRouteMap } from '@/lib/managerNav';
+import { managerRouteMap, navigateManager, ManagerTabKey } from '@/lib/managerNav';
+import { SecurityModal } from '@/components';
 
-type TabKey = 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks';
+type TabKey = ManagerTabKey;
 
 function ManagerInvoicePageInner() {
 
 
   // Security modal state
   const [showSecurityModal, setShowSecurityModal] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // Security handlers
-  const handlePasswordUpdate = () => {
-    if (!newPassword || !confirmPassword) {
-      alert('Please fill in both password fields');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      alert('Passwords do not match');
-      return;
-    }
-    if (newPassword.length < 8) {
-      alert('Password must be at least 8 characters long');
-      return;
-    }
-    // TODO: Connect to real backend API
-    alert('Password updated successfully!');
-    setNewPassword('');
-    setConfirmPassword('');
-    setShowSecurityModal(false);
-  };
-
-  const handleToggle2FA = () => {
-    if (!twoFactorEnabled) {
-      // TODO: Connect to real 2FA setup
-      alert('2FA setup initiated! In production, this would show QR code setup.');
-      setTwoFactorEnabled(true);
-    } else {
-      alert('2FA disabled successfully!');
-      setTwoFactorEnabled(false);
-    }
-  };
+  // Security modal logic moved to <SecurityModal />
 
   const searchParams = useSearchParams();
   const initialTabParam = searchParams?.get('tab');
@@ -75,19 +39,17 @@ function ManagerInvoicePageInner() {
 
   // Navigation handler
   function navigateTab(section: TabKey) {
-    if (section === 'dashboard' || section === 'invoices') {
-      setActiveTab(section);
-      return;
-    }
-    window.location.href = managerRouteMap[section];
+    navigateManager(section, {
+      internalHandler: (t) => setActiveTab(t)
+    });
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb]">
-  <ManagerHeader title="SparQ Plug" subtitle="Account & Business Management Portal" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-  <ManagerTopNav active={activeTab} onChange={navigateTab} />
-        <div className="p-1">
+    <ManagerLayout
+      active={activeTab}
+      headerSubtitle="Account & Business Management Portal"
+      onNavChange={(tab) => navigateManager(tab, { internalHandler: (t)=> setActiveTab(t) })}
+    >
       {activeTab === 'invoices' && (
             <>
               <ManagerSectionBanner
@@ -206,7 +168,6 @@ function ManagerInvoicePageInner() {
               <p className="text-gray-500">This section is under development and will be available soon.</p>
             </div>
           )}
-        </div>
         <div className="mt-4 flex justify-end">
           <button
             onClick={() => setShowSecurityModal(true)}
@@ -216,96 +177,9 @@ function ManagerInvoicePageInner() {
             Account Security
           </button>
         </div>
-      </div>
       {/* Security Modal */}
-      {showSecurityModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[1000]">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-md border border-gray-200 shadow-lg relative">
-            <button
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              onClick={() => setShowSecurityModal(false)}
-              aria-label="Close"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Security Settings</h2>
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Change Password</label>
-                <div className="relative">
-                  <input 
-                    type={showNewPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10" 
-                    placeholder="New password" 
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    {showNewPassword ? (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                      </svg>
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-                <div className="relative mt-2">
-                  <input 
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10" 
-                    placeholder="Confirm new password" 
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    {showConfirmPassword ? (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                      </svg>
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-                <button 
-                  onClick={handlePasswordUpdate}
-                  className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow"
-                >
-                  Update Password
-                </button>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Two-Factor Authentication (2FA)</label>
-                <button 
-                  onClick={handleToggle2FA}
-                  className={`${twoFactorEnabled ? 'bg-green-500 hover:bg-green-600' : 'bg-yellow-500 hover:bg-yellow-600'} text-white px-4 py-2 rounded-lg font-medium shadow`}
-                >
-                  {twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}
-                </button>
-                <p className="text-xs text-gray-500 mt-1">
-                  {twoFactorEnabled ? '2FA is currently enabled for your account.' : 'Add an extra layer of security to your account.'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      <SecurityModal open={showSecurityModal} onClose={() => setShowSecurityModal(false)} />
+    </ManagerLayout>
   );
 }
 

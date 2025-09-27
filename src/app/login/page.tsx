@@ -1,109 +1,95 @@
 "use client";
-import { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Real login page placeholder.
+ * Currently performs a mock credential check and sets a signed-in role cookie (manager by default)
+ * TODO: Replace with real authentication (NextAuth / custom API) and secure HttpOnly session cookie.
+ */
 export default function LoginPage() {
-  const [selectedRole, setSelectedRole] = useState('');
   const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [isBrowser, setIsBrowser] = useState(false);
-  useEffect(() => { setIsBrowser(true); }, []);
-  const isDev = process.env.NODE_ENV === 'development' || 
-                (isBrowser && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
-
-  const handleDevLogin = (role: string) => {
-    // Set role cookie for development
-    document.cookie = `role=${role}; path=/; max-age=86400`; // 24 hours
-    
-    // Redirect based on role
-    switch (role) {
-      case 'admin':
-        router.push('/admin');
-        break;
-      case 'manager':
-        router.push('/manager');
-        break;
-      case 'client':
-        router.push('/client');
-        break;
-      default:
-        router.push('/');
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      // Mock check: accept any non-empty email/password
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+      // Simplistic role inference just for demo: admin if email starts with admin@
+      const role = email.startsWith('admin') ? 'admin' : email.startsWith('client') ? 'client' : 'manager';
+      document.cookie = `role=${role}; path=/; max-age=86400`; // NOT secure – placeholder only
+      router.push(role === 'admin' ? '/admin' : role === 'client' ? '/client' : '/manager');
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleProductionRedirect = () => {
-    if (!isBrowser) return;
-    const rt = encodeURIComponent(window.location.href.replace('/login', ''));
-    const target = `https://portal.getsparqd.com/login?sso=1&returnTo=${rt}`;
-    window.location.replace(target);
-  };
-
-  if (isBrowser && !isDev) {
-    // Production behavior - redirect to external portal
-    handleProductionRedirect();
-    return (
-      <main className="min-h-screen flex flex-col items-center justify-center bg-[#f5f7fb] px-4">
-        <div className="bg-white rounded-2xl shadow-xl p-10 w-full max-w-lg text-center border border-gray-200">
-          <h1 className="text-2xl font-semibold text-[#1d74d0] mb-4">Redirecting to Portal Login…</h1>
-          <a href="https://portal.getsparqd.com/login?sso=1" className="inline-block px-4 py-2 bg-[#1d74d0] text-white rounded-lg">Open Portal Login</a>
-        </div>
-      </main>
-    );
   }
 
-  // Development login interface
+  function handlePortalRedirect() {
+    const rt = encodeURIComponent(window.location.href.replace('/login', ''));
+    const target = `https://portal.getsparqd.com/login?sso=1&returnTo=${rt}`;
+    window.location.assign(target);
+  }
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-[#f5f7fb] px-4">
-      <div className="bg-white rounded-2xl shadow-xl p-10 w-full max-w-lg text-center border border-gray-200">
-        <div className="mb-6">
+      <div className="bg-white rounded-2xl shadow-xl p-10 w-full max-w-md border border-gray-200">
+        <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-[#1d74d0] mb-2">SparQ Plug</h1>
-          <p className="text-gray-600">Development Login</p>
-          <div className="mt-4 px-3 py-2 bg-yellow-100 border border-yellow-300 rounded-lg">
-            <p className="text-sm text-yellow-800">🚧 Development Mode - Choose your role</p>
+          <p className="text-gray-600">Sign in to your account</p>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+          <div className="text-left">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 focus:border-[#1d74d0] focus:ring-[#1d74d0] px-4 py-2.5 text-sm outline-none"
+              placeholder="you@example.com"
+              autoComplete="email"
+              required
+            />
           </div>
+          <div className="text-left">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 focus:border-[#1d74d0] focus:ring-[#1d74d0] px-4 py-2.5 text-sm outline-none"
+              placeholder="••••••••"
+              autoComplete="current-password"
+              required
+            />
+          </div>
+          {error && (
+            <div className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">{error}</div>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#1d74d0] hover:bg-[#155ba0] disabled:opacity-60 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors"
+          >
+            {loading ? 'Signing in…' : 'Sign In'}
+          </button>
+        </form>
+        <div className="mt-8 pt-6 border-t border-gray-200 text-center space-y-3">
+          <button onClick={handlePortalRedirect} className="text-sm text-[#1d74d0] hover:text-[#155ba0] font-medium">Use Portal SSO Instead →</button>
+          <p className="text-xs text-gray-500">Need different environment? <a href="/devLogin" className="underline hover:text-[#1d74d0]">Dev Role Switch</a></p>
         </div>
-        
-        <div className="space-y-4">
-          <button
-            onClick={() => handleDevLogin('admin')}
-            className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
-            </svg>
-            <span>Login as Admin</span>
-          </button>
-          
-          <button
-            onClick={() => handleDevLogin('manager')}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-            </svg>
-            <span>Login as Manager</span>
-          </button>
-          
-          <button
-            onClick={() => handleDevLogin('client')}
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-            </svg>
-            <span>Login as Client</span>
-          </button>
-        </div>
-        
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <p className="text-sm text-gray-500 mb-3">Production Login</p>
-          <button
-            onClick={handleProductionRedirect}
-            className="text-[#1d74d0] hover:text-[#155ba0] font-medium text-sm"
-          >
-            Use Portal Login Instead →
-          </button>
-        </div>
+        <p className="mt-6 text-center text-[11px] text-gray-400">Prototype auth — replace with real secure implementation.</p>
       </div>
     </main>
   );

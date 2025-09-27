@@ -1,10 +1,8 @@
 'use client';
-import ManagerHeader from '@/components/ManagerHeader';
-import ManagerTopNav from '@/components/ManagerTopNav';
+import ManagerLayout from '@/components/ManagerLayout';
 import TaskList from '@/components/TaskList';
 import TaskCreate from '@/components/TaskCreate';
 import ManagerSectionBanner from '@/components/ManagerSectionBanner';
-import { managerRouteMap } from '@/lib/managerNav';
 import { useState } from 'react';
 
 export default function ManagerTasksPage() {
@@ -13,17 +11,14 @@ export default function ManagerTasksPage() {
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   function toggleStatus(s: string) { setStatusFilters(prev => prev.includes(s) ? prev.filter(x=>x!==s) : [...prev, s]); }
   return (
-    <div className="min-h-screen bg-[#f5f7fb]">
-  <ManagerHeader title="SparQ Plug" subtitle="Manage and complete assigned work" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-  <ManagerTopNav active={'tasks'} onChange={(k)=>{ if (k==='tasks') return; window.location.href = managerRouteMap[k as keyof typeof managerRouteMap]; }} />
-        <ManagerSectionBanner
+    <ManagerLayout active="tasks" headerSubtitle="Manage and complete assigned work">
+      <ManagerSectionBanner
           icon="✅"
           title="Task Center"
           subtitle="Track, prioritize and complete work across clients and internal operations"
           variant="indigo"
         />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" aria-label="Task workspace">
           <div className="lg:col-span-2">
             <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
               <div className="flex flex-col gap-4 mb-4">
@@ -34,7 +29,7 @@ export default function ManagerTasksPage() {
                     <button onClick={()=>setScope('all')} className={`text-xs px-3 py-1 rounded-full border ${scope==='all'?'bg-blue-600 text-white border-blue-600':'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>All</button>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-3 items-center">
+                <div className="flex flex-wrap gap-3 items-center" aria-label="Task search and status filters">
                   <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search" className="border px-3 py-1 rounded text-sm" />
                   <div className="flex gap-2 text-[11px]">
                     {['open','in_progress','done'].map(s => (
@@ -50,8 +45,7 @@ export default function ManagerTasksPage() {
           <div className="flex flex-col gap-6">
             <TaskCreate />
           </div>
-        </div>
       </div>
-    </div>
+    </ManagerLayout>
   );
 }

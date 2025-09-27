@@ -3,10 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { withBasePath } from '@/lib/basePath';
-import ManagerHeader from '@/components/ManagerHeader';
-import ManagerTopNav from '@/components/ManagerTopNav';
 import ManagerSectionBanner from '@/components/ManagerSectionBanner';
-import { managerRouteMap } from '@/lib/managerNav';
+import ManagerLayout from '@/components/ManagerLayout';
 
 export default function ManagerClientsPage() {
   type Client = {
@@ -71,11 +69,7 @@ export default function ManagerClientsPage() {
   const totalRevenue = clients.reduce((sum, c) => sum + (c.monthlyBudget || 0), 0);
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb]">
-      <ManagerHeader title="SparQ Plug" subtitle="Client Portfolio Management" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-  <ManagerTopNav active={'clients'} onChange={(k)=>{ if (k==='clients') return; window.location.href = managerRouteMap[k as keyof typeof managerRouteMap]; }} />
-        <div className="p-1">
+    <ManagerLayout active="clients" headerSubtitle="Client Portfolio Management">
           <ManagerSectionBanner
             icon="👥"
             title="My Clients"
@@ -83,7 +77,7 @@ export default function ManagerClientsPage() {
             variant="purple"
           />
           {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" aria-label="Client portfolio KPIs">
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
               <h3 className="text-lg font-medium text-white/90">Total Clients</h3>
               <p className="text-3xl font-bold mt-2">{clients.length}</p>
@@ -109,7 +103,8 @@ export default function ManagerClientsPage() {
           </div>
 
           {/* Filters and Search */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8 p-6">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8 p-6" aria-labelledby="client-filters-heading">
+            <h2 id="client-filters-heading" className="sr-only">Client Filters</h2>
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <input
@@ -136,7 +131,7 @@ export default function ManagerClientsPage() {
           </div>
 
           {/* Client Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-live="polite">
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 animate-pulse">
@@ -244,8 +239,6 @@ export default function ManagerClientsPage() {
               </div>
             )}
           </div>
-        </div>
-      </div>
-    </div>
+    </ManagerLayout>
   );
 }

@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { withBasePath } from '@/lib/basePath';
-import ManagerHeader from '@/components/ManagerHeader';
-import ManagerTopNav from '@/components/ManagerTopNav';
+import ManagerLayout from '@/components/ManagerLayout';
+import { navigateManager } from '@/lib/managerNav';
 
 type Client = {
   id: string;
@@ -141,11 +141,7 @@ export default function ManagerClientProfilePage() {
     : '0';
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb]">
-      <ManagerHeader title="SparQ Plug" subtitle="Client Profile" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <ManagerTopNav active={'clients'} onChange={(k)=>{ if (k==='clients') return; const map: Record<string,string> = { dashboard:'/manager', invoices:'/manager?tab=invoices', clients:'/manager/clients', analytics:'/manager/analytics', settings:'/manager/settings', tasks:'/manager/tasks' }; window.location.href = map[k]; }} />
-        <div className="p-1">
+    <ManagerLayout active={'clients'} headerSubtitle="Client Profile">
           {/* Client Header Card */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8 overflow-hidden">
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8">
@@ -552,8 +548,6 @@ export default function ManagerClientProfilePage() {
               </button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+    </ManagerLayout>
   );
 }

@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import ManagerHeader from '@/components/ManagerHeader';
-import ManagerTopNav from '@/components/ManagerTopNav';
+import ManagerLayout from '@/components/ManagerLayout';
 import KpiCard from '@/components/KpiCard';
 import ManagerSectionBanner from '@/components/ManagerSectionBanner';
 import { managerRouteMap } from '@/lib/managerNav';
@@ -50,22 +49,13 @@ const mockAnalytics: AnalyticsData = {
 };
 
 export default function ManagerAnalyticsPage() {
-  const [activeTab] = useState<'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks'>('analytics');
   const [timeRange, setTimeRange] = useState('6m');
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(()=> setLoading(false), 600); return ()=> clearTimeout(t); }, []);
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb]">
-      <ManagerHeader title="SparQ Plug" subtitle="Business Performance & Insights Dashboard" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <ManagerTopNav
-          active={activeTab}
-          onChange={(k) => { if (k==='analytics') return; window.location.href = managerRouteMap[k as keyof typeof managerRouteMap]; }}
-        />
-
-        <div className="space-y-8">
+    <ManagerLayout active="analytics" headerSubtitle="Business Performance & Insights Dashboard">
+      <div className="space-y-8">
           <ManagerSectionBanner
             icon="📊"
             title="Analytics Dashboard"
@@ -109,9 +99,10 @@ export default function ManagerAnalyticsPage() {
           </section>
 
           {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8" aria-label="Charts and client performance insights">
             {/* Revenue Chart */}
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm" aria-labelledby="revenue-trend-heading">
+              <h3 id="revenue-trend-heading" className="sr-only">Revenue Trend</h3>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-gray-800">Revenue Trend</h3>
                 <span className="text-sm text-gray-500">Last 9 months</span>
@@ -136,7 +127,8 @@ export default function ManagerAnalyticsPage() {
             </div>
 
             {/* Top Performing Clients */}
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm" aria-labelledby="top-performing-clients-heading">
+              <h3 id="top-performing-clients-heading" className="sr-only">Top Performing Clients</h3>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-gray-800">Top Performing Clients</h3>
                 <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">View All</button>
@@ -207,8 +199,7 @@ export default function ManagerAnalyticsPage() {
               </div>
             </div>
           </section>
-        </div>
       </div>
-    </div>
+    </ManagerLayout>
   );
 }

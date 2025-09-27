@@ -3,13 +3,11 @@
 export const dynamic = 'force-dynamic';
 
 import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { withBasePath } from '@/lib/basePath';
-import ManagerHeader from '@/components/ManagerHeader';
-import ManagerTopNav from '@/components/ManagerTopNav';
 import ManagerSectionBanner from '@/components/ManagerSectionBanner';
-import { managerRouteMap } from '@/lib/managerNav';
+import ManagerLayout from '@/components/ManagerLayout';
 
 type Client = {
   id: string;
@@ -37,7 +35,9 @@ type CalendarPost = {
 
 function ManagerClientCalendarsPageInner() {
   const searchParams = useSearchParams();
-  const selectedClientId = searchParams.get('client');
+  const router = useRouter();
+  const initialClient = searchParams.get('client') || '';
+  const [selectedClientId, setSelectedClientId] = useState<string>(initialClient);
   
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -60,6 +60,13 @@ function ManagerClientCalendarsPageInner() {
     };
     fetchClients();
   }, []);
+
+  // Sync URL when selected client changes (no history spam, no reload)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const path = selectedClientId ? `${window.location.pathname}?client=${selectedClientId}` : window.location.pathname;
+    router.replace(path);
+  }, [selectedClientId, router]);
 
   // Load posts for selected client
   useEffect(() => {
@@ -153,17 +160,7 @@ function ManagerClientCalendarsPageInner() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb]">
-      <ManagerHeader title="SparQ Plug" subtitle="Client Calendars" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <ManagerTopNav
-          active={'clients'}
-          onChange={(k) => {
-            if (k === 'clients') return;
-            window.location.href = managerRouteMap[k];
-          }}
-        />
-        <div className="p-1">
+    <ManagerLayout active="clients" headerSubtitle="Client Calendars">
           <ManagerSectionBanner
             icon="🗓️"
             variant="blue"
@@ -179,7 +176,8 @@ function ManagerClientCalendarsPageInner() {
             }
           />
           {/* Client Selection */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8 p-6">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8 p-6" aria-labelledby="client-calendars-selection-heading">
+            <h2 id="client-calendars-selection-heading" className="sr-only">Client selection</h2>
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div className="flex items-center space-x-4">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -195,17 +193,8 @@ function ManagerClientCalendarsPageInner() {
 
               <div className="flex items-center space-x-4">
                 <select
-                  value={selectedClientId || ''}
-                  onChange={(e) => {
-                    const clientId = e.target.value;
-                    if (clientId) {
-                      window.history.pushState({}, '', `?client=${clientId}`);
-                      window.location.reload();
-                    } else {
-                      window.history.pushState({}, '', window.location.pathname);
-                      window.location.reload();
-                    }
-                  }}
+                  value={selectedClientId}
+                  onChange={(e) => setSelectedClientId(e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 min-w-[200px]"
                   aria-label="Select client"
                 >
@@ -267,8 +256,8 @@ function ManagerClientCalendarsPageInner() {
 
           {!selectedClient ? (
             // No client selected - show client grid
-            <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-8" aria-live="polite">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-label="Clients without selected calendar">
                 {clients.map(client => (
                   <div key={client.id} className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-shadow">
                     <div className="p-6">
@@ -309,10 +298,7 @@ function ManagerClientCalendarsPageInner() {
 
                       <div className="flex justify-between items-center pt-4 border-t border-gray-100">
                         <button
-                          onClick={() => {
-                            window.history.pushState({}, '', `?client=${client.id}`);
-                            window.location.reload();
-                          }}
+                          onClick={() => setSelectedClientId(client.id)}
                           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                         >
                           View Calendar
@@ -538,9 +524,7 @@ function ManagerClientCalendarsPageInner() {
               </div>
             </div>
           )}
-        </div>
-      </div>
-    </div>
+    </ManagerLayout>
   );
 }
 

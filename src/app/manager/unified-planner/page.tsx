@@ -1,10 +1,8 @@
 "use client";
 import nextDynamic from 'next/dynamic';
 import Link from 'next/link';
-import ManagerHeader from '@/components/ManagerHeader';
-import ManagerTopNav from '@/components/ManagerTopNav';
 import ManagerSectionBanner from '@/components/ManagerSectionBanner';
-import { managerRouteMap } from '@/lib/managerNav';
+import ManagerLayout from '@/components/ManagerLayout';
 
 const MultiClientPlanner = nextDynamic(() => import('@/components/MultiClientPlanner'), { ssr: false });
 
@@ -12,17 +10,7 @@ export const dynamic = 'force-dynamic'; // Next.js segment option
 
 export default function ManagerUnifiedPlannerPage() {
   return (
-    <div className="min-h-screen bg-[#f5f7fb]">
-      <ManagerHeader title="SparQ Plug" subtitle="Unified Client Planner" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <ManagerTopNav
-          active={'clients'}
-          onChange={(k) => {
-            if (k === 'clients') return; // remain on clients section
-            window.location.href = managerRouteMap[k];
-          }}
-        />
-        <div className="p-1">
+    <ManagerLayout active="clients" headerSubtitle="Unified Client Planner">
           <ManagerSectionBanner
             icon="📅"
             variant="purple"
@@ -47,8 +35,6 @@ export default function ManagerUnifiedPlannerPage() {
             </div>
             <MultiClientPlanner managerScope />
           </div>
-        </div>
-      </div>
-    </div>
+    </ManagerLayout>
   );
 }

@@ -16,6 +16,7 @@ Environment variables
 - PUBLIC_URL: Your public site URL (e.g., <https://example.com>). Used in Stripe redirects.
 - NEXT_PUBLIC_FEATURE_EMAIL_SETUP / FEATURE_EMAIL_SETUP: Set to "true" to show the Email Setup UI (use NEXT_PUBLIC_ variant for client render).
 - STRIPE_SECRET_KEY: Live or test secret key (optional for mocked flow).
+- NEXT_PUBLIC_MANAGER_NAV_DEBUG: Set to "true" to render the manager navigation debug panel (development tooling only).
 
 Local development
 
@@ -115,3 +116,99 @@ This app can provision email mailboxes on the same server via a script you provi
 
 License
 Proprietary/All rights reserved (update as needed).
+
+---
+
+## Manager Section Architecture & Navigation (Internal Docs)
+
+The manager interface ("SparQ Plug" portal) uses a unified layout and typed navigation model to ensure consistency and testability.
+
+### Key Files
+
+| Concern | File |
+|---------|------|
+| Tab key types & routes | `src/lib/managerNav.ts` |
+| Shared layout shell | `src/components/ManagerLayout.tsx` |
+| Top navigation bar | `src/components/ManagerTopNav.tsx` |
+| Root manager page (dashboard/invoices toggle) | `src/app/manager/page.tsx` |
+| Client calendars (dynamic client query) | `src/app/manager/client-calendars/page.tsx` |
+| Analytics hook | `src/hooks/useManagerNavAnalytics.ts` |
+| Debug panel (dev only) | `src/components/ManagerNavDebugPanel.tsx` |
+
+### Tab Model
+
+Tabs are defined by the `ManagerTabKey` union and mapped via `managerRouteMap`:
+
+```ts
+export type ManagerTabKey = 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks';
+```
+
+Dashboard and invoices share the same physical route (`/manager`) and distinguish state via a `?tab=invoices` query parameter; internal switching is handled client-side for instant UX.
+
+### Navigation Helper
+
+`navigateManager(tab, { internalHandler, router, replace })` centralizes navigation:
+
+- If `tab` is `dashboard` or `invoices` and `internalHandler` is provided, it invokes the handler (no route push by default). The caller may sync URL (root page does this with `history.replaceState`).
+- Else it prefers the provided Next.js router (`router.push` / `router.replace`) and falls back to a hard navigation (`window.location.href`).
+
+### ManagerLayout
+
+Wraps pages with header + top nav and delegates to `navigateManager` for SPA behavior. Accepts:
+
+- `active`: current tab key
+- `headerTitle` / `headerSubtitle`
+- `onNavChange`: optional override (used by root page to intercept dashboard/invoices)
+
+### Instrumentation
+
+`managerNav.ts` exposes lightweight event instrumentation:
+
+```ts
+addManagerNavListener(ev => {
+   // ev: { tab, internal, method: 'internal' | 'router' | 'hard', timestamp }
+});
+```
+
+Events fire after each navigation decision. Use `useManagerNavAnalytics` to retain a rolling buffer (default 100) and/or stream to an analytics endpoint.
+
+### Debugging Panel
+
+Include the debug panel in development to visualize navigation in real-time:
+
+```tsx
+import ManagerNavDebugPanel from '@/components/ManagerNavDebugPanel';
+
+{process.env.NODE_ENV === 'development' && <ManagerNavDebugPanel />}
+```
+
+### Testing
+
+`managerNav.test.ts` validates:
+
+- Route map keys & invoices query param
+- Internal handler bypass (dashboard/invoices)
+- Router vs hard navigation fallback
+- Instrumentation event emission (internal, router, hard)
+
+Add future integration tests by rendering `ManagerLayout` with a mocked router and simulating tab button clicks using React Testing Library.
+
+### Adding a New Tab
+
+1. Add key to `ManagerTabKey` and `managerRouteMap`.
+2. Add label entry in `ManagerTopNav` tabs array (order defines visual sequence).
+3. Create `/manager/<new-tab>/page.tsx` using `ManagerLayout` with `active="<key>"`.
+4. Update or add tests asserting key presence.
+5. (Optional) If co-located with dashboard/invoices logic, ensure it does NOT use internalHandler unless it shares the same physical route.
+
+### Accessibility Considerations
+
+- Top nav uses buttons with `aria-current="page"` for active state.
+- Section banners supply semantic headings; some pages include visually-hidden (`sr-only`) H1 to maintain structural outline.
+- Dynamic grids (e.g., calendars) may utilize `aria-live="polite"` for content changes (extend as needed for screen reader announcement fidelity).
+
+### Performance Notes
+
+Navigation avoids full-page reloads except when a hard fallback occurs (rare). Dashboard/invoices toggle is instant (state + optional URL param update). Client calendars now update query string via `router.replace` without flush/reload.
+
+---

@@ -1,21 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import ManagerHeader from '@/components/ManagerHeader';
-import ManagerTopNav from '@/components/ManagerTopNav';
+import ManagerLayout from '@/components/ManagerLayout';
 import InvitationManager from '@/components/InvitationManager';
 import ManagerSectionBanner from '@/components/ManagerSectionBanner';
 import { managerRouteMap } from '@/lib/managerNav';
 
 export default function ManagerSettingsPage() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks'>('settings');
   const [showSecurityModal, setShowSecurityModal] = useState(false);
-
-  // Navigation handler
-  const handleNav = (section: 'dashboard' | 'invoices' | 'clients' | 'analytics' | 'settings' | 'tasks') => {
-    if (section === 'settings') return;
-    window.location.href = managerRouteMap[section];
-  };
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -55,13 +47,8 @@ export default function ManagerSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb]">
-      <ManagerHeader title="SparQ Plug" subtitle="Account & Security Management" />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <ManagerTopNav active={activeTab} onChange={handleNav} />
-        
-        <div className="space-y-8">
+    <ManagerLayout active="settings" headerSubtitle="Account & Security Management">
+      <div className="space-y-8">
           <ManagerSectionBanner
             icon="⚙️"
             title="Account Settings"
@@ -72,7 +59,8 @@ export default function ManagerSettingsPage() {
           {/* Settings Sections */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Security Settings */}
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm" aria-labelledby="security-section-heading">
+              <h2 id="security-section-heading" className="sr-only">Security Settings</h2>
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
                   <span className="text-red-600 text-xl">🔒</span>
@@ -111,7 +99,8 @@ export default function ManagerSettingsPage() {
             </div>
 
             {/* Account Preferences */}
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm" aria-labelledby="preferences-section-heading">
+              <h2 id="preferences-section-heading" className="sr-only">Account Preferences</h2>
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                   <span className="text-blue-600 text-xl">👤</span>
@@ -161,7 +150,8 @@ export default function ManagerSettingsPage() {
             </div>
 
             {/* Business Information */}
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm lg:col-span-2">
+            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm lg:col-span-2" aria-labelledby="business-info-section-heading">
+              <h2 id="business-info-section-heading" className="sr-only">Business Information</h2>
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                   <span className="text-green-600 text-xl">🏢</span>
@@ -226,7 +216,8 @@ export default function ManagerSettingsPage() {
             </div>
 
             {/* Client Invitation Management */}
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm lg:col-span-2">
+            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm lg:col-span-2" aria-labelledby="invitations-section-heading">
+              <h2 id="invitations-section-heading" className="sr-only">Client Invitations</h2>
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
                   <span className="text-purple-600 text-xl">📧</span>
@@ -243,7 +234,6 @@ export default function ManagerSettingsPage() {
               />
             </div>
           </div>
-        </div>
       </div>
 
       {/* Security Modal */}
@@ -325,6 +315,6 @@ export default function ManagerSettingsPage() {
           </div>
         </div>
       )}
-    </div>
+    </ManagerLayout>
   );
 }
