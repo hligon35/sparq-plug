@@ -160,11 +160,19 @@ app.get('/_diag', (req, res) => {
   });
 });
 
-// Redirect root to role landing (prefer basePath-prefixed URL)
+// Support legacy/static site link target: /login.html -> canonical login path
+app.get('/login.html', (req, res) => {
+  return res.redirect(302, `${basePath}/login`);
+});
+
+// Root behavior: unauthenticated -> login, authenticated -> role landing
 app.get('/', (req, res) => {
-  const role = (req.session?.user?.role) || 'client';
-  const target = `${basePath}${rolePath(role)}` || rolePath(role);
-  return res.redirect(302, target);
+  if (req.session?.user?.role) {
+    const role = req.session.user.role;
+    const target = `${basePath}${rolePath(role)}` || rolePath(role);
+    return res.redirect(302, target);
+  }
+  return res.redirect(302, `${basePath}/login`);
 });
 
 // Handle any form of login path, normalize duplicates, and redirect appropriately
