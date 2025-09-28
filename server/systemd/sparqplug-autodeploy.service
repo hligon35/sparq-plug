@@ -1,0 +1,27 @@
+[Unit]
+Description=SparQ Plug auto-deploy (pull/build/restart via systemd)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/sparqy/GetSparQdDotCom/SparQDigital/sparq-plug
+ExecStart=/usr/bin/env bash -lc "scripts/deploy-systemd.sh"
+User=sparqy
+Group=sparqy
+Environment=DEPLOY_BRANCH=server
+TimeoutStartSec=900
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=6
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=false
+PrivateTmp=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+RestrictNamespaces=true
+
+[Install]
+WantedBy=multi-user.target

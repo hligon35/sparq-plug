@@ -1,0 +1,48 @@
+name: Server Auto Deploy (systemd)
+
+on:
+  push:
+    branches: [ server ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+            ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Add known_hosts (github + target)
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null
+          if [ -n "${{ secrets.SSH_HOST }}" ]; then
+            ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+          fi
+
+      - name: Run remote deploy script
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ]; then
+            echo "SSH_HOST/SSH_USER not set" >&2; exit 1; fi
+          ssh -o StrictHostKeyChecking=yes "$SSH_USER@$SSH_HOST" 'bash -lc "cd /home/sparqy/GetSparQdDotCom/SparQDigital/sparq-plug && scripts/deploy-systemd.sh"'
+
+      - name: Post health check
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh -o StrictHostKeyChecking=yes "$SSH_USER@$SSH_HOST" 'bash -lc "curl -fsS -m 8 http://localhost:3000/healthz || true"'
+
+      - name: Summary
+        run: echo "Deployment workflow completed."

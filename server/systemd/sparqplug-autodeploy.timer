@@ -1,0 +1,12 @@
+[Unit]
+Description=Run SparQ Plug auto-deploy every 5 minutes
+
+[Timer]
+OnBootSec=2m
+OnUnitActiveSec=5m
+AccuracySec=30s
+Unit=sparqplug-autodeploy.service
+Persistent=true
+
+[Install]
+WantedBy=timers.target
