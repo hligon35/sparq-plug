@@ -131,7 +131,8 @@ app.use((req, res, next) => {
 
   if (req.session && req.session.user) return next();
 
-  const portal = process.env.PORTAL_HOST || 'portal.getsparqd.com';
+  // Deprecated: legacy portal host removed. Use PORTAL_HOST if explicitly set; otherwise disable SSO flow.
+  const portal = process.env.PORTAL_HOST || 'disabled';
   const disableSSO = process.env.DISABLE_SSO === 'true' || portal === 'disabled' || portal === req.headers.host;
   if (disableSSO) {
     // Allow request to proceed to upstream so app can render its own login / access control
@@ -168,7 +169,8 @@ app.get('/', (req, res) => {
 
 // Handle any form of login path, normalize duplicates, and redirect appropriately
 app.get(['/login', '/app/login', '/app/app/login'], (req, res) => {
-  const portal = process.env.PORTAL_HOST || 'portal.getsparqd.com';
+  // Deprecated: legacy portal host removed. Use PORTAL_HOST if explicitly set; otherwise bypass external portal.
+  const portal = process.env.PORTAL_HOST || 'disabled';
   const host = req.headers.host || 'sparqplug.getsparqd.com';
   const proto = 'https';
 
