@@ -56,16 +56,11 @@ export async function middleware(req: NextRequest) {
   return withSecurityHeaders(NextResponse.next());
 }
 
-function redirect(req: NextRequest, isDev: boolean) {
-  if (isDev) {
-    const url = req.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
-  }
-  const currentUrl = req.nextUrl.clone();
-  const rt = encodeURIComponent(currentUrl.toString());
-  const target = `https://portal.getsparqd.com/login?sso=1&returnTo=${rt}`;
-  return NextResponse.redirect(target);
+function redirect(req: NextRequest, _isDev: boolean) {
+  // Always send unauthenticated users to local login (legacy external portal removed)
+  const url = req.nextUrl.clone();
+  url.pathname = '/login';
+  return NextResponse.redirect(url);
 }
 
 export const config = {

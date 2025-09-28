@@ -31,11 +31,7 @@ export default function LoginPage() {
     }
   }
 
-  function handlePortalRedirect() {
-    const rt = encodeURIComponent(window.location.href.replace('/login', ''));
-    const target = `https://portal.getsparqd.com/login?sso=1&returnTo=${rt}`;
-    window.location.assign(target);
-  }
+  // Legacy external portal SSO removed; keeping placeholder for future external SSO integration.
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-12">
@@ -105,14 +101,11 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-8 pt-6 border-t border-slate-200 text-center space-y-3">
-            <button onClick={handlePortalRedirect} className="text-xs text-slate-500 hover:text-slate-700 transition">
-              Use Portal SSO instead
-            </button>
-            <p className="text-[10px] text-slate-400">
-              {process.env.NODE_ENV === 'development' && (
+            {process.env.NODE_ENV === 'development' && (
+              <p className="text-[10px] text-slate-400">
                 <a href="/devLogin" className="underline hover:text-[#1d74d0]">Dev role switch</a>
-              )}
-            </p>
+              </p>
+            )}
           </div>
         </div>
         <p className="mt-6 text-center text-[11px] text-slate-400">Secured session • JWT cookie prototype</p>
