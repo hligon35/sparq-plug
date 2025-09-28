@@ -126,8 +126,16 @@ app.use((req, res, next) => {
     req.path.startsWith('/_next') || req.path.startsWith('/assets') || req.path.startsWith('/favicon')
   ) return next();
 
-  const loginLike = req.path === '/login' || req.path === `${bp}/login` || req.path.startsWith(`${bp}${bp}/login`);
-  if (loginLike) return next();
+  // Treat /login.html and root as local-auth entry points; allow them through without external SSO redirect
+  const loginLike = (
+    req.path === '/login' ||
+    req.path === '/login.html' ||
+    req.path === `${bp}/login` ||
+    req.path === `${bp}/login.html` ||
+    req.path.startsWith(`${bp}${bp}/login`)
+  );
+  const rootPath = req.path === '/' || (bp && (req.path === bp || req.path === `${bp}/`));
+  if (loginLike || rootPath) return next();
 
   if (req.session && req.session.user) return next();
 
