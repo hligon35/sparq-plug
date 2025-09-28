@@ -29,7 +29,7 @@ ip -4 route || true
 echo "RESOLV.CONF:"; cat /etc/resolv.conf 2>/dev/null || true
 
 log "DNS LOOKUPS"
-for host in getsparqd.com portal.getsparqd.com sparqplug.getsparqd.com; do
+for host in getsparqd.com sparqplug.getsparqd.com; do
   getent ahosts "$host" || true
 done
 

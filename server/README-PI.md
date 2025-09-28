@@ -1,9 +1,9 @@
-# Raspberry Pi deployment: getsparqd.com, portal.getsparqd.com, sparqplug.getsparqd.com
+# Raspberry Pi deployment: getsparqd.com, sparqplug.getsparqd.com (portal retired)
 
 This folder ships a minimal, repeatable deployment for a Raspberry Pi 5 (8GB):
 
 - getsparqd.com — static landing site (served by nginx)
-- portal.getsparqd.com — your second app (built from its own repo via Dockerfile)
+// portal.getsparqd.com (retired)
 - sparqplug.getsparqd.com — this Next.js app (built from this repo)
 
 Cloudflare Tunnel (cloudflared) routes traffic by hostname to each service. No public ports are required on the Pi.

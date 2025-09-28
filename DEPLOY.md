@@ -1,12 +1,11 @@
 # Deploying SparQ stack (Pi 5 + Cloudflare Tunnel)
 
-This repo now includes a Raspberry Pi deployment bundle to run three sites together and auto-update every 6 hours:
+This repo now includes a Raspberry Pi deployment bundle to run two sites together (portal retired) and auto-update every 6 hours:
 
 - getsparqd.com (static site)
-- portal.getsparqd.com (portal app from separate repo)
 - sparqplug.getsparqd.com (this app)
 
-See server/README-PI.md for the turnkey setup steps. In short, on the Pi:
+See server/README-PI.md for the turnkey setup steps. (Legacy portal host portal.getsparqd.com has been removed.) In short, on the Pi:
 
 1) Install Docker and the compose plugin
 2) Clone this repo and cd server/
