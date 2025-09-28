@@ -1,9 +1,9 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function ResetPasswordPage() {
-  const params = useSearchParams();
+function ResetPasswordInner() {
+  const params = useSearchParams(); // Now safely within Suspense wrapper
   const token = params.get('token') || '';
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -54,5 +54,13 @@ export default function ResetPasswordPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-600">Loading…</div>}>
+      <ResetPasswordInner />
+    </Suspense>
   );
 }

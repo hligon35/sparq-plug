@@ -72,10 +72,11 @@ app.use((req, res, next) => {
     while (fixed.startsWith(bp + bp)) fixed = fixed.slice(bp.length);
     return res.redirect(301, fixed);
   }
-  // Collapse trailing slash variations: /app -> /app/ for consistent upstream handling
-  if (req.url === bp) {
-    return res.redirect(301, `${bp}/`);
-  }
+  // Trailing slash normalization: previously redirected /app -> /app/.
+  // Disabled to avoid potential redirect loop with upstream Next.js which may redirect /app/ -> /app.
+  // if (req.url === bp) {
+  //   return res.redirect(301, `${bp}/`);
+  // }
   return next();
 });
 
@@ -111,11 +112,11 @@ function rolePath(role) {
   return role === 'admin' ? '/admin' : role === 'manager' ? '/manager' : '/client';
 }
 
-// Require authenticated session for all non-health routes except login endpoints we handle below
+// Session / SSO gate: optionally disable SSO redirects with DISABLE_SSO=true or PORTAL_HOST=disabled
 app.use((req, res, next) => {
   if (req.path === '/healthz') return next();
-  // Allow Next.js internals and static assets under basePath (e.g., /app/_next/...)
   const bp = basePath || '';
+  // Public / framework assets
   if (
     (bp && req.path.startsWith(`${bp}/_next`)) ||
     (bp && req.path.startsWith(`${bp}/assets`)) ||
@@ -123,14 +124,19 @@ app.use((req, res, next) => {
     (bp && (req.path === `${bp}` || req.path === `${bp}/`)) ||
     req.path === '/_diag' ||
     req.path.startsWith('/_next') || req.path.startsWith('/assets') || req.path.startsWith('/favicon')
-  ) {
-    return next();
-  }
-  // Allow raw login paths to fall through to our login handler
+  ) return next();
+
   const loginLike = req.path === '/login' || req.path === `${bp}/login` || req.path.startsWith(`${bp}${bp}/login`);
   if (loginLike) return next();
+
   if (req.session && req.session.user) return next();
+
   const portal = process.env.PORTAL_HOST || 'portal.getsparqd.com';
+  const disableSSO = process.env.DISABLE_SSO === 'true' || portal === 'disabled' || portal === req.headers.host;
+  if (disableSSO) {
+    // Allow request to proceed to upstream so app can render its own login / access control
+    return next();
+  }
   const host = req.headers.host || 'sparqplug.getsparqd.com';
   const proto = 'https';
   const returnTo = encodeURIComponent(`${proto}://${host}${req.originalUrl || '/'}`);
