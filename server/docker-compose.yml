@@ -37,16 +37,7 @@ services:
     restart: unless-stopped
 
   # Portal app (portal.getsparqd.com), built from external repo
-  portal-app:
-    build:
-      context: ./portal-app/src
-      dockerfile: ${PORTAL_DOCKERFILE:-Dockerfile}
-    environment:
-      NODE_ENV: production
-      SSO_JWT_SECRET: "${SSO_JWT_SECRET:-change-me}"
-    expose:
-      - "3003"
-    restart: unless-stopped
+  # (legacy portal app removed)
 
   # Static landing site (getsparqd.com) served by nginx
   static-site:
@@ -66,7 +57,6 @@ services:
     depends_on:
       - deployer
       - sparqplug
-      - portal-app
       - static-site
     restart: unless-stopped
 
