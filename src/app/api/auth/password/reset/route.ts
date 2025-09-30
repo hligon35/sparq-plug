@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { sendEmail, passwordResetSuccessTemplate } from '@/lib/email';
-import { rateLimitCheck, rateLimitKeyFromRequest, rateLimitHeaders } from '@/lib/rateLimit';
-import { evaluatePassword } from '@/lib';
+import { evaluatePassword } from '@/lib/passwordPolicy';
 import { audit } from '@/lib/audit';
+import { rateLimitCheck, rateLimitHeaders, rateLimitKeyFromRequest } from '@/lib/rateLimit';
 import { scheduleMaintenance } from '@/lib/maintenance';
 
 export async function POST(req: NextRequest) {
@@ -15,33 +14,37 @@ export async function POST(req: NextRequest) {
     const key = rateLimitKeyFromRequest({ ip, path: '/api/auth/password/reset' });
     const limit = rateLimitCheck(key, limiterOpts);
     if (!limit.allowed) {
-      const r = NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+      const res = NextResponse.json({ error: 'Too many requests' }, { status: 429 });
       const hdrs = rateLimitHeaders(limit.remaining, limiterOpts);
-      Object.entries(hdrs).forEach(([k,v]) => r.headers.set(k,v));
-      return r;
+      Object.entries(hdrs).forEach(([k,v]) => res.headers.set(k,v));
+      return res;
     }
     const { token, password } = await req.json();
-    if (!token || !password) return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+    if (!token || !password) return NextResponse.json({ error: 'Missing token or password' }, { status: 400 });
     const pwEval = evaluatePassword(password);
     if (!pwEval.ok) return NextResponse.json({ error: 'Weak password', details: pwEval.errors }, { status: 400 });
     const hash = crypto.createHash('sha256').update(token).digest('hex');
-  const record = await prisma.passwordResetToken.findFirst({ where: { tokenHash: hash, usedAt: null, expiresAt: { gt: new Date() } } });
-    if (!record) return NextResponse.json({ error: 'Invalid or expired token' }, { status: 400 });
-    const newHash = await bcrypt.hash(password, 12);
-    await prisma.$transaction([
-      prisma.user.update({ where: { id: record.userId }, data: { passwordHash: newHash } }),
-      prisma.passwordResetToken.update({ where: { id: record.id }, data: { usedAt: new Date() } })
-    ]);
-    const user = await prisma.user.findUnique({ where: { id: record.userId } });
-    if (user) {
-      await sendEmail({ to: user.email, subject: 'Your password was changed', html: passwordResetSuccessTemplate(), template: 'password-reset-success' });
-      await audit({ actor: user.email, tenantId: 'system', action: 'auth.password.reset.complete', target: `user:${user.id}` });
+    const prt = await prisma.passwordResetToken.findFirst({ where: { tokenHash: hash }, include: { user: true } });
+    const now = new Date();
+    if (!prt || prt.expiresAt < now) {
+      // Clean up if expired
+      if (prt) await prisma.passwordResetToken.delete({ where: { id: prt.id } });
+      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 400 });
     }
-  const res = NextResponse.json({ ok: true });
-  const hdrs = rateLimitHeaders(limit.remaining, limiterOpts);
-  Object.entries(hdrs).forEach(([k,v]) => res.headers.set(k,v));
-  return res;
-  } catch {
+    const passwordHash = await bcrypt.hash(password, 12);
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: prt.userId }, data: { passwordHash } }),
+      prisma.passwordResetToken.deleteMany({ where: { userId: prt.userId } })
+    ]);
+    await audit({ actor: prt.user.email, tenantId: 'system', action: 'auth.password.reset', target: `user:${prt.userId}` });
+    const res = NextResponse.json({ ok: true });
+    const hdrs = rateLimitHeaders(limit.remaining, limiterOpts);
+    Object.entries(hdrs).forEach(([k,v]) => res.headers.set(k,v));
+    // background cleanup
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    scheduleMaintenance();
+    return res;
+  } catch (e:any) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
