@@ -37,8 +37,14 @@ export async function POST(req: NextRequest) {
     const base = process.env.NEXT_PUBLIC_BASE_URL || req.nextUrl.origin;
     const link = `${base}/reset-password?token=${raw}`;
     await sendEmail({ to: user.email, subject: 'Reset your password', html: passwordResetTemplate(link), template: 'password-reset-request' });
+    const debugMode = process.env.RESET_TOKEN_DEBUG === '1' || process.env.RESET_TOKEN_DEBUG === 'true';
   await audit({ actor: user.email, tenantId: 'system', action: 'auth.password.reset.request', target: `user:${user.id}` });
-  const res = NextResponse.json({ ok: true });
+  const payload: Record<string, any> = { ok: true };
+  if (debugMode) {
+    payload.debugToken = raw;
+    payload.debugLink = link;
+  }
+  const res = NextResponse.json(payload);
   const hdrs = rateLimitHeaders(limit.remaining, limiterOpts);
   Object.entries(hdrs).forEach(([k,v]) => res.headers.set(k,v));
   // background cleanup
