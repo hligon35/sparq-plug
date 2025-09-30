@@ -1,0 +1,20 @@
+version: '3.9'
+services:
+  gateway:
+    build: .. # adjust Dockerfile context if needed
+    command: node gateway/server.js
+    environment:
+      APP_URL: http://next:3000
+      APP_BASE_PATH: /app
+      DISABLE_SSO: 'true'
+      FORCE_LOCAL_LOGIN: 'true'
+      PORT: 4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      - next
+  next:
+    build: ../app # path to your Next.js app
+    command: "node server.js" # or next start
+    expose:
+      - "3000"

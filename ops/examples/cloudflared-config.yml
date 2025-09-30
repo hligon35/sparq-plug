@@ -1,0 +1,33 @@
+# Example Cloudflare Tunnel config for SparQ Plug
+# Place typically at ~/.cloudflared/config.yml (or specify with --config)
+# Then run: cloudflared tunnel run sparqplug (assuming tunnel name is 'sparqplug')
+# Ensure the DNS CNAME for sparqplug points to the tunnel UUID (already present per your records).
+
+# Replace with your actual tunnel UUID
+TunnelID: 29f4117c-e471-46da-8488-fe38909c9e8b
+# Optional human-readable name (depends on your cloudflared version)
+# tunnel: sparqplug
+
+# Credentials file usually auto-generated: ~/.cloudflared/29f4117c-e471-46da-8488-fe38909c9e8b.json
+# Make sure it matches the TunnelID above.
+
+ingress:
+  # 1. Route sparqplug subdomain to the gateway (port 4000)
+  - hostname: sparqplug.getsparqd.com
+    service: http://localhost:4000
+    # Optionally add originRequest tweaks:
+    originRequest:
+      connectTimeout: 10s
+      noTLSVerify: true
+
+  # (Optional) Additional internal hostnames -> services can go here.
+  # - hostname: api.getsparqd.com
+  #   service: http://localhost:5000
+
+  # 2. Catch-all: return 404 for anything not matched
+  - service: http_status:404
+
+# (Optional) Warp routing / logging / metrics examples:
+# metrics: 127.0.0.1:4317
+# logfile: /var/log/cloudflared.log
+# loglevel: info

@@ -1,0 +1,26 @@
+HTTP/1.1 404 Not Found
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: same-origin
+Origin-Agent-Cluster: ?1
+referrer-policy: strict-origin-when-cross-origin
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+x-content-type-options: nosniff
+X-DNS-Prefetch-Control: off
+X-Download-Options: noopen
+X-Permitted-Cross-Domain-Policies: none
+X-XSS-Protection: 0
+x-frame-options: SAMEORIGIN
+permissions-policy: camera=(), microphone=(), geolocation=(self)
+content-security-policy: default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; frame-ancestors 'self'; frame-src 'self' https:; connect-src 'self' https:
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-nextjs-cache: HIT
+x-nextjs-prerender: 1, 1
+x-nextjs-stale-time: 300
+x-powered-by: Next.js
+etag: "rpxhd4k4ig6lo"
+content-type: text/html; charset=utf-8
+content-length: 8558
+date: Mon, 29 Sep 2025 18:28:41 GMT
+connection: close
+

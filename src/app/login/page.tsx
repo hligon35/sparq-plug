@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { withBasePath } from '@/lib/basePath';
 import { useRouter } from 'next/navigation';
 
 /**
@@ -19,7 +20,11 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+      const res = await fetch(withBasePath('/api/auth/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Login failed');
       const role = data.role;

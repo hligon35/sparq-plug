@@ -15,6 +15,6 @@
     }
   ],
   "rules": {
-    "no-floating-promises": "off" // rule referenced but not installed; silence until plugin added
+    "no-floating-promises": "off"
   }
 }

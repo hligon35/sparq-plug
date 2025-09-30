@@ -1,0 +1,24 @@
+[gateway] express-session not installed -> session support disabled
+[gateway] connect-redis not installed -> Redis session store disabled
+[gateway] redis client not installed -> Redis session store disabled
+[gateway] helmet not installed -> security headers reduced
+[gateway] Session middleware disabled (express-session missing)
+/home/sparqy/GetSparQdDotCom/SparQDigital/sparq-plug/node_modules/path-to-regexp/dist/index.js:96
+            throw new PathError(`Missing parameter name at index ${index}`, str);
+            ^
+
+PathError [TypeError]: Missing parameter name at index 19: /_diag/chunk/:rel(*); visit https://git.new/pathToRegexpError for info
+    at name (/home/sparqy/GetSparQdDotCom/SparQDigital/sparq-plug/node_modules/path-to-regexp/dist/index.js:96:19)
+    at parse (/home/sparqy/GetSparQdDotCom/SparQDigital/sparq-plug/node_modules/path-to-regexp/dist/index.js:113:68)
+    at pathToRegexp (/home/sparqy/GetSparQdDotCom/SparQDigital/sparq-plug/node_modules/path-to-regexp/dist/index.js:267:58)
+    at Object.match (/home/sparqy/GetSparQdDotCom/SparQDigital/sparq-plug/node_modules/path-to-regexp/dist/index.js:237:30)
+    at matcher (/home/sparqy/GetSparQdDotCom/SparQDigital/sparq-plug/node_modules/router/lib/layer.js:86:23)
+    at new Layer (/home/sparqy/GetSparQdDotCom/SparQDigital/sparq-plug/node_modules/router/lib/layer.js:93:62)
+    at Function.route (/home/sparqy/GetSparQdDotCom/SparQDigital/sparq-plug/node_modules/router/index.js:428:17)
+    at Function.route (/home/sparqy/GetSparQdDotCom/SparQDigital/sparq-plug/node_modules/express/lib/application.js:257:22)
+    at app.<computed> [as get] (/home/sparqy/GetSparQdDotCom/SparQDigital/sparq-plug/node_modules/express/lib/application.js:478:22)
+    at Object.<anonymous> (/home/sparqy/GetSparQdDotCom/SparQDigital/sparq-plug/gateway/server.js:180:5) {
+  originalPath: '/_diag/chunk/:rel(*)'
+}
+
+Node.js v20.19.5

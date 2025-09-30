@@ -1,0 +1,38 @@
+[
+  {
+    "id": "1759113122446-vsek8i",
+    "name": "B3U",
+    "contactPerson": "Bridget \"Bree \" Charles",
+    "email": "breecharles@b3unstoppable.net",
+    "website": "https://www.b3unstoppable.net",
+    "industry": "Other",
+    "companySize": "1-10",
+    "services": [
+      "Social Media Management",
+      "Analytics & Reporting",
+      "Brand Development",
+      "Influencer Marketing"
+    ],
+    "socialPlatforms": [
+      "Facebook",
+      "TikTok",
+      "Instagram",
+      "YouTube",
+      "LinkedIn"
+    ],
+    "monthlyBudget": 250,
+    "currentFollowers": 0,
+    "contentPreferences": [
+      "Photos",
+      "Live Streams",
+      "Videos",
+      "Reels",
+      "User-Generated Content"
+    ],
+    "postingFrequency": "3-4 times per week",
+    "timezone": "EST",
+    "status": "Active",
+    "createdAt": "2025-09-29T02:32:02.445Z",
+    "updatedAt": "2025-09-29T02:32:02.445Z"
+  }
+]
