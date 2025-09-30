@@ -42,7 +42,7 @@ export async function middleware(req: NextRequest) {
   if (protectedPrefixes.some(p => url.pathname === p || url.pathname.startsWith(p + '/'))) {
     if (!payload) {
       // Redirect to static gateway login page
-      const login = '/app/login.html';
+  const login = '/app/login';
       const res = NextResponse.redirect(new URL(login, req.url));
       res.headers.set('x-auth-redirect', '1');
       return res;

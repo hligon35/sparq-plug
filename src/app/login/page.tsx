@@ -70,7 +70,7 @@ export default function LoginPage() {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label htmlFor="password" className="text-sm font-medium text-slate-700">Password</label>
-                  <a href="/forgot-password" className="text-xs font-medium text-[#1d74d0] hover:text-[#155ba0]">Forgot password?</a>
+                  <a href="/app/forgot-password" className="text-xs font-medium text-[#1d74d0] hover:text-[#155ba0]">Forgot password?</a>
                 </div>
                 <input
                   id="password"
@@ -100,7 +100,7 @@ export default function LoginPage() {
 
           <div className="mt-8 space-y-4 text-center">
             <p className="text-sm text-slate-600">
-              Need an account? <a href="/request-access" className="font-medium text-[#1d74d0] hover:text-[#155ba0]">Request access</a>
+              Need an account? <a href="/app/request-access" className="font-medium text-[#1d74d0] hover:text-[#155ba0]">Request access</a>
             </p>
             <p className="text-xs text-slate-400">Issues signing in? Contact your administrator.</p>
           </div>

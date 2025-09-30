@@ -299,10 +299,15 @@ app.get(['/login.html', `${basePath}/login.html`], (req, res, next) => {
   const host = req.headers.host || 'sparqplug.getsparqd.com';
   const forceLocal = process.env.FORCE_LOCAL_LOGIN === 'true';
   const disableSSO = forceLocal || process.env.DISABLE_SSO === 'true' || portal === 'disabled' || portal === host;
-  if (!disableSSO) return res.redirect(302, `${basePath}/login`); // fall through to SSO/Next route if enabled
+  const forceStatic = process.env.FORCE_STATIC_LOGIN === 'true';
+  // Preferred: dynamic Next page at /app/login (or basePath/login). Serve static only in fallback/dev or when forced.
+  if (!forceStatic) {
+    return res.redirect(302, `${basePath}/login`);
+  }
+  if (!disableSSO) return res.redirect(302, `${basePath}/login`);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store');
-  res.setHeader('X-Login-Mode', 'static-local');
+  res.setHeader('X-Login-Mode', forceStatic ? 'static-forced' : 'static-local');
   return res.end(STATIC_LOGIN_HTML(process.env.LOGIN_PAGE_TITLE || 'Login'));
 });
 
@@ -329,7 +334,9 @@ app.post(`${basePath}/api/dev-login`, express.json(), (req, res) => {
   const { username, password } = req.body || {};
   if (!username || !password) return res.status(400).json({ error: 'missing_credentials' });
   // Primitive dev auth: accept anything, assign role based on simple heuristic
-  const role = username.startsWith('admin') ? 'admin' : username.startsWith('mgr') ? 'manager' : 'client';
+  // Basic dev role mapping: explicit test admin usernames or prefix-based
+  const adminUsers = (process.env.DEV_ADMIN_USERS || 'hligon,bhall').split(',').map(s=>s.trim()).filter(Boolean);
+  const role = adminUsers.includes(username) ? 'admin' : username.startsWith('admin') ? 'admin' : username.startsWith('mgr') ? 'manager' : 'client';
   req.session.user = { username, role };
   return res.json({ ok: true, role });
 });
@@ -343,6 +350,17 @@ app.get('/', (req, res) => {
   }
   return res.redirect(302, `${basePath}/login`); // direct to actual React route
 });
+
+// BasePath root behavior (e.g. /app or /app/) so that the SPA redirect after dev-login hits gateway logic
+if (basePath && basePath !== '/') {
+  app.get([basePath, `${basePath}/`], (req, res) => {
+    if (req.session?.user?.role) {
+      const role = req.session.user.role;
+      return res.redirect(302, `${basePath}${rolePath(role)}`);
+    }
+    return res.redirect(302, `${basePath}/login`);
+  });
+}
 
 // Handle any form of login path, normalize duplicates, and redirect appropriately
 app.get(['/login', '/app/login', '/app/app/login'], (req, res, next) => {
@@ -403,21 +421,21 @@ app.use(
     },
     // Avoid double-prefixing when incoming path already has basePath
     pathRewrite: (path) => {
-  const bp = basePath || '';
-      // Normalize duplicate base paths just in case
+      const bp = basePath || '';
+      // 1. Collapse duplicate basePath segments (/app/app/.. -> /app/..)
       if (bp && path.startsWith(bp + bp)) {
-        let fixed = path; while (fixed.startsWith(bp + bp)) fixed = fixed.slice(bp.length); path = fixed;
+        let fixed = path;
+        while (fixed.startsWith(bp + bp)) fixed = fixed.slice(bp.length);
+        path = fixed;
       }
-      // Static assets: always serve from upstream /_next, regardless of incoming prefix
-      if (path.startsWith('/_next')) return path; // already correct
-      if (bp && path.startsWith(`${bp}/_next`)) return path; // do not strip basePath for Next static // strip basePath
-      // Common static roots
-      if (path.startsWith('/favicon') || path.startsWith('/assets')) return path;
-      if (bp && path.startsWith(`${bp}/favicon`)) return path; // do not strip basePath for favicon
-      if (bp && path.startsWith(`${bp}/assets`)) return path; // do not strip basePath for assets
-      // For app routes, ensure basePath is present exactly once
-      if (!bp) return path;
-      return path.startsWith(bp) ? path : `${bp}${path}`;
+      if (!bp) return path || '/';
+      // 2. Strip leading basePath so upstream (which is NOT configured with basePath) gets root-relative paths.
+      if (path === bp) return '/';
+      if (path === `${bp}/`) return '/';
+      if (path.startsWith(`${bp}/`)) path = path.slice(bp.length);
+      // 3. Ensure path begins with '/'
+      if (!path.startsWith('/')) path = '/' + path;
+      return path || '/';
     },
     onProxyReq: (proxyReq, req) => {
       try {
