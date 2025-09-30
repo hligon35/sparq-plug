@@ -18,6 +18,7 @@
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:studio": "prisma studio",
     "seed:admin": "node scripts/seedAdmin.mjs"
+  ,"seed:users": "node scripts/seedUsers.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",

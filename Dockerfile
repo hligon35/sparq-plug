@@ -1,3 +1,31 @@
+## Multi-stage production build for SparQ Plug (Next.js + Gateway)
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --legacy-peer-deps
+
+FROM node:20-alpine AS builder
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=3000
+# Copy only necessary runtime files
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/gateway ./gateway
+COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/src ./src
+# Expose Next on 3000; run gateway separately or in another container if desired
+CMD ["npm","run","start"]
 # Multi-stage Dockerfile for self-hosting Next.js (app dir)
 # Build stage
 FROM node:20-alpine AS builder
