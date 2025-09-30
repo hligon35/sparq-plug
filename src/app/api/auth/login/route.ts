@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { signSession, buildSessionCookie, coerceRole } from '@/lib/auth';
+import { signSession, buildSessionCookie, coerceRole, RoleValue } from '@/lib/auth';
 import { rateLimitCheck, rateLimitKeyFromRequest, rateLimitHeaders } from '@/lib/rateLimit';
 import { audit } from '@/lib/audit';
 import { scheduleMaintenance } from '@/lib/maintenance';
@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    const role = coerceRole(user.role);
-    const token = await signSession({ sub: user.id, role });
+  const role: RoleValue = coerceRole(user.role);
+  const token = await signSession({ sub: user.id, role });
     const res = NextResponse.json({ ok: true, role });
     res.headers.set('Set-Cookie', buildSessionCookie(token));
     await audit({ actor: user.email, tenantId: 'system', action: 'auth.login.success', target: `user:${user.id}`, metadata: { loginAs: identifier } });
