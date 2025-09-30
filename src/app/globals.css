@@ -1,3 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom light background gradient (used by various auth pages) */
+body { font-feature-settings: "kern"; -webkit-font-smoothing: antialiased; }
 @import "tailwindcss";
 
 :root {
