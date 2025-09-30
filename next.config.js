@@ -1,14 +1,13 @@
 // Unified Next.js configuration (JS version) with dynamic basePath logic previously in next.config.ts
 // Dev: serve at root unless APP_BASE_PATH explicitly set (allows quick local testing without /app prefix)
 // Prod: default to /app unless overridden by APP_BASE_PATH.
-const isDev = process.env.NODE_ENV === 'development';
-const basePath = isDev
-  ? (process.env.APP_BASE_PATH !== undefined ? process.env.APP_BASE_PATH : '')
-  : (process.env.APP_BASE_PATH !== undefined ? process.env.APP_BASE_PATH : '/app');
+// We serve the Next.js app at root internally and let the gateway (/app prefix) rewrite paths.
+// This avoids Next.js needing a compiled basePath and eliminates mismatches causing 404/500 on assets.
+const basePath = '';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  basePath,
+  basePath, // always '' (gateway adds external /app prefix)
   env: { NEXT_PUBLIC_BASE_PATH: basePath },
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
@@ -46,7 +45,7 @@ const nextConfig = {
       },
     ];
   },
-  ...(isDev && { reactStrictMode: true, swcMinify: true }),
+  // React strict mode intentionally disabled in prod build simplification. Enable locally if desired.
 };
 
 module.exports = nextConfig;

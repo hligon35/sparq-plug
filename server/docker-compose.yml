@@ -6,10 +6,9 @@ services:
       dockerfile: Dockerfile
     environment:
       - NODE_ENV=production
-      - GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET}
+      - GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET:-d9f3a7c1-4b2e-4e8f-9a6d-2f8c3e7b1a9f}
       - REPO_OWNER=${REPO_OWNER:-hligon35}
       - MAIN_REPO=${MAIN_REPO:-sparq-plug}
-      - PORTAL_REPO_NAME=${PORTAL_REPO_NAME:-sparq-dash}
       - STATIC_REPO_NAME=${STATIC_REPO_NAME:-sparq-landing}
       - ROOT_HOST=${ROOT_HOST:-getsparqd.com}
     volumes:

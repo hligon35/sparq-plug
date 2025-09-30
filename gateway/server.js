@@ -36,6 +36,13 @@ const basePath = (() => {
   return bp;
 })();
 const upstream = process.env.APP_URL || 'http://localhost:3000';
+const enablePathDebug = process.env.DEBUG_PATH_REWRITE === 'true';
+const stripBasePath = process.env.GATEWAY_STRIP_BASEPATH !== 'false'; // default true; set to 'false' to disable stripping
+// Flag to indicate whether the upstream Next.js build itself is configured with the basePath.
+// We recently removed the basePath from the Next build; therefore upstreamHasBasePath should be false
+// and the gateway must strip the external basePath for ALL application routes (not just assets) to avoid 404s.
+// Set UPSTREAM_HAS_BASEPATH=true if you rebuild Next with the basePath again.
+const upstreamHasBasePath = process.env.UPSTREAM_HAS_BASEPATH === 'true';
 
 const redisClient = (createClient && process.env.REDIS_URL) ? createClient({ url: process.env.REDIS_URL }) : null;
 let storeReady = false;
@@ -147,14 +154,14 @@ app.get('/_app_health', async (req, res) => {
   const bp = basePath || '';
   try {
     const t0 = Date.now();
-    const rRoot = await fetch(upstream + (bp || '') + '/', { method: 'HEAD' }).catch(() => null);
+    const rRoot = await fetch(upstream + (upstreamHasBasePath ? (bp || '') : '') + '/', { method: 'HEAD' }).catch(() => null);
     results.checks.root = rRoot ? { status: rRoot.status, ms: Date.now() - t0 } : { error: 'no response' };
   } catch (e) {
     results.checks.root = { error: e.message };
   }
   try {
     const t1 = Date.now();
-    const rChunk = await fetch(upstream + (bp || '') + '/_next/static/chunks', { method: 'HEAD' }).catch(() => null);
+    const rChunk = await fetch(upstream + (upstreamHasBasePath ? (bp || '') : '') + '/_next/static/chunks', { method: 'HEAD' }).catch(() => null);
     results.checks.chunks = rChunk ? { status: rChunk.status, ms: Date.now() - t1 } : { error: 'no response' };
   } catch (e) {
     results.checks.chunks = { error: e.message };
@@ -230,7 +237,7 @@ app.get(/^\/_diag\/chunk\/(.+)$/i, async (req, res) => {
   try {
     const rel = (req.params[0] || '').replace(/^\/+/, '');
     if (!rel) return res.status(400).json({ ok: false, error: 'missing_path' });
-    const upstreamUrl = `${upstream}${basePath}/_next/static/chunks/${rel}`;
+  const upstreamUrl = upstream + (upstreamHasBasePath ? basePath : '') + `/_next/static/chunks/${rel}`;
     const t0 = Date.now();
     let r;
     try { r = await fetch(upstreamUrl, { method: 'HEAD' }); } catch (err) { r = { status: 0, _err: err }; }
@@ -245,6 +252,44 @@ app.get(/^\/_diag\/chunk\/(.+)$/i, async (req, res) => {
   } catch (e) {
     return res.status(500).json({ ok: false, error: e.message });
   }
+});
+
+// Comprehensive upstream connectivity check: root, login, healthz, static chunk
+app.get('/_diag/upstream-check', async (req, res) => {
+  const bp = basePath || '';
+  const report = { upstream, basePath: bp, results: {}, now: new Date().toISOString() };
+  const targets = [
+    { name: 'root', url: upstream + (upstreamHasBasePath ? bp : '') + '/' },
+    { name: 'loginPage', url: upstream + (upstreamHasBasePath ? bp : '') + '/login' },
+    { name: 'healthzApp', url: upstream + (upstreamHasBasePath ? bp : '') + '/api/healthz' },
+    { name: 'staticChunks', url: upstream + (upstreamHasBasePath ? bp : '') + '/_next/static/' }
+  ];
+  for (const t of targets) {
+    try {
+      const t0 = Date.now();
+      const r = await fetch(t.url, { method: 'HEAD' }).catch(()=> null);
+      report.results[t.name] = r ? { status: r.status, ms: Date.now() - t0 } : { error: 'no_response' };
+    } catch (e) {
+      report.results[t.name] = { error: e.message };
+    }
+  }
+  res.json(report);
+});
+
+// Lightweight gateway internal state
+app.get('/_diag/gateway-state', (req, res) => {
+  res.json({
+    ok: true,
+    basePath,
+    upstream,
+    upstreamHasBasePath,
+    stripBasePath,
+    enablePathDebug,
+    pid: process.pid,
+    uptimeSec: process.uptime(),
+    memory: process.memoryUsage(),
+    time: new Date().toISOString()
+  });
 });
 
 // Real static login landing page (served by gateway) when SSO is disabled/forced.
@@ -369,27 +414,26 @@ app.get(['/login', '/app/login', '/app/app/login'], (req, res, next) => {
   const proto = 'https';
   const forceLocal = process.env.FORCE_LOCAL_LOGIN === 'true';
   const disableSSO = forceLocal || process.env.DISABLE_SSO === 'true' || portal === 'disabled' || portal === host;
-  const localLoginRoute = process.env.LOCAL_LOGIN_ROUTE || 'devLogin';
   const bp = basePath || '';
 
+  // If already authenticated, go to role landing.
   if (req.session && req.session.user) {
     const role = req.session.user.role || 'client';
-    const target = `${basePath}${rolePath(role)}` || rolePath(role);
-    return res.redirect(302, target);
+    return res.redirect(302, `${bp}${rolePath(role)}`);
   }
+
+  // Local / disabled SSO mode: allow dynamic Next.js login page to render.
   if (disableSSO) {
-    // Serve static login page directly (eliminate dependency on upstream) and normalize to basePath + /login.html
-    res.setHeader('Cache-Control', 'no-store, max-age=0');
-    res.setHeader('X-Login-Mode', 'static-local');
-    const staticPath = `${bp}/login.html`;
-    // If current request isn't already the fully-qualified basePath variant, redirect there (avoid root-only /login.html ambiguity)
-    if (req.path !== staticPath) {
-      return res.redirect(302, staticPath);
+    // Normalize bare /login to /app/login (basePath variant)
+    if (req.path === '/login') {
+      return res.redirect(302, `${bp}/login`);
     }
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.end(STATIC_LOGIN_HTML(process.env.LOGIN_PAGE_TITLE || 'Login'));
+    // For any duplicated /app/app/login variant, collapse handled earlier; just proxy through.
+    return next();
   }
-  const returnTo = encodeURIComponent(`${proto}://${host}${basePath || ''}` || `${proto}://${host}/`);
+
+  // Otherwise (SSO enabled) redirect to external portal login.
+  const returnTo = encodeURIComponent(`${proto}://${host}${bp || ''}` || `${proto}://${host}/`);
   res.setHeader('Cache-Control', 'no-store, max-age=0');
   return res.redirect(302, `https://${portal}/login?sso=1&returnTo=${returnTo}`);
 });
@@ -429,13 +473,21 @@ app.use(
         path = fixed;
       }
       if (!bp) return path || '/';
-      // 2. Strip leading basePath so upstream (which is NOT configured with basePath) gets root-relative paths.
-      if (path === bp) return '/';
-      if (path === `${bp}/`) return '/';
-      if (path.startsWith(`${bp}/`)) path = path.slice(bp.length);
+      let rewritten = path;
+      const mustStripForAsset = bp && (path.startsWith(`${bp}/_next/`) || path.startsWith(`${bp}/favicon`) || path.startsWith(`${bp}/assets/`));
+      const shouldStripForAppRoute = !upstreamHasBasePath && bp && rewritten.startsWith(`${bp}/`);
+      if (shouldStripForAppRoute || mustStripForAsset || stripBasePath) {
+        // Strip leading basePath when upstream build lacks it (current default) or when forced.
+        if (rewritten === bp || rewritten === `${bp}/`) rewritten = '/';
+        else if (rewritten.startsWith(`${bp}/`)) rewritten = rewritten.slice(bp.length) || '/';
+      }
       // 3. Ensure path begins with '/'
-      if (!path.startsWith('/')) path = '/' + path;
-      return path || '/';
+      if (!rewritten.startsWith('/')) rewritten = '/' + rewritten;
+      if (enablePathDebug) {
+        // eslint-disable-next-line no-console
+        console.log('[gateway:pathRewrite]', { incoming: path, rewritten, stripBasePath, upstreamHasBasePath, mustStripForAsset, shouldStripForAppRoute });
+      }
+      return rewritten || '/';
     },
     onProxyReq: (proxyReq, req) => {
       try {
@@ -541,7 +593,8 @@ app.use(
 
 // Gateway should NOT share the same port as the upstream Next.js app.
 // Use PORT (gateway) + APP_URL (pointing to Next) to decouple.
-const PORT = process.env.PORT || 4000;
+// Prefer explicit GATEWAY_PORT (matches cloudflared config) then fallback to PORT then default 4000
+const PORT = process.env.GATEWAY_PORT || process.env.PORT || 4000;
 if (upstream.replace(/\/$/, '') === `http://localhost:${PORT}`) {
   console.warn('[gateway] WARNING: Gateway PORT matches upstream APP_URL port. This will cause a loop or EADDRINUSE. Adjust PORT or APP_URL.');
 }
@@ -564,7 +617,7 @@ app.listen(PORT, () => {
 
 app.get('/_diag/upstream', async (req, res) => {
   try {
-    const r = await fetch(`http://localhost:3000/app/api/healthz`);
+    const r = await fetch(`http://localhost:3000${upstreamHasBasePath ? basePath : ''}/api/healthz`);
     res.json({ ok: r.ok, status: r.status });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
